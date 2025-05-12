@@ -1,0 +1,1 @@
+python -m gunicorn portfolios.asgi:application -k uvicorn.workers.UvicornWorker
