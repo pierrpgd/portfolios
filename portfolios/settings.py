@@ -28,8 +28,11 @@ SECRET_KEY = 'django-insecure-9_wl9)ij$@#x&(n9=$+^r@s#(mf_xw9nlrv6as-fiz)(cdgpw=
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    'portfolios-9j2n.onrender.com',
+    'portfolios-9j2n.onrender.com', 
+    'localhost',
+    '127.0.0.1',
 ]
+
 
 # Application definition
 
@@ -40,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'pierrpgd',
 ]
 
 MIDDLEWARE = [
@@ -75,15 +79,22 @@ WSGI_APPLICATION = 'portfolios.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-DATABASES = {
-    'default': dj_database_url.config(
-        # Replace this value with your local database's connection string.
-        default='postgresql://postgres:postgres@localhost:5432/mysite',
-        conn_max_age=600
-    )
-}
-
+if os.environ.get('RENDER', None) == 'true':
+    DATABASES = {
+        'default': dj_database_url.config(
+            # Replace this value with your local database's connection string.
+            default='postgresql://postgres:postgres@localhost:5432/mysite',
+            conn_max_age=600
+        )
+    }
+else:
+    # configuration SQLite pour développement local
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -119,7 +130,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 # This production code might break development mode, so we check whether we're in DEBUG mode
 if not DEBUG:
