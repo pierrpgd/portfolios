@@ -29,9 +29,12 @@ class HomePageTest(unittest.TestCase):
 
     def test_two_columns(self):
         self.browser.get('http://localhost:8000')
-        cols = self.browser.find_elements(By.CLASS_NAME, "col")
+        cols = self.browser.find_elements(By.CSS_SELECTOR, "[class*='col']")
 
         self.assertEqual(len(cols), 2, "Homepage doesn't have 2 columns.")
+
+        self.assertEqual(cols[0].get_attribute("class"), 'col-3', "The left column doesn't match the expected size (3/12).")
+        self.assertEqual(cols[1].get_attribute("class"), 'col-9', "The right column doesn't match the expected size (9/12).")
 
 class NavBarTest(unittest.TestCase):
 
