@@ -14,8 +14,12 @@ class HomeMapTest(TestCase):
         request = HttpRequest()
         name = 'TEST'
         about = 'TEST'
-        context = {'name':name,'about':about}
+        experience = 'TEST'
+        projects = 'TEST'
+        context = {'name':name,'about':about, 'experience':experience, 'projects':projects}
         response = home(request, context)
         soup = BeautifulSoup(response.content, "html.parser")
         self.assertEqual(soup.find(id="name").text, name, 'The name on the homepage is not a variable.')
         self.assertEqual(soup.find(id="about").text, about, "The 'About' part on the homepage is not a variable.")
+        self.assertEqual(soup.find(id="experience").text, about, "The 'Experience' part on the homepage is not a variable.")
+        self.assertEqual(soup.find(id="projects").text, about, "The 'Projects' part on the homepage is not a variable.")
