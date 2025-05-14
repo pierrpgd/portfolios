@@ -12,7 +12,7 @@
         <div class="row">
             <div class="col-3">
                 <nav class="navbar">
-                    <h1 class="name">{{ name }}</h1>
+                    <h1 id="name">{{ name }}</h1>
                     <ul>
                         <li class="nav-item">About</li>
                         <li class="nav-item">Experience</li>
@@ -20,7 +20,9 @@
                     </ul>
                 </nav>
             </div>
-            <div class="col-9"></div>
+            <div class="col-9">
+                <section id="about">{{ about }}</section>
+            </div>
         </div>
     </div>
 </body>
