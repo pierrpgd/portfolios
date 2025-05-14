@@ -59,3 +59,8 @@ class NavBarTest(unittest.TestCase):
         self.assertEqual(items[0].text, 'About', "Navigation bar doesn't have an 'About' item.")
         self.assertEqual(items[1].text, 'Experience', "Navigation bar doesn't have an 'Experience' item.")
         self.assertEqual(items[2].text, 'Projects', "Navigation bar doesn't have an 'Projects' item.")
+
+    def test_navbar_is_vertical(self):
+        self.browser.get('http://localhost:8000')
+        navbar = self.browser.find_element(By.CLASS_NAME, "navbar")
+        self.assertIn("flex-direction: column;", navbar.get_attribute("style"), "Navigation bar is not vertical")
