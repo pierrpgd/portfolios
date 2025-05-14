@@ -36,6 +36,11 @@ class HomePageTest(unittest.TestCase):
         self.assertEqual(cols[0].get_attribute("class"), 'col-3', "The left column doesn't match the expected size (3/12).")
         self.assertEqual(cols[1].get_attribute("class"), 'col-9', "The right column doesn't match the expected size (9/12).")
 
+    def test_visible_title_is_my_name(self):
+        self.browser.get('http://localhost:8000')
+        name = self.browser.find_element(By.CLASS_NAME, "name")
+        self.assertEqual(name.text, 'Pierrick Pagaud', "My name doesn't appear on the portfolio.")
+
 class NavBarTest(unittest.TestCase):
 
     def setUp(self):
