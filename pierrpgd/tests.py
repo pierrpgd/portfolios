@@ -30,5 +30,10 @@ class NavBarTest(unittest.TestCase):
     def test_navbar_contains_items(self):
         self.browser.get('http://localhost:8000')
         navbar = self.browser.find_element(By.CLASS_NAME, "navbar")
-        items = navbar.find_element(By.CLASS_NAME, "nav-item")
-        self.assertIsNotNone(items)
+
+        items = navbar.find_elements(By.CLASS_NAME, "nav-item")
+        self.assertEqual(len(items), 3, "Navigation bar doesn't have 3 items.")
+
+        self.assertEqual(items[0].text, 'About', "Navigation bar doesn't have an 'About' item.")
+        self.assertEqual(items[1].text, 'Experience', "Navigation bar doesn't have an 'Experience' item.")
+        self.assertEqual(items[2].text, 'Projects', "Navigation bar doesn't have an 'Projects' item.")
