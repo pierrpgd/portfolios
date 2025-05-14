@@ -41,6 +41,14 @@ class HomePageTest(unittest.TestCase):
         name = self.browser.find_element(By.ID, "name")
         self.assertEqual(name.text, 'Pierrick Pagaud', "My name doesn't appear on the portfolio.")
 
+    def test_top_margin(self):
+        self.browser.get('http://localhost:8000')
+        body = self.browser.find_element(By.TAG_NAME, "body")
+        divs = body.find_elements(By.TAG_NAME, "div")
+        self.assertGreaterEqual(len(divs), 2, "The number of div elements in the body is low.")
+        self.assertIn('p-4', divs[0].get_attribute("class"), "The first div element in the body is not a p-4 class.")
+        self.assertIn('mt-5', divs[1].get_attribute("class"), "The second div element in the body is not a mt-5 class.")
+
 class NavBarTest(unittest.TestCase):
 
     def setUp(self):
