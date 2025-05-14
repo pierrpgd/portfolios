@@ -18,3 +18,17 @@ class HomePageTest(unittest.TestCase):
         self.browser.get('http://localhost:8000')
         navbar = self.browser.find_element(By.CLASS_NAME, "navbar")
         self.assertIsNotNone(navbar)
+
+class NavBarTest(unittest.TestCase):
+
+    def setUp(self):
+        self.browser = webdriver.Chrome()
+
+    def tearDown(self):
+        self.browser.quit()
+
+    def test_navbar_contains_items(self):
+        self.browser.get('http://localhost:8000')
+        navbar = self.browser.find_element(By.CLASS_NAME, "navbar")
+        items = navbar.find_element(By.CLASS_NAME, "nav-item")
+        self.assertIsNotNone(items)
