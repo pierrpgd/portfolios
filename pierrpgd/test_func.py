@@ -38,7 +38,7 @@ class HomePageTest(unittest.TestCase):
 
     def test_visible_title_is_my_name(self):
         self.browser.get('http://localhost:8000')
-        name = self.browser.find_element(By.CLASS_NAME, "name")
+        name = self.browser.find_element(By.ID, "name")
         self.assertEqual(name.text, 'Pierrick Pagaud', "My name doesn't appear on the portfolio.")
 
 class NavBarTest(unittest.TestCase):
