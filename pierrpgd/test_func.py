@@ -64,3 +64,8 @@ class NavBarTest(unittest.TestCase):
         self.browser.get('http://localhost:8000')
         navbar = self.browser.find_element(By.CLASS_NAME, "navbar")
         self.assertIn("flex-direction: column;", navbar.get_attribute("style"), "Navigation bar is not vertical")
+    
+    def test_navbar_is_left_aligned(self):
+        self.browser.get('http://localhost:8000')
+        navbar = self.browser.find_element(By.CLASS_NAME, "navbar")
+        self.assertIn("align-items: flex-start;", navbar.get_attribute("style"), "Navigation bar is not left-aligned")
