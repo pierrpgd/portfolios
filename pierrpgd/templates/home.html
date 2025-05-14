@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Portfolio de Pierrick Pagaud</title>
+    <title>Portfolio de {{ name }}</title>
     {% load bootstrap5 %}
     {% bootstrap_css %}
     {% bootstrap_javascript %}
@@ -12,7 +12,7 @@
         <div class="row">
             <div class="col-3">
                 <nav class="navbar">
-                    <h1 class="name">Pierrick Pagaud</h1>
+                    <h1 class="name">{{ name }}</h1>
                     <ul>
                         <li class="nav-item">About</li>
                         <li class="nav-item">Experience</li>
