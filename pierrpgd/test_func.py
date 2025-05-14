@@ -49,6 +49,17 @@ class HomePageTest(unittest.TestCase):
         self.assertIn('p-4', divs[0].get_attribute("class"), "The first div element in the body is not a p-4 class.")
         self.assertIn('mt-5', divs[1].get_attribute("class"), "The second div element in the body is not a mt-5 class.")
 
+    def test_side_margins(self):
+        self.browser.get('http://localhost:8000')
+        body = self.browser.find_element(By.TAG_NAME, "body")
+        
+        container = body.find_elements(By.TAG_NAME, "div")[1]
+        self.assertIn('container-fluid', container.get_attribute("class"), "The second div element in the body is not a container-fluid class.")
+        
+        row = body.find_elements(By.TAG_NAME, "div")[2]
+        self.assertIn('margin-left: 5vw;', row.get_attribute("style"), "The third div element in the body doesn't have margins on the left side.")
+        self.assertIn('margin-right: 5vw;', row.get_attribute("style"), "The third div element in the body doesn't have margins on the right side.")
+
 class NavBarTest(unittest.TestCase):
 
     def setUp(self):
