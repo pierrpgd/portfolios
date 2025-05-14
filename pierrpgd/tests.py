@@ -19,6 +19,14 @@ class HomePageTest(unittest.TestCase):
         navbar = self.browser.find_element(By.CLASS_NAME, "navbar")
         self.assertIsNotNone(navbar)
 
+    def test_boostrap_is_charged(self):
+        self.browser.get('http://localhost:8000')
+        links = self.browser.find_elements(By.TAG_NAME, "link")
+        bootstrap_loaded = any(
+            "bootstrap" in link.get_attribute("href") for link in links if link.get_attribute("rel") == "stylesheet"
+        )
+        self.assertTrue(bootstrap_loaded, "Bootstrap CSS is not charged.")
+
 class NavBarTest(unittest.TestCase):
 
     def setUp(self):
