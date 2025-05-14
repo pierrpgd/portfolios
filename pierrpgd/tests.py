@@ -27,6 +27,12 @@ class HomePageTest(unittest.TestCase):
         )
         self.assertTrue(bootstrap_loaded, "Bootstrap CSS is not charged.")
 
+    def test_two_columns(self):
+        self.browser.get('http://localhost:8000')
+        cols = self.browser.find_elements(By.CLASS_NAME, "col")
+
+        self.assertEqual(len(cols), 2, "Homepage doesn't have 2 columns.")
+
 class NavBarTest(unittest.TestCase):
 
     def setUp(self):
