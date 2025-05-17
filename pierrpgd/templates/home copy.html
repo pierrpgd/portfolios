@@ -11,8 +11,8 @@
     <div class="p-4"></div>
     <div class="container-fluid mt-5">
         <div class="row" style="margin-left:5vw;margin-right:5vw;">
-            <div id="col-1" class="col-5">
-                <nav class="navbar" style="flex-direction:column;align-items:flex-start;">
+            <div class="col-5">
+                <nav class="navbar" style="flex-direction:column;align-items:flex-start;position:fixed;">
                     <h1 id="name">{{ name }}</h1>
                     <ul>
                         <li class="nav-item">About</li>
@@ -21,7 +21,7 @@
                     </ul>
                 </nav>
             </div>
-            <div id="col-2" class="col-7">
+            <div class="col-7">
                 <section id="about" style="margin-bottom:100px;">
                     {% for paragraphe in about %}
                         <div class="container-fluid mt-4" style="padding-left:0px;padding-right:0px;text-align:justify;">
@@ -43,7 +43,7 @@
                         {% endfor %}
                     </div>
                 </section>
-                <section id="projects">{{ projects }}</section>
+                <section id="projects" style="margin-top:70px;margin-bottom:100px;">{{ projects }}</section>
             </div>
         </div>
     </div>
