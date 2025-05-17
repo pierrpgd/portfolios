@@ -29,7 +29,7 @@ class HomePageTest(unittest.TestCase):
 
     def test_two_columns(self):
         self.browser.get('http://localhost:8000')
-        cols = self.browser.find_elements(By.CSS_SELECTOR, "[class*='col']")
+        cols = self.browser.find_elements(By.CSS_SELECTOR, "[id*='col']")
 
         self.assertEqual(len(cols), 2, "Homepage doesn't have 2 columns.")
 
