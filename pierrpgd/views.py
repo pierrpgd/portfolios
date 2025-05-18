@@ -2,11 +2,12 @@ from django.shortcuts import render
 from .models import Profile, About, Experience, Project
 
 def home(request, context=''):
-    if context == '':
-        # Créer ou récupérer le profil
-        profile, created = Profile.objects.get_or_create(name='Pierrick Pagaud')
+    try:
+        if context == '':
+            # Créer ou récupérer le profil
+            profile, created = Profile.objects.get_or_create(name='Pierrick Pagaud')
 
-        about = [
+            about = [
                 '''Beyond the Indian hamlet, upon a forlorn strand, I happened on a trail
                 of recent footprints. Through rotting kelp, sea cocoa-nuts & bamboo, the
                 tracks led me to their maker, a White man, his trowzers & Pea-jacket
@@ -30,67 +31,86 @@ def home(request, context=''):
                 '''I confessed I did not.'''
         ]
         
-        # Créer les paragraphes About
-        for i, content in enumerate(about):
-            About.objects.update_or_create(
+            # Créer les paragraphes About
+            for i, content in enumerate(about):
+                About.objects.update_or_create(
+                    profile=profile,
+                    order=i,
+                    defaults={'content': content}
+                )
+            
+            experience = [
+                {
+                    'dates':'MAR. 2023 - MAR. 2025',
+                    'company':'Alpha 3i',
+                    'location':'Jacksonville FL, USA',
+                    'position':'Ingénieur logiciel MES',
+                    'description':'''Conception, développement et intégration de modules MES au sein de systèmes
+                    ERP pour des acteurs industriels de secteurs variés (aéronautique, santé, automobile).'''
+                },
+                {
+                    'dates':'SEP. 2019 - FEB. 2023',
+                    'company':'PAPREC France',
+                    'location':'Lyon, FRA',
+                    'position':'Chef de projet informatique junior',
+                    'description':'''Déploiement d'une plateforme IoT pour l'activité Collecte et Transports de déchets.'''
+                },
+                {
+                    'dates':'SEP. 2018 - SEP. 2019',
+                    'company':'PAPREC France',
+                    'location':'Lyon, FRA',
+                    'position':'Assistant chef de projet informatique (alternance)',
+                    'description':'''Déploiement d’une application web d’optimisation de circuit pour l’activité
+                    Collecte et Transports de déchets.'''
+                }
+            ]
+            
+            # Créer les expériences
+            for i, exp in enumerate(experience):
+                Experience.objects.update_or_create(
+                    profile=profile,
+                    order=i,
+                    defaults={
+                        'dates': exp['dates'],
+                        'company': exp['company'],
+                        'location': exp['location'],
+                        'position': exp['position'],
+                        'description': exp['description']
+                    }
+                )
+            
+            # Créer le projet
+            Project.objects.update_or_create(
                 profile=profile,
-                order=i,
-                defaults={'content': content}
-            )
-        
-        experience = [
-            {
-                'dates':'MAR. 2023 - MAR. 2025',
-                'company':'Alpha 3i',
-                'location':'Jacksonville FL, USA',
-                'position':'Ingénieur logiciel MES',
-                'description':'''Conception, développement et intégration de modules MES au sein de systèmes
-                ERP pour des acteurs industriels de secteurs variés (aéronautique, santé, automobile).'''
-            },
-            {
-                'dates':'SEP. 2019 - FEB. 2023',
-                'company':'PAPREC France',
-                'location':'Lyon, FRA',
-                'position':'Chef de projet informatique junior',
-                'description':'''Déploiement d'une plateforme IoT pour l'activité Collecte et Transports de déchets.'''
-            },
-            {
-                'dates':'SEP. 2018 - SEP. 2019',
-                'company':'PAPREC France',
-                'location':'Lyon, FRA',
-                'position':'Assistant chef de projet informatique (alternance)',
-                'description':'''Déploiement d’une application web d’optimisation de circuit pour l’activité
-                Collecte et Transports de déchets.'''
-            }
-        ]
-        
-        # Créer les expériences
-        for i, exp in enumerate(experience):
-            Experience.objects.update_or_create(
-                profile=profile,
-                order=i,
                 defaults={
-                    'dates': exp['dates'],
-                    'company': exp['company'],
-                    'location': exp['location'],
-                    'position': exp['position'],
-                    'description': exp['description']
+                    'title': 'This website',
+                    'description': 'Description du projet'
                 }
             )
-        
-        # Créer le projet
-        Project.objects.update_or_create(
-            profile=profile,
-            defaults={
-                'title': 'This website',
-                'description': 'Description du projet'
-            }
-        )
 
-        context = {
-            'profile': profile,
-            'about': profile.about.all(),
-            'experience': profile.experience.all(),
-            'projects': profile.projects.all()
-        }
+            context = {
+                'profile': profile,
+                'about': profile.about.all(),
+                'experience': profile.experience.all(),
+                'projects': profile.projects.all()
+            }
+            
+    except Exception as e:
+        print(f"Erreur dans la vue home: {str(e)}")
+        raise
     return render(request, 'home.html', context)
+
+def data_display(request):
+    """Vue pour afficher toutes les données de la base"""
+    profiles = Profile.objects.all()
+    abouts = About.objects.all()
+    experiences = Experience.objects.all()
+    projects = Project.objects.all()
+    
+    context = {
+        'profiles': profiles,
+        'abouts': abouts,
+        'experiences': experiences,
+        'projects': projects
+    }
+    return render(request, 'data_display.html', context)

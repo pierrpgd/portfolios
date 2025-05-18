@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>Données de la Base de Données</h1>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2>Profils</h2>
+        </div>
+        <div class="card-body">
+            {% if profiles %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Créé le</th>
+                            <th>Mis à jour le</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for profile in profiles %}
+                        <tr>
+                            <td>{{ profile.name }}</td>
+                            <td>{{ profile.created_at }}</td>
+                            <td>{{ profile.updated_at }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Aucun profil trouvé</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2>Sections About</h2>
+        </div>
+        <div class="card-body">
+            {% if abouts %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Profil</th>
+                            <th>Ordre</th>
+                            <th>Contenu</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for about in abouts %}
+                        <tr>
+                            <td>{{ about.profile.name }}</td>
+                            <td>{{ about.order }}</td>
+                            <td>{{ about.content }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Aucune section About trouvée</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2>Expériences</h2>
+        </div>
+        <div class="card-body">
+            {% if experiences %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Profil</th>
+                            <th>Ordre</th>
+                            <th>Période</th>
+                            <th>Poste</th>
+                            <th>Entreprise</th>
+                            <th>Localisation</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for exp in experiences %}
+                        <tr>
+                            <td>{{ exp.profile.name }}</td>
+                            <td>{{ exp.order }}</td>
+                            <td>{{ exp.dates }}</td>
+                            <td>{{ exp.position }}</td>
+                            <td>{{ exp.company }}</td>
+                            <td>{{ exp.location }}</td>
+                            <td>{{ exp.description }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Aucune expérience trouvée</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2>Projets</h2>
+        </div>
+        <div class="card-body">
+            {% if projects %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Profil</th>
+                            <th>Ordre</th>
+                            <th>Titre</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in projects %}
+                        <tr>
+                            <td>{{ project.profile.name }}</td>
+                            <td>{{ project.order }}</td>
+                            <td>{{ project.title }}</td>
+                            <td>{{ project.description }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Aucun projet trouvé</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

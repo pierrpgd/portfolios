@@ -1,0 +1,9 @@
+from django.urls import path
+from . import views
+
+app_name = 'pierrpgd'
+
+urlpatterns = [
+    path('', views.home, name='home'),
+    path('data/', views.data_display, name='data_display'),
+]

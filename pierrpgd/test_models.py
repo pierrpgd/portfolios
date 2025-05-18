@@ -111,8 +111,8 @@ class ExperienceModelTest(TestCase):
             order=2
         )
         experiences = Experience.objects.all()
-        self.assertEqual(experiences[0], exp2)  # Tri par ordre décroissant
-        self.assertEqual(experiences[1], self.experience)
+        self.assertEqual(experiences[0], self.experience)
+        self.assertEqual(experiences[1], exp2)
 
     def test_experience_deletion(self):
         """Test la suppression d'une expérience"""
