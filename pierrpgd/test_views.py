@@ -107,12 +107,16 @@ class HomeTest(TestCase):
 
 class DataDisplayViewTest(TestCase):
     def setUp(self):
-        # Créer un superuser pour les tests
-        self.user = User.objects.create_superuser(
-            username='testuser',
-            email='test@example.com',
-            password='testpassword'
-        )
+        # Vérifier si le superuser existe déjà
+        if not User.objects.filter(username='testuser').exists():
+            self.user = User.objects.create_superuser(
+                username='testuser',
+                email='test@example.com',
+                password='testpassword'
+            )
+        else:
+            self.user = User.objects.get(username='testuser')
+        
         self.client = Client()
         self.client.login(username='testuser', password='testpassword')
         
@@ -138,6 +142,11 @@ class DataDisplayViewTest(TestCase):
             description='Test Project Description',
             order=0
         )
+    
+    def tearDown(self):
+        # Supprimer le superuser à la fin des tests
+        if hasattr(self, 'user'):
+            self.user.delete()
 
     def test_data_display_view(self):
         response = self.client.get(reverse('data_display'))

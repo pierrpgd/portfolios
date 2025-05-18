@@ -114,3 +114,10 @@ def data_display(request):
         'projects': projects
     }
     return render(request, 'data_display.html', context)
+
+def add_profile(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        Profile.objects.create(name=name)
+        return redirect('data_display')
+    return render(request, 'add_profile.html')

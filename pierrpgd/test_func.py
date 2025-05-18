@@ -1,8 +1,10 @@
+from django.test import TestCase, Client
+from django.contrib.auth.models import User
+from django.urls import reverse
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-import unittest
 
-class HomePageTest(unittest.TestCase):
+class HomePageTest(TestCase):
 
     def setUp(self):
         options = webdriver.ChromeOptions()
@@ -42,7 +44,7 @@ class HomePageTest(unittest.TestCase):
         name = self.browser.find_element(By.ID, "name")
         self.assertEqual(name.text, 'Pierrick Pagaud', "My name doesn't appear on the portfolio.")
 
-class NavBarTest(unittest.TestCase):
+class NavBarTest(TestCase):
 
     def setUp(self):
         options = webdriver.ChromeOptions()
@@ -65,3 +67,42 @@ class NavBarTest(unittest.TestCase):
         self.assertEqual(links[1].get_attribute('href'), 'http://localhost:8000/#about', "Navigation bar doesn't have an 'About' item.")
         self.assertEqual(links[2].get_attribute('href'), 'http://localhost:8000/#experience', "Navigation bar doesn't have an 'Experience' item.")
         self.assertEqual(links[3].get_attribute('href'), 'http://localhost:8000/#projects', "Navigation bar doesn't have an 'Projects' item.")
+
+class DataDisplayTest(TestCase):
+    def setUp(self):
+        # Vérifier si le superuser existe déjà
+        if not User.objects.filter(username='testuser').exists():
+            self.user = User.objects.create_superuser(
+                username='testuser',
+                email='test@example.com',
+                password='testpassword'
+            )
+        else:
+            self.user = User.objects.get(username='testuser')
+        
+        self.client = Client()
+        self.client.login(username='testuser', password='testpassword')
+    
+    def tearDown(self):
+        # Supprimer le superuser à la fin des tests
+        if hasattr(self, 'user'):
+            self.user.delete()
+
+    def test_profile_add_button_exists(self):
+        response = self.client.get(reverse('data_display'))
+        self.assertEqual(response.status_code, 200)
+        
+        # Vérifier la présence du bouton d'ajout
+        self.assertContains(response, 'Ajouter un profil')
+        
+        # Vérifier l'existence du lien vers la page d'ajout
+        add_profile_url = reverse('add_profile')
+        self.assertContains(response, f'href="{add_profile_url}"')
+        
+        # Vérifier que le bouton est dans la section des profils
+        content = response.content.decode('utf-8')
+        profiles_section_start = content.find('<div class="card mb-4">')
+        profiles_section_end = content.find('</div>', profiles_section_start)
+        profiles_section = content[profiles_section_start:profiles_section_end]
+        
+        self.assertIn('Ajouter un profil', profiles_section)
