@@ -177,7 +177,7 @@
     <div class="container-flex">
         <div class="layout">
             <nav id="col-1">
-                <h1 id="name"><a href="/">{{ name }}</a></h1>
+                <h1 id="name"><a href="/">{{ profile.name }}</a></h1>
                 <ul>
                     <li class="nav-item"><a href="#about">About</a></li>
                     <li class="nav-item"><a href="#experience">Experience</a></li>
@@ -189,7 +189,7 @@
                 <section id="about">
                     <h2>About</h2>
                     {% for paragraphe in about %}
-                        <p>{{ paragraphe }}</p>
+                        <p>{{ paragraphe.content }}</p>
                     {% endfor %}
                 </section>
 
@@ -212,7 +212,10 @@
 
                 <section id="projects">
                     <h2>Projects</h2>
-                    <p>{{ projects }}</p>
+                    {% for project in projects %}
+                        <p>{{ project.title }}</p>
+                        <p>{{ project.description }}</p>
+                    {% endfor %}
                 </section>
             </div>
         </div>

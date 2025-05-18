@@ -1,8 +1,11 @@
 from django.shortcuts import render
+from .models import Profile, About, Experience, Project
 
 def home(request, context=''):
     if context == '':
-        name = 'Pierrick Pagaud'
+        # Créer ou récupérer le profil
+        profile, created = Profile.objects.get_or_create(name='Pierrick Pagaud')
+
         about = [
                 '''Beyond the Indian hamlet, upon a forlorn strand, I happened on a trail
                 of recent footprints. Through rotting kelp, sea cocoa-nuts & bamboo, the
@@ -26,6 +29,15 @@ def home(request, context=''):
                 will earn, sir?”''',
                 '''I confessed I did not.'''
         ]
+        
+        # Créer les paragraphes About
+        for i, content in enumerate(about):
+            About.objects.update_or_create(
+                profile=profile,
+                order=i,
+                defaults={'content': content}
+            )
+        
         experience = [
             {
                 'dates':'MAR. 2023 - MAR. 2025',
@@ -51,9 +63,34 @@ def home(request, context=''):
                 Collecte et Transports de déchets.'''
             }
         ]
-        projects = 'This website.'
-        context={'name':name,
-                'about':about,
-                'experience':experience,
-                'projects':projects}
+        
+        # Créer les expériences
+        for i, exp in enumerate(experience):
+            Experience.objects.update_or_create(
+                profile=profile,
+                order=i,
+                defaults={
+                    'dates': exp['dates'],
+                    'company': exp['company'],
+                    'location': exp['location'],
+                    'position': exp['position'],
+                    'description': exp['description']
+                }
+            )
+        
+        # Créer le projet
+        Project.objects.update_or_create(
+            profile=profile,
+            defaults={
+                'title': 'This website',
+                'description': 'Description du projet'
+            }
+        )
+
+        context = {
+            'profile': profile,
+            'about': profile.about.all(),
+            'experience': profile.experience.all(),
+            'projects': profile.projects.all()
+        }
     return render(request, 'home.html', context)
