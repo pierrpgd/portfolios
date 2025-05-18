@@ -26,8 +26,8 @@ class HomeMapTest(TestCase):
         response = home(request, context)
         soup = BeautifulSoup(response.content, "html.parser")
         self.assertEqual(soup.find(id="name").text, name, 'The name on the homepage is not a variable.')
-        self.assertEqual(soup.find(id="about").get_text(strip=True), about[0], "The 'About' part on the homepage is not a variable.")
-        self.assertEqual(soup.find(id="experience").get_text(strip=True, separator='.'),
-                         experience[0]['dates']+'.'+experience[0]['position']+'.'+experience[0]['company']+' - '+experience[0]['location']+'.'+experience[0]['description'],
+        self.assertEqual(soup.find(id="about").get_text(strip=True).replace('About', ''), about[0], "The 'About' part on the homepage is not a variable.")
+        self.assertEqual(soup.find(id="experience").get_text(strip=True, separator='.').replace('Experience', ''),
+                         '.'+experience[0]['dates']+'.'+experience[0]['position']+'.'+experience[0]['company']+'.- '+experience[0]['location']+'.'+experience[0]['description'],
                          "The 'Experience' part on the homepage is not a variable.")
-        self.assertEqual(soup.find(id="projects").text, projects, "The 'Projects' part on the homepage is not a variable.")
+        self.assertEqual(soup.find(id="projects").get_text(strip=True).replace('Projects', ''), projects, "The 'Projects' part on the homepage is not a variable.")
