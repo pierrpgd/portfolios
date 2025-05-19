@@ -45,6 +45,23 @@ def data_display(request):
 def add_profile(request):
     if request.method == 'POST':
         name = request.POST.get('name')
-        Profile.objects.create(name=name)
-        return redirect('data_display')
+        identifiant = request.POST.get('identifiant')
+        
+        # Vérifier que l'identifiant ne contient pas d'espace
+        if ' ' in identifiant:
+            return render(request, 'add_profile.html', {
+                'error_message': 'L\'identifiant ne doit pas contenir d\'espace'
+            })
+        
+        try:
+            # Vérifier si l'identifiant existe déjà
+            Profile.objects.get(identifiant=identifiant)
+            return render(request, 'add_profile.html', {
+                'error_message': 'Cet identifiant est déjà utilisé'
+            })
+        except Profile.DoesNotExist:
+            # Créer le profil
+            Profile.objects.create(name=name, identifiant=identifiant)
+            return redirect('data_display')
+    
     return render(request, 'add_profile.html')

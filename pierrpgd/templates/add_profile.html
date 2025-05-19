@@ -4,13 +4,22 @@
 <div class="container">
     <h1>Ajouter un profil</h1>
     
+    {% if error_message %}
+        <div class="alert alert-danger">{{ error_message }}</div>
+    {% endif %}
+    
     <form method="post">
         {% csrf_token %}
         <div class="mb-3">
-            <label for="name" class="form-label">Nom du profil</label>
-            <input type="text" class="form-control" id="name" name="name" required>
+            <label for="id_identifiant" class="form-label">Identifiant</label>
+            <input type="text" class="form-control" id="id_identifiant" name="identifiant" required>
+            <div class="form-text">L'identifiant doit être unique et sans espace.</div>
         </div>
-        <button type="submit" class="btn btn-primary">Ajouter</button>
+        <div class="mb-3">
+            <label for="id_name" class="form-label">Nom</label>
+            <input type="text" class="form-control" id="id_name" name="name" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
     </form>
 </div>
 {% endblock %}

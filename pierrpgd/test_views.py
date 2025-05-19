@@ -1,6 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import resolve, reverse
 from django.http import HttpRequest
+from django.utils.html import escape
 from .views import portfolio
 from .models import Profile, About, Experience, Project
 from bs4 import BeautifulSoup
@@ -320,3 +321,69 @@ class DataDisplayViewTest(TestCase):
         project1_index = content.find('Project 1')
         project2_index = content.find('Project 2')
         self.assertTrue(project2_index < project1_index)  # Project 2 devrait apparaître avant Project 1
+
+class AddProfileViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.url = reverse('add_profile')
+        
+        # Créer un superuser pour les tests
+        self.user = User.objects.create_superuser(
+            username='testuser',
+            email='test@example.com',
+            password='testpassword'
+        )
+        self.client.login(username='testuser', password='testpassword')
+
+    def tearDown(self):
+        # Supprimer le superuser à la fin des tests
+        if hasattr(self, 'user'):
+            self.user.delete()
+
+    def test_add_profile_view_get(self):
+        """Teste que la vue add_profile affiche le formulaire"""
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'add_profile.html')
+        self.assertContains(response, 'Ajouter un profil')
+        self.assertContains(response, 'Identifiant')
+        self.assertContains(response, 'Nom')
+
+    def test_add_profile_success(self):
+        """Teste la création réussie d'un profil"""
+        data = {
+            'identifiant': 'new-profile',
+            'name': 'New Profile'
+        }
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)  # Redirection
+        self.assertRedirects(response, reverse('data_display'))
+        
+        # Vérifier que le profil a été créé
+        profile = Profile.objects.get(identifiant='new-profile')
+        self.assertEqual(profile.name, 'New Profile')
+
+    def test_add_profile_invalid_identifiant(self):
+        """Teste la création avec un identifiant invalide (contient des espaces)"""
+        data = {
+            'identifiant': 'invalid identifiant',
+            'name': 'Test Profile'
+        }
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'add_profile.html')
+        self.assertContains(response, escape('L\'identifiant ne doit pas contenir d\'espace'))
+
+    def test_add_profile_duplicate_identifiant(self):
+        """Teste la création avec un identifiant déjà existant"""
+        # Créer un profil avec un identifiant existant
+        Profile.objects.create(identifiant='existing', name='Existing Profile')
+        
+        data = {
+            'identifiant': 'existing',
+            'name': 'Test Profile'
+        }
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'add_profile.html')
+        self.assertContains(response, 'Cet identifiant est déjà utilisé')
