@@ -18,6 +18,7 @@
                 <table class="table">
                     <thead>
                         <tr>
+                            <th>Identifiant</th>
                             <th>Nom</th>
                             <th>Créé le</th>
                             <th>Mis à jour le</th>
@@ -26,6 +27,7 @@
                     <tbody>
                         {% for profile in profiles %}
                             <tr>
+                                <td>{{ profile.identifiant }}</td>
                                 <td>{{ profile.name }}</td>
                                 <td>{{ profile.created_at|date:"F j, Y, g:i a" }}</td>
                                 <td>{{ profile.updated_at|date:"F j, Y, g:i a" }}</td>

@@ -11,7 +11,10 @@ class HomeTest(TestCase):
         self.request = HttpRequest()
 
         # Créer un profil de test
-        self.profile = Profile.objects.create(name='Test Profile')
+        self.profile = Profile.objects.create(
+            name='Test Profile',
+            identifiant='test-identifiant'
+        )
         
         # Créer une section About de test
         self.about = About.objects.create(
@@ -121,7 +124,10 @@ class DataDisplayViewTest(TestCase):
         self.client.login(username='testuser', password='testpassword')
         
         # Créer des objets de test
-        self.profile = Profile.objects.create(name='Test Profile')
+        self.profile = Profile.objects.create(
+            name='Test Profile',
+            identifiant='test-identifiant'
+        )
         self.about = About.objects.create(
             profile=self.profile,
             content='Test About Content',
@@ -240,7 +246,10 @@ class DataDisplayViewTest(TestCase):
 
     def test_about_ordering(self):
         # Créer des objets avec différents ordres
-        profile2 = Profile.objects.create(name='Test Profile 2')
+        profile2 = Profile.objects.create(
+            name='Test Profile 2',
+            identifiant='test-identifiant-2'
+        )
         About.objects.create(profile=profile2, content='About 2', order=0)
         About.objects.create(profile=profile2, content='About 1', order=1)
         
@@ -254,7 +263,10 @@ class DataDisplayViewTest(TestCase):
 
     def test_experience_ordering(self):
         # Créer des expériences avec différents ordres
-        profile2 = Profile.objects.create(name='Test Profile 2')
+        profile2 = Profile.objects.create(
+            name='Test Profile 2',
+            identifiant='test-identifiant-2'
+        )
         Experience.objects.create(
             profile=profile2,
             dates='2020-2023',
@@ -284,7 +296,10 @@ class DataDisplayViewTest(TestCase):
 
     def test_project_ordering(self):
         # Créer des projets avec différents ordres
-        profile2 = Profile.objects.create(name='Test Profile 2')
+        profile2 = Profile.objects.create(
+            name='Test Profile 2',
+            identifiant='test-identifiant-2'
+        )
         Project.objects.create(
             profile=profile2,
             title='Project 1',

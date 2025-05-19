@@ -1,15 +1,22 @@
 from django.test import TestCase
+from django.db import IntegrityError
 from .models import Profile, About, Experience, Project
 
 class ProfileModelTest(TestCase):
     def setUp(self):
-        self.profile = Profile.objects.create(name='Test Profile')
+        self.profile = Profile.objects.create(name='Test Profile', identifiant='test-identifiant')
 
     def test_profile_creation(self):
         """Test la création d'un profil"""
         self.assertEqual(self.profile.name, 'Test Profile')
+        self.assertEqual(self.profile.identifiant, 'test-identifiant')
         self.assertIsNotNone(self.profile.created_at)
         self.assertIsNotNone(self.profile.updated_at)
+
+    def test_profile_creation_with_same_identifiant(self):
+        """Test que la création d'un profil avec un identifiant déjà existant échoue"""
+        with self.assertRaises(IntegrityError):
+            Profile.objects.create(name='Another Profile', identifiant='test-identifiant')
 
     def test_profile_string_representation(self):
         """Test la représentation en chaîne de caractères"""
@@ -18,9 +25,11 @@ class ProfileModelTest(TestCase):
     def test_profile_update(self):
         """Test la mise à jour d'un profil"""
         self.profile.name = 'Updated Profile'
+        self.profile.identifiant = 'updated-identifiant'
         self.profile.save()
         updated_profile = Profile.objects.get(id=self.profile.id)
         self.assertEqual(updated_profile.name, 'Updated Profile')
+        self.assertEqual(updated_profile.identifiant, 'updated-identifiant')
 
     def test_profile_deletion(self):
         """Test la suppression d'un profil"""
@@ -32,7 +41,10 @@ class ProfileModelTest(TestCase):
 
 class AboutModelTest(TestCase):
     def setUp(self):
-        self.profile = Profile.objects.create(name='Test Profile')
+        self.profile = Profile.objects.create(
+            name='Test Profile',
+            identifiant='test-identifiant'
+        )
         self.about = About.objects.create(
             profile=self.profile,
             content='Test content',
@@ -78,7 +90,10 @@ class AboutModelTest(TestCase):
 
 class ExperienceModelTest(TestCase):
     def setUp(self):
-        self.profile = Profile.objects.create(name='Test Profile')
+        self.profile = Profile.objects.create(
+            name='Test Profile',
+            identifiant='test-identifiant'
+        )
         self.experience = Experience.objects.create(
             profile=self.profile,
             dates='2023-2024',
@@ -131,7 +146,10 @@ class ExperienceModelTest(TestCase):
 
 class ProjectModelTest(TestCase):
     def setUp(self):
-        self.profile = Profile.objects.create(name='Test Profile')
+        self.profile = Profile.objects.create(
+            name='Test Profile',
+            identifiant='test-identifiant'
+        )
         self.project = Project.objects.create(
             profile=self.profile,
             title='Test Project',

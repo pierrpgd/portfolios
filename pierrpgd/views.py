@@ -1,11 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from .models import Profile, About, Experience, Project
 
 def home(request, context=''):
     try:
         if context == '':
             # Créer ou récupérer le profil
-            profile, created = Profile.objects.get_or_create(name='Pierrick Pagaud')
+            profile, created = Profile.objects.get_or_create(identifiant='pierrpgd',name='Pierrick Pagaud')
 
             about = [
                 '''Beyond the Indian hamlet, upon a forlorn strand, I happened on a trail
