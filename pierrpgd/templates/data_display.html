@@ -1,5 +1,163 @@
 {% extends 'base.html' %}
 
+{% block extra_css %}
+    <style>
+        .hoverable-row:hover {
+            background-color: #0869c9 !important;
+            color: white !important;
+        }
+        .table {
+            cursor: default;
+        }
+        .table * {
+            cursor: default;
+        }
+        .table tr:hover {
+            cursor: default;
+        }
+        .hoverable-row:hover {
+            cursor: default;
+        }
+    </style>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sélection/désélection d'une ligne au clic
+            document.querySelectorAll('.table tbody tr').forEach(row => {
+                row.addEventListener('click', function() {
+                    // Désélectionner toutes les lignes
+                    document.querySelectorAll('.table tbody tr').forEach(row => {
+                        row.classList.remove('table-active');
+                    });
+                    // Sélectionner la ligne cliquée
+                    this.classList.add('table-active');
+                    
+                    // Charger les données du profil sélectionné
+                    const profileIdentifiant = this.querySelector('td:first-child').textContent;
+                    fetch(`/load_profile_data/?identifiant=${profileIdentifiant}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.error) {
+                                document.querySelector('#profile-data').innerHTML = `
+                                    <div class="alert alert-danger">${data.error}</div>
+                                `;
+                                return;
+                            }
+
+                            // Créer le HTML pour les données
+                            const html = `
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h2>À propos</h2>
+                                    </div>
+                                    <div class="card-body">
+                                        ${data.about.length > 0 ? `
+                                            <table id="about-table" class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Ordre</th>
+                                                        <th>Contenu</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    ${data.about.map(about => `
+                                                        <tr>
+                                                            <td>${about.order}</td>
+                                                            <td>${about.content}</td>
+                                                        </tr>
+                                                    `).join('')}
+                                                </tbody>
+                                            </table>
+                                        ` : `
+                                            <p>Aucune section About trouvée</p>
+                                        `}
+                                    </div>
+                                </div>
+
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h2>Expériences</h2>
+                                    </div>
+                                    <div class="card-body">
+                                        ${data.experience.length > 0 ? `
+                                            <table id="experience-table" class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Ordre</th>
+                                                        <th>Période</th>
+                                                        <th>Poste</th>
+                                                        <th>Entreprise</th>
+                                                        <th>Localisation</th>
+                                                        <th>Description</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    ${data.experience.map(exp => `
+                                                        <tr>
+                                                            <td>${exp.order}</td>
+                                                            <td>${exp.dates}</td>
+                                                            <td>${exp.position}</td>
+                                                            <td>${exp.company}</td>
+                                                            <td>${exp.location}</td>
+                                                            <td>${exp.description}</td>
+                                                        </tr>
+                                                    `).join('')}
+                                                </tbody>
+                                            </table>
+                                        ` : `
+                                            <p>Aucune expérience trouvée</p>
+                                        `}
+                                    </div>
+                                </div>
+
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h2>Projets</h2>
+                                    </div>
+                                    <div class="card-body">
+                                        ${data.projects.length > 0 ? `
+                                            <table id="projects-table" class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Ordre</th>
+                                                        <th>Titre</th>
+                                                        <th>Description</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    ${data.projects.map(project => `
+                                                        <tr>
+                                                            <td>${project.order}</td>
+                                                            <td>${project.title}</td>
+                                                            <td>${project.description}</td>
+                                                        </tr>
+                                                    `).join('')}
+                                                </tbody>
+                                            </table>
+                                        ` : `
+                                            <p>Aucun projet trouvé</p>
+                                        `}
+                                    </div>
+                                </div>
+                            `;
+
+                            // Mettre à jour le DOM
+                            document.querySelector('#profile-data').innerHTML = html;
+                        })
+                        .catch(error => {
+                            console.error('Erreur:', error);
+                            document.querySelector('#profile-data').innerHTML = `
+                                <div class="alert alert-danger">Erreur lors du chargement des données</div>
+                            `;
+                        });
+                });
+            });
+        });
+    </script>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <h1>Données de la Base de Données</h1>
@@ -15,7 +173,7 @@
         </div>
         <div class="card-body">
             {% if profiles %}
-                <table class="table">
+                <table id="profile-table" class="table table-hover">
                     <thead>
                         <tr>
                             <th>Identifiant</th>
@@ -41,103 +199,11 @@
         </div>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-header">
-            <h2>Sections About</h2>
-        </div>
-        <div class="card-body">
-            {% if abouts %}
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Profil</th>
-                            <th>Ordre</th>
-                            <th>Contenu</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for about in abouts %}
-                        <tr>
-                            <td>{{ about.profile.name }}</td>
-                            <td>{{ about.order }}</td>
-                            <td>{{ about.content }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <p>Aucune section About trouvée</p>
-            {% endif %}
-        </div>
-    </div>
-
-    <div class="card mb-4">
-        <div class="card-header">
-            <h2>Expériences</h2>
-        </div>
-        <div class="card-body">
-            {% if experiences %}
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Profil</th>
-                            <th>Ordre</th>
-                            <th>Période</th>
-                            <th>Poste</th>
-                            <th>Entreprise</th>
-                            <th>Localisation</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for exp in experiences %}
-                        <tr>
-                            <td>{{ exp.profile.name }}</td>
-                            <td>{{ exp.order }}</td>
-                            <td>{{ exp.dates }}</td>
-                            <td>{{ exp.position }}</td>
-                            <td>{{ exp.company }}</td>
-                            <td>{{ exp.location }}</td>
-                            <td>{{ exp.description }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <p>Aucune expérience trouvée</p>
-            {% endif %}
-        </div>
-    </div>
-
-    <div class="card mb-4">
-        <div class="card-header">
-            <h2>Projets</h2>
-        </div>
-        <div class="card-body">
-            {% if projects %}
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Profil</th>
-                            <th>Ordre</th>
-                            <th>Titre</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for project in projects %}
-                        <tr>
-                            <td>{{ project.profile.name }}</td>
-                            <td>{{ project.order }}</td>
-                            <td>{{ project.title }}</td>
-                            <td>{{ project.description }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <p>Aucun projet trouvé</p>
-            {% endif %}
+    <!-- Conteneur pour les données du profil sélectionné -->
+    <div id="profile-data">
+        <!-- Les données seront chargées ici via AJAX -->
+        <div class="text-muted text-center py-5">
+            Sélectionnez un profil pour voir ses données
         </div>
     </div>
 </div>

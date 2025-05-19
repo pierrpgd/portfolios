@@ -1,8 +1,13 @@
-from django.test import TestCase, Client
+from django.test import TestCase, Client, LiveServerTestCase
 from django.contrib.auth.models import User
 from django.urls import reverse
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
+from .models import Profile, About, Experience, Project
 
 url_portfolio = 'http://localhost:8000/pierrpgd'
 
@@ -70,7 +75,7 @@ class NavBarTest(TestCase):
         self.assertEqual(links[2].get_attribute('href'), f'{url_portfolio}/#experience', "Navigation bar doesn't have an 'Experience' item.")
         self.assertEqual(links[3].get_attribute('href'), f'{url_portfolio}/#projects', "Navigation bar doesn't have an 'Projects' item.")
 
-class DataDisplayTest(TestCase):
+class DataDisplayTest(LiveServerTestCase):
     def setUp(self):
         # Vérifier si le superuser existe déjà
         if not User.objects.filter(username='testuser').exists():
@@ -84,11 +89,96 @@ class DataDisplayTest(TestCase):
         
         self.client = Client()
         self.client.login(username='testuser', password='testpassword')
-    
+        
+        # Créer un profil de test avec ses éléments liés
+        self.profile = Profile.objects.create(
+            name='Test Profile',
+            identifiant='test-profile'
+        )
+        
+        self.about = About.objects.create(
+            profile=self.profile,
+            content='Test About Content',
+            order=1
+        )
+        
+        self.experience = Experience.objects.create(
+            profile=self.profile,
+            dates='2023-2024',
+            company='Test Company',
+            location='Test Location',
+            position='Test Position',
+            description='Test Description',
+            order=1
+        )
+        
+        self.project = Project.objects.create(
+            profile=self.profile,
+            title='Test Project',
+            description='Test Project Description',
+            order=1
+        )
+
+        # # Configurer Selenium
+        # options = webdriver.ChromeOptions()
+        # options.add_argument('--headless')  # Mode sans interface graphique
+        # options.add_argument('--no-sandbox')
+        # options.add_argument('--disable-dev-shm-usage')
+        # self.selenium = webdriver.Chrome(options=options)
+        
+        # # Se connecter
+        # self.selenium.get(f'{self.live_server_url}/accounts/login/')
+        # username_input = self.selenium.find_element(By.NAME, 'username')
+        # password_input = self.selenium.find_element(By.NAME, 'password')
+        # username_input.send_keys('testuser')
+        # password_input.send_keys('12345')
+        # password_input.send_keys(Keys.RETURN)
+
+        options = webdriver.ChromeOptions()
+        options.add_argument('--headless')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        self.browser = webdriver.Chrome(options=options)
+        
+        # Attendre que la page soit chargée
+        # WebDriverWait(self.browser, 10).until(
+        #     EC.presence_of_element_located((By.ID, 'profile-data'))
+        # )
+
     def tearDown(self):
         # Supprimer le superuser à la fin des tests
         if hasattr(self, 'user'):
             self.user.delete()
+
+    def test_profile_selection_and_data_display(self):
+        """
+        Teste la sélection d'un profil et l'affichage des données liées avec Selenium
+        """
+        # Accéder à la page data_display
+        self.browser.get(f'{self.live_server_url}/data/')
+        
+        # Trouver la ligne du profil dans le tableau
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.name}')]/..")
+        
+        # Cliquer sur la ligne du profil
+        profile_row.click()
+        
+        # Attendre que les données soient chargées
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@id='profile-data']//h2[text()='À propos']"))
+        )
+
+        # Vérifier l'affichage des données About
+        about_content = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'about-table')]//td[contains(text(), 'Test About Content')]")
+        self.assertTrue(about_content.is_displayed())
+
+        # Vérifier l'affichage des données Experience
+        experience_company = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), 'Test Company')]")
+        self.assertTrue(experience_company.is_displayed())
+
+        # Vérifier l'affichage des données Project
+        project_title = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), 'Test Project')]")
+        self.assertTrue(project_title.is_displayed())
 
     def test_profile_add_button_exists(self):
         response = self.client.get(reverse('data_display'))

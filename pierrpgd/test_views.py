@@ -116,6 +116,7 @@ class PortfolioViewTest(TestCase):
 
 class DataDisplayViewTest(TestCase):
     def setUp(self):
+        """Configuration commune pour tous les tests"""
         # Vérifier si le superuser existe déjà
         if not User.objects.filter(username='testuser').exists():
             self.user = User.objects.create_superuser(
@@ -129,10 +130,10 @@ class DataDisplayViewTest(TestCase):
         self.client = Client()
         self.client.login(username='testuser', password='testpassword')
         
-        # Créer un profil de test
+        # Créer un profil de test avec ses éléments liés
         self.profile = Profile.objects.create(
             name='Test Profile',
-            identifiant='test-identifiant'
+            identifiant='test-profile'
         )
         
         # Créer une section About de test
@@ -178,23 +179,6 @@ class DataDisplayViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.profile.name)
 
-    def test_experience_display(self):
-        """Teste l'affichage des expériences"""
-        response = self.client.get(reverse('data_display'))
-        self.assertEqual(response.status_code, 200)
-        exp_text = response.content.decode('utf-8')
-        self.assertIn(self.experience.dates, exp_text)
-        self.assertIn(self.experience.company, exp_text)
-        self.assertIn(self.experience.description, exp_text)
-
-    def test_project_display(self):
-        """Teste l'affichage des projets"""
-        response = self.client.get(reverse('data_display'))
-        self.assertEqual(response.status_code, 200)
-        project_text = response.content.decode('utf-8')
-        self.assertIn(self.project.title, project_text)
-        self.assertIn(self.project.description, project_text)
-
     def test_profile_deletion(self):
         # Supprimer le profil et vérifier que les données associées sont supprimées
         Profile.objects.all().delete()
@@ -210,117 +194,365 @@ class DataDisplayViewTest(TestCase):
         self.assertContains(response, 'Aucune expérience trouvée')
         self.assertContains(response, 'Aucun projet trouvé')
 
-    def test_about_deletion(self):
-        # Supprimer toutes les sections About
-        about_id = self.about.id
-        About.objects.all().delete()
-        
+    def test_profile_selection_and_data_display(self):
+        """
+        Teste la sélection d'un profil et l'affichage des données liées
+        """
+        # Accéder à la page data_display
         response = self.client.get(reverse('data_display'))
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, self.about.content)
-        self.assertContains(response, 'Aucune section About trouvée')
-        self.assertFalse(About.objects.filter(id=about_id).exists())
-
-    def test_experience_deletion(self):
-        # Supprimer toutes les expériences
-        exp_id = self.experience.id
-        Experience.objects.all().delete()
         
-        response = self.client.get(reverse('data_display'))
+        # Simuler le clic sur la ligne du profil
+        response = self.client.get(reverse('load_profile_data') + f'?identifiant={self.profile.identifiant}')
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, self.experience.company)
-        self.assertNotContains(response, self.experience.position)
-        self.assertContains(response, 'Aucune expérience trouvée')
-        self.assertFalse(Experience.objects.filter(id=exp_id).exists())
-
-    def test_project_deletion(self):
-        # Supprimer toutes les projets
-        project_id = self.project.id
-        Project.objects.all().delete()
         
-        response = self.client.get(reverse('data_display'))
-        self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, self.project.title)
-        self.assertNotContains(response, self.project.description)
-        self.assertContains(response, 'Aucun projet trouvé')
-        self.assertFalse(Project.objects.filter(id=project_id).exists())
+        # Vérifier que les données sont correctement chargées
+        data = response.json()
+        self.assertIn('about', data)
+        self.assertIn('experience', data)
+        self.assertIn('projects', data)
+        
+        # Vérifier que les données correspondent
+        self.assertEqual(len(data['about']), 1)
+        self.assertEqual(data['about'][0]['content'], self.about.content)
+        
+        self.assertEqual(len(data['experience']), 1)
+        self.assertEqual(data['experience'][0]['company'], self.experience.company)
+        
+        self.assertEqual(len(data['projects']), 1)
+        self.assertEqual(data['projects'][0]['title'], self.project.title)
 
-    def test_about_ordering(self):
-        # Créer des objets avec différents ordres
-        profile2 = Profile.objects.create(
-            name='Test Profile 2',
-            identifiant='test-identifiant-2'
+class LoadDataViewTest(TestCase):
+    def setUp(self):
+        """Configuration commune pour tous les tests"""
+        # Vérifier si le superuser existe déjà
+        if not User.objects.filter(username='testuser').exists():
+            self.user = User.objects.create_superuser(
+                username='testuser',
+                email='test@example.com',
+                password='testpassword'
+            )
+        else:
+            self.user = User.objects.get(username='testuser')
+        
+        self.client = Client()
+        self.client.login(username='testuser', password='testpassword')
+        
+        # Créer un profil de test
+        self.profile = Profile.objects.create(
+            name='Test Profile',
+            identifiant='test-profile'
         )
-        About.objects.create(profile=profile2, content='About 2', order=0)
-        About.objects.create(profile=profile2, content='About 1', order=1)
-        
-        response = self.client.get(reverse('data_display'))
-        self.assertEqual(response.status_code, 200)
-        # Vérifier que les éléments sont ordonnés correctement
-        content = response.content.decode('utf-8')
-        about1_index = content.find('About 1')
-        about2_index = content.find('About 2')
-        self.assertTrue(about2_index < about1_index)  # About 2 devrait apparaître avant About 1
 
-    def test_experience_ordering(self):
-        # Créer des expériences avec différents ordres
-        profile2 = Profile.objects.create(
-            name='Test Profile 2',
-            identifiant='test-identifiant-2'
-        )
-        Experience.objects.create(
-            profile=profile2,
-            dates='2020-2023',
-            company='Company 1',
-            position='Position 1',
-            location='Location 1',
-            description='Description 1',
-            order=1
-        )
-        Experience.objects.create(
-            profile=profile2,
-            dates='2023-2025',
-            company='Company 2',
-            position='Position 2',
-            location='Location 2',
-            description='Description 2',
+    def tearDown(self):
+        # Supprimer le superuser à la fin des tests
+        if hasattr(self, 'user'):
+            self.user.delete()
+
+    def test_create_about(self):
+        """Teste la création d'une section About"""
+        # Données pour la création
+        about_data = {
+            'profile': self.profile,
+            'content': 'Nouvelle section About',
+            'order': 0
+        }
+        
+        # Créer une nouvelle section About
+        About.objects.create(**about_data)
+        
+        # Vérifier que l'objet a été créé
+        self.assertTrue(About.objects.filter(content='Nouvelle section About').exists())
+        
+        # Vérifier que la section apparaît dans l'interface
+        response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(response.status_code, 200)
+        
+        data = response.json()
+        self.assertIn('about', data)
+        self.assertEqual(len(data['about']), 1)
+        self.assertEqual(data['about'][0]['content'], 'Nouvelle section About')
+
+    def test_update_about(self):
+        """Teste la mise à jour d'une section About"""
+        # Créer une section About pour le test
+        about = About.objects.create(
+            profile=self.profile,
+            content='Contenu initial',
             order=0
         )
         
-        response = self.client.get(reverse('data_display'))
+        # Données pour la mise à jour
+        updated_data = {
+            'content': 'Contenu mis à jour',
+            'order': 1
+        }
+        
+        # Mettre à jour la section About en utilisant les méthodes natives
+        About.objects.filter(id=about.id).update(**updated_data)
+        
+        # Vérifier que les modifications ont été sauvegardées
+        about.refresh_from_db()
+        self.assertEqual(about.content, 'Contenu mis à jour')
+        self.assertEqual(about.order, 1)
+        
+        # Vérifier que les changements apparaissent dans l'interface via load_profile_data
+        response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
         self.assertEqual(response.status_code, 200)
-        # Vérifier que les expériences sont ordonnées correctement
-        content = response.content.decode('utf-8')
-        position1_index = content.find('Position 1')
-        position2_index = content.find('Position 2')
-        self.assertTrue(position2_index < position1_index)  # Expérience 2 devrait apparaître avant Expérience 1
+        
+        data = response.json()
+        self.assertIn('about', data)
+        self.assertEqual(len(data['about']), 1)
+        self.assertEqual(data['about'][0]['content'], 'Contenu mis à jour')
+        self.assertEqual(data['about'][0]['order'], 1)
 
-    def test_project_ordering(self):
-        # Créer des projets avec différents ordres
-        profile2 = Profile.objects.create(
-            name='Test Profile 2',
-            identifiant='test-identifiant-2'
-        )
-        Project.objects.create(
-            profile=profile2,
-            title='Project 1',
-            description='Description 1',
-            order=1
-        )
-        Project.objects.create(
-            profile=profile2,
-            title='Project 2',
-            description='Description 2',
+    def test_delete_about(self):
+        """Teste la suppression d'une section About"""
+        # Créer une section About pour le test
+        about = About.objects.create(
+            profile=self.profile,
+            content='Contenu à supprimer',
             order=0
         )
         
-        response = self.client.get(reverse('data_display'))
+        # Supprimer la section About
+        About.objects.filter(id=about.id).delete()
+        
+        # Vérifier que l'objet a été supprimé
+        self.assertFalse(About.objects.filter(id=about.id).exists())
+        
+        # Vérifier que la section ne s'affiche plus
+        response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
         self.assertEqual(response.status_code, 200)
-        # Vérifier que les projets sont ordonnés correctement
-        content = response.content.decode('utf-8')
-        project1_index = content.find('Project 1')
-        project2_index = content.find('Project 2')
-        self.assertTrue(project2_index < project1_index)  # Project 2 devrait apparaître avant Project 1
+        
+        data = response.json()
+        self.assertIn('about', data)
+        self.assertEqual(len(data['about']), 0)
+
+    def test_create_experience(self):
+        """Teste la création d'une expérience"""
+        # Données pour la création
+        experience_data = {
+            'profile': self.profile,
+            'dates': '2023-2024',
+            'company': 'Nouvelle entreprise',
+            'location': 'Nouveau lieu',
+            'position': 'Nouveau poste',
+            'description': 'Nouvelle description',
+            'order': 0
+        }
+        
+        # Créer une nouvelle expérience
+        Experience.objects.create(**experience_data)
+        
+        # Vérifier que l'objet a été créé
+        self.assertTrue(Experience.objects.filter(company='Nouvelle entreprise').exists())
+        
+        # Vérifier que l'expérience apparaît dans l'interface
+        response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(response.status_code, 200)
+        
+        data = response.json()
+        self.assertIn('experience', data)
+        self.assertEqual(len(data['experience']), 1)
+        self.assertEqual(data['experience'][0]['company'], 'Nouvelle entreprise')
+
+    def test_update_experience(self):
+        """Teste la mise à jour d'une expérience"""
+        # Créer une expérience pour le test
+        experience = Experience.objects.create(
+            profile=self.profile,
+            dates='2023-2024',
+            company='Entreprise initiale',
+            location='Lieu initial',
+            position='Poste initial',
+            description='Description initiale',
+            order=0
+        )
+        
+        # Données pour la mise à jour
+        updated_data = {
+            'dates': '2024-2025',
+            'company': 'Entreprise mise à jour',
+            'location': 'Lieu mis à jour',
+            'position': 'Poste mis à jour',
+            'description': 'Description mise à jour',
+            'order': 1
+        }
+        
+        # Mettre à jour l'expérience en utilisant les méthodes natives
+        Experience.objects.filter(id=experience.id).update(**updated_data)
+        
+        # Vérifier que les modifications ont été sauvegardées
+        experience.refresh_from_db()
+        self.assertEqual(experience.company, 'Entreprise mise à jour')
+        self.assertEqual(experience.order, 1)
+        
+        # Vérifier que les changements apparaissent dans l'interface via load_profile_data
+        response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(response.status_code, 200)
+        
+        data = response.json()
+        self.assertIn('experience', data)
+        self.assertEqual(len(data['experience']), 1)
+        self.assertEqual(data['experience'][0]['company'], 'Entreprise mise à jour')
+        self.assertEqual(data['experience'][0]['order'], 1)
+
+    def test_delete_experience(self):
+        """Teste la suppression d'une expérience"""
+        # Créer une expérience pour le test
+        experience = Experience.objects.create(
+            profile=self.profile,
+            dates='2023-2024',
+            company='Entreprise à supprimer',
+            location='Lieu à supprimer',
+            position='Poste à supprimer',
+            description='Description à supprimer',
+            order=0
+        )
+        
+        # Supprimer l'expérience
+        experience.delete()
+        
+        # Vérifier que l'objet a été supprimé
+        self.assertFalse(Experience.objects.filter(id=experience.id).exists())
+        
+        # Vérifier que l'expérience ne s'affiche plus
+        response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(response.status_code, 200)
+        
+        data = response.json()
+        self.assertIn('experience', data)
+        self.assertEqual(len(data['experience']), 0)
+
+    def test_create_project(self):
+        """Teste la création d'un projet"""
+        # Données pour la création
+        project_data = {
+            'profile': self.profile,
+            'title': 'Nouveau projet',
+            'description': 'Description du nouveau projet',
+            'order': 0
+        }
+        
+        # Créer un nouveau projet
+        Project.objects.create(**project_data)
+        
+        # Vérifier que l'objet a été créé
+        self.assertTrue(Project.objects.filter(title='Nouveau projet').exists())
+        
+        # Vérifier que le projet apparaît dans l'interface
+        response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(response.status_code, 200)
+        
+        data = response.json()
+        self.assertIn('projects', data)
+        self.assertEqual(len(data['projects']), 1)
+        self.assertEqual(data['projects'][0]['title'], 'Nouveau projet')
+
+    def test_update_project(self):
+        """Teste la mise à jour d'un projet"""
+        # Créer un projet pour le test
+        project = Project.objects.create(
+            profile=self.profile,
+            title='Titre initial',
+            description='Description initiale',
+            order=0
+        )
+        
+        # Données pour la mise à jour
+        updated_data = {
+            'title': 'Titre mis à jour',
+            'description': 'Description mise à jour',
+            'order': 1
+        }
+        
+        # Mettre à jour le projet en utilisant les méthodes natives
+        Project.objects.filter(id=project.id).update(**updated_data)
+        
+        # Vérifier que les modifications ont été sauvegardées
+        project.refresh_from_db()
+        self.assertEqual(project.title, 'Titre mis à jour')
+        self.assertEqual(project.order, 1)
+        
+        # Vérifier que les changements apparaissent dans l'interface via load_profile_data
+        response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(response.status_code, 200)
+        
+        # Vérifier que les données retournées correspondent aux changements
+        data = response.json()
+        self.assertIn('projects', data)
+        self.assertEqual(len(data['projects']), 1)
+        self.assertEqual(data['projects'][0]['title'], 'Titre mis à jour')
+        self.assertEqual(data['projects'][0]['order'], 1)
+
+    def test_delete_project(self):
+        """Teste la suppression d'un projet"""
+        # Créer un projet pour le test
+        project = Project.objects.create(
+            profile=self.profile,
+            title='Projet à supprimer',
+            description='Description à supprimer',
+            order=0
+        )
+        
+        # Supprimer le projet
+        project.delete()
+        
+        # Vérifier que l'objet a été supprimé
+        self.assertFalse(Project.objects.filter(id=project.id).exists())
+        
+        # Vérifier que le projet ne s'affiche plus
+        response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(response.status_code, 200)
+        
+        data = response.json()
+        self.assertIn('projects', data)
+        self.assertEqual(len(data['projects']), 0)
+
+    def test_ordering(self):
+        """Teste l'ordre des About, Projets et Expériences"""
+        # Créer des About avec différents ordres
+        about1 = About.objects.create(profile=self.profile, content='About 1', order=2)
+        about2 = About.objects.create(profile=self.profile, content='About 2', order=1)
+        about3 = About.objects.create(profile=self.profile, content='About 3', order=0)
+        
+        # Créer des Projets avec différents ordres
+        project1 = Project.objects.create(profile=self.profile, title='Project 1', order=2)
+        project2 = Project.objects.create(profile=self.profile, title='Project 2', order=1)
+        project3 = Project.objects.create(profile=self.profile, title='Project 3', order=0)
+        
+        # Créer des Expériences avec différents ordres
+        experience1 = Experience.objects.create(profile=self.profile, company='Experience 1', order=2, dates='2023')
+        experience2 = Experience.objects.create(profile=self.profile, company='Experience 2', order=1, dates='2024')
+        experience3 = Experience.objects.create(profile=self.profile, company='Experience 3', order=0, dates='2025')
+        
+        # Vérifier l'ordre via load_profile_data
+        response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(response.status_code, 200)
+        
+        data = response.json()
+        
+        # Vérifier l'ordre des About
+        abouts = data['about']
+        self.assertEqual(len(abouts), 3)
+        self.assertEqual(abouts[0]['content'], 'About 3')  # Order = 0
+        self.assertEqual(abouts[1]['content'], 'About 2')  # Order = 1
+        self.assertEqual(abouts[2]['content'], 'About 1')  # Order = 2
+        
+        # Vérifier l'ordre des Projets
+        projects = data['projects']
+        self.assertEqual(len(projects), 3)
+        self.assertEqual(projects[0]['title'], 'Project 3')  # Order = 0
+        self.assertEqual(projects[1]['title'], 'Project 2')  # Order = 1
+        self.assertEqual(projects[2]['title'], 'Project 1')  # Order = 2
+        
+        # Vérifier l'ordre des Expériences
+        experiences = data['experience']
+        self.assertEqual(len(experiences), 3)
+        self.assertEqual(experiences[0]['company'], 'Experience 3')  # Order = 0
+        self.assertEqual(experiences[1]['company'], 'Experience 2')  # Order = 1
+        self.assertEqual(experiences[2]['company'], 'Experience 1')  # Order = 2
 
 class AddProfileViewTest(TestCase):
     def setUp(self):
