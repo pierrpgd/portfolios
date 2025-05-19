@@ -150,7 +150,7 @@ class DataDisplayTest(LiveServerTestCase):
         if hasattr(self, 'user'):
             self.user.delete()
 
-    def test_profile_selection_and_data_display(self):
+    def test_profile_selection_toggle_and_data_display_or_hide(self):
         """
         Teste la sélection d'un profil et l'affichage des données liées avec Selenium
         """
@@ -179,6 +179,24 @@ class DataDisplayTest(LiveServerTestCase):
         # Vérifier l'affichage des données Project
         project_title = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), 'Test Project')]")
         self.assertTrue(project_title.is_displayed())
+
+        # Cliquer à nouveau sur la ligne du profil pour le désélectionner
+        profile_row.click()
+        
+        # Attendre que les données soient masquées
+        WebDriverWait(self.browser, 10).until(
+            EC.invisibility_of_element_located((By.XPATH, "//div[@id='profile-data']//h2[text()='À propos']"))
+        )
+        
+        # Vérifier que les données sont masquées
+        about_content = self.browser.find_elements(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'about-table')]//td[contains(text(), 'Test About Content')]")
+        self.assertEqual(len(about_content), 0)
+        
+        experience_company = self.browser.find_elements(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), 'Test Company')]")
+        self.assertEqual(len(experience_company), 0)
+        
+        project_title = self.browser.find_elements(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), 'Test Project')]")
+        self.assertEqual(len(project_title), 0)
 
     def test_profile_add_button_exists(self):
         response = self.client.get(reverse('data_display'))

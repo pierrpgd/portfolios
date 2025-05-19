@@ -24,9 +24,24 @@
 {% block extra_js %}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Variable pour suivre le profil actuellement sélectionné
+            let selectedProfile = null;
+
             // Sélection/désélection d'une ligne au clic
             document.querySelectorAll('.table tbody tr').forEach(row => {
                 row.addEventListener('click', function() {
+                    const profileIdentifiant = this.querySelector('td:first-child').textContent;
+                    
+                    // Si c'est le même profil qui est cliqué, on désélectionne
+                    if (selectedProfile === profileIdentifiant) {
+                        // Désélectionner la ligne
+                        this.classList.remove('table-active');
+                        // Effacer les données affichées
+                        document.querySelector('#profile-data').innerHTML = '';
+                        selectedProfile = null;
+                        return;
+                    }
+
                     // Désélectionner toutes les lignes
                     document.querySelectorAll('.table tbody tr').forEach(row => {
                         row.classList.remove('table-active');
@@ -34,8 +49,10 @@
                     // Sélectionner la ligne cliquée
                     this.classList.add('table-active');
                     
+                    // Mettre à jour le profil sélectionné
+                    selectedProfile = profileIdentifiant;
+                    
                     // Charger les données du profil sélectionné
-                    const profileIdentifiant = this.querySelector('td:first-child').textContent;
                     fetch(`/load_profile_data/?identifiant=${profileIdentifiant}`)
                         .then(response => response.json())
                         .then(data => {
