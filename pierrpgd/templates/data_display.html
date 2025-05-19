@@ -18,6 +18,140 @@
         .hoverable-row:hover {
             cursor: default;
         }
+        
+        /* Style pour la popup About */
+        #aboutModal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            width: 80%;
+            max-width: none;
+            font-size: 1.2em;
+            line-height: 1.6;
+        }
+        #aboutModalContent {
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+        #aboutModal button.close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6c757d;
+            transition: color 0.2s;
+        }
+        #aboutModal button.close:hover {
+            color: #343a40;
+        }
+        
+        /* Fond gris transparent */
+        #aboutModalBackdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        
+        /* Style pour les modals Experience et Projects */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            width: 80%;
+            max-width: none;
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin: 0;
+            height: fit-content;
+        }
+        .modal-content {
+            padding: 20px;
+            border-radius: 5px;
+            background: #f8f9fa;
+            min-height: 60px;
+            margin: 0;
+            border: 1px solid #e0e0e0;
+        }
+        .modal-content-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .modal-content-text {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #666;
+            padding: 15px;
+            background: white;
+            border-radius: 3px;
+            border: 1px solid #e0e0e0;
+        }
+        .modal-content-info {
+            margin-bottom: 15px;
+            color: #666;
+        }
+        .modal-content-info span {
+            font-weight: bold;
+            color: #333;
+        }
+        .modal button.close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6c757d;
+            transition: color 0.2s;
+            margin: 0;
+        }
+        .modal button.close:hover {
+            color: #343a40;
+        }
+        .modal-header {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        /* Style pour les modals Experience et Projects */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
     </style>
 {% endblock %}
 
@@ -80,7 +214,7 @@
                                                 </thead>
                                                 <tbody>
                                                     ${data.about.map(about => `
-                                                        <tr>
+                                                        <tr class="about-row" data-content="${about.content}">
                                                             <td>${about.order}</td>
                                                             <td>${about.content}</td>
                                                         </tr>
@@ -112,7 +246,7 @@
                                                 </thead>
                                                 <tbody>
                                                     ${data.experience.map(exp => `
-                                                        <tr>
+                                                        <tr class="experience-row" data-content="${exp.description}" data-dates="${exp.dates}" data-company="${exp.company}" data-location="${exp.location}">
                                                             <td>${exp.order}</td>
                                                             <td>${exp.dates}</td>
                                                             <td>${exp.position}</td>
@@ -145,7 +279,7 @@
                                                 </thead>
                                                 <tbody>
                                                     ${data.projects.map(project => `
-                                                        <tr>
+                                                        <tr class="project-row" data-title="${project.title}" data-content="${project.description}">
                                                             <td>${project.order}</td>
                                                             <td>${project.title}</td>
                                                             <td>${project.description}</td>
@@ -162,6 +296,27 @@
 
                             // Mettre à jour le DOM
                             document.querySelector('#profile-data').innerHTML = html;
+
+                            // Ajouter les gestionnaires d'événements pour les lignes About
+                            document.querySelectorAll('.about-row').forEach(row => {
+                                row.addEventListener('dblclick', function() {
+                                    showPopup(row, 'aboutModal', 'aboutModalContent');
+                                });
+                            });
+
+                            // Ajouter les gestionnaires d'événements pour les lignes Experience
+                            document.querySelectorAll('.experience-row').forEach(row => {
+                                row.addEventListener('dblclick', function() {
+                                    showPopup(row, 'experienceModal', 'experienceModalContent');
+                                });
+                            });
+
+                            // Ajouter les gestionnaires d'événements pour les lignes Projects
+                            document.querySelectorAll('.project-row').forEach(row => {
+                                row.addEventListener('dblclick', function() {
+                                    showPopup(row, 'projectModal', 'projectModalContent');
+                                });
+                            });
                         })
                         .catch(error => {
                             console.error('Erreur:', error);
@@ -172,56 +327,122 @@
                 });
             });
         });
+
+        // Fonction pour afficher une popup générique
+        function showPopup(row, modalId, contentId) {
+            const content = row.getAttribute('data-content');
+            const dates = row.getAttribute('data-dates');
+            const company = row.getAttribute('data-company');
+            const location = row.getAttribute('data-location');
+            const projectTitle = row.getAttribute('data-title');
+            const title = modalId === 'aboutModal' ? 'À propos' : 
+                         modalId === 'experienceModal' ? 'Expérience' : 
+                         'Projet';
+            
+            // Créer la popup si elle n'existe pas déjà
+            let modal = document.getElementById(modalId);
+            let backdrop = document.getElementById('modalBackdrop');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = modalId;
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-header">
+                        <button class="close">&times;</button>
+                    </div>
+                    <div class="modal-content">
+                        <div class="modal-content-title">${title}</div>
+                        ${modalId === 'experienceModal' ? `
+                            <div class="modal-content-info">
+                                <span>Période :</span> ${dates}<br>
+                                <span>Entreprise :</span> ${company}<br>
+                                <span>Localisation :</span> ${location}
+                            </div>
+                        ` : modalId === 'projectModal' ? `
+                            <div class="modal-content-info">
+                                <span>Titre :</span> ${projectTitle}<br>
+                            </div>
+                        ` : ''}
+                        <div class="modal-content-text" id="${contentId}">${content}</div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+            if (!backdrop) {
+                backdrop = document.createElement('div');
+                backdrop.id = 'modalBackdrop';
+                backdrop.className = 'modal-backdrop';
+                document.body.appendChild(backdrop);
+            }
+            
+            // Afficher la popup et le fond
+            modal.style.display = 'block';
+            backdrop.style.display = 'block';
+            
+            // Ajouter l'événement de fermeture
+            document.querySelector(`#${modalId} button.close`).onclick = function() {
+                modal.style.display = 'none';
+                backdrop.style.display = 'none';
+            };
+            
+            // Fermer la popup en cliquant en dehors
+            window.onclick = function(event) {
+                if (event.target == backdrop || event.target == modal) {
+                    modal.style.display = 'none';
+                    backdrop.style.display = 'none';
+                }
+            };
+        }
     </script>
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1>Données de la Base de Données</h1>
+    <div class="container" style="background-color: white;">
+        <h1>Données de la Base de Données</h1>
 
-    <div class="card mb-4">
-        <div class="card-header d-flex align-items-center">
-            <h2>Profils</h2>
-            <div class="ms-auto">
-                <a href="{% url 'add_profile' %}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Ajouter un profil
-                </a>
+        <div class="card mb-4">
+            <div class="card-header d-flex align-items-center">
+                <h2>Profils</h2>
+                <div class="ms-auto">
+                    <a href="{% url 'add_profile' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Ajouter un profil
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if profiles %}
+                    <table id="profile-table" class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Identifiant</th>
+                                <th>Nom</th>
+                                <th>Créé le</th>
+                                <th>Mis à jour le</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for profile in profiles %}
+                                <tr>
+                                    <td>{{ profile.identifiant }}</td>
+                                    <td>{{ profile.name }}</td>
+                                    <td>{{ profile.created_at|date:"F j, Y, g:i a" }}</td>
+                                    <td>{{ profile.updated_at|date:"F j, Y, g:i a" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="text-muted">Aucun profil trouvé</p>
+                {% endif %}
             </div>
         </div>
-        <div class="card-body">
-            {% if profiles %}
-                <table id="profile-table" class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Identifiant</th>
-                            <th>Nom</th>
-                            <th>Créé le</th>
-                            <th>Mis à jour le</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for profile in profiles %}
-                            <tr>
-                                <td>{{ profile.identifiant }}</td>
-                                <td>{{ profile.name }}</td>
-                                <td>{{ profile.created_at|date:"F j, Y, g:i a" }}</td>
-                                <td>{{ profile.updated_at|date:"F j, Y, g:i a" }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <p class="text-muted">Aucun profil trouvé</p>
-            {% endif %}
-        </div>
-    </div>
 
-    <!-- Conteneur pour les données du profil sélectionné -->
-    <div id="profile-data">
-        <!-- Les données seront chargées ici via AJAX -->
-        <div class="text-muted text-center py-5">
-            Sélectionnez un profil pour voir ses données
+        <!-- Conteneur pour les données du profil sélectionné -->
+        <div id="profile-data">
+            <!-- Les données seront chargées ici via AJAX -->
+            <div class="text-muted text-center py-5">
+                Sélectionnez un profil pour voir ses données
+            </div>
         </div>
     </div>
-</div>
 {% endblock %}

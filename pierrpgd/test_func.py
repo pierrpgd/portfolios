@@ -5,8 +5,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import NoSuchElementException
 from .models import Profile, About, Experience, Project
 
 url_portfolio = 'http://localhost:8000/pierrpgd'
@@ -119,32 +119,12 @@ class DataDisplayTest(LiveServerTestCase):
             order=1
         )
 
-        # # Configurer Selenium
-        # options = webdriver.ChromeOptions()
-        # options.add_argument('--headless')  # Mode sans interface graphique
-        # options.add_argument('--no-sandbox')
-        # options.add_argument('--disable-dev-shm-usage')
-        # self.selenium = webdriver.Chrome(options=options)
-        
-        # # Se connecter
-        # self.selenium.get(f'{self.live_server_url}/accounts/login/')
-        # username_input = self.selenium.find_element(By.NAME, 'username')
-        # password_input = self.selenium.find_element(By.NAME, 'password')
-        # username_input.send_keys('testuser')
-        # password_input.send_keys('12345')
-        # password_input.send_keys(Keys.RETURN)
-
         options = webdriver.ChromeOptions()
         options.add_argument('--headless')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         self.browser = webdriver.Chrome(options=options)
         
-        # Attendre que la page soit chargée
-        # WebDriverWait(self.browser, 10).until(
-        #     EC.presence_of_element_located((By.ID, 'profile-data'))
-        # )
-
     def tearDown(self):
         # Supprimer le superuser à la fin des tests
         if hasattr(self, 'user'):
@@ -216,3 +196,162 @@ class DataDisplayTest(LiveServerTestCase):
         profiles_section = content[profiles_section_start:profiles_section_end]
         
         self.assertIn('Ajouter un profil', profiles_section)
+
+    def test_double_click_about(self):
+        """Teste le comportement du double clic sur une ligne du tableau À propos"""
+        
+        # Accéder à la page data_display
+        self.browser.get(f'{self.live_server_url}/data/')
+        
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        profile_row.click()
+        
+        # Attendre que les données soient chargées
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@id='profile-data']//h2[text()='À propos']"))
+        )
+        
+        # Trouver la ligne du tableau À propos
+        about_row = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'about-table')]//td[contains(text(), 'Test About Content')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(about_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'aboutModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        try:
+            modal = self.browser.find_element(By.ID, 'aboutModal')
+            self.assertTrue(modal.is_displayed())
+            
+            # Vérifier que le contenu de la popup est correct
+            modal_content = self.browser.find_element(By.ID, 'aboutModalContent')
+            self.assertIn('Test About Content', modal_content.text)
+            
+            # Fermer la popup
+            close_button = self.browser.find_element(By.CSS_SELECTOR, '#aboutModal button.close')
+            close_button.click()
+            
+            # Attendre que la popup soit masquée
+            WebDriverWait(self.browser, 10).until(
+                EC.invisibility_of_element_located((By.ID, 'aboutModal'))
+            )
+            
+            # Vérifier que la popup est masquée (display: none)
+            modal = self.browser.find_element(By.ID, 'aboutModal')
+            display_style = modal.value_of_css_property('display')
+            self.assertEqual(display_style, 'none')
+            
+        except NoSuchElementException:
+            self.fail("La popup n'a pas été trouvée")
+
+    def test_double_click_experience(self):
+        """Teste le comportement du double clic sur une ligne du tableau Expériences"""
+        
+        # Accéder à la page data_display
+        self.browser.get(f'{self.live_server_url}/data/')
+        
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        profile_row.click()
+        
+        # Attendre que les données soient chargées
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@id='profile-data']//h2[text()='Expériences']"))
+        )
+        
+        # Trouver la ligne du tableau Expériences
+        experience_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), '{self.experience.description}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(experience_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'experienceModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'experienceModal')
+        self.assertTrue(modal.is_displayed())
+        
+        # Vérifier le contenu de la popup
+        modal_content = self.browser.find_element(By.ID, 'experienceModalContent')
+        self.assertIn(self.experience.description, modal_content.text)
+        
+        # Vérifier les informations de l'expérience
+        info = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-content-info')
+        self.assertIn(self.experience.dates, info.text)
+        self.assertIn(self.experience.company, info.text)
+        self.assertIn(self.experience.location, info.text)
+        
+        # Fermer la popup
+        close_button = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal button.close')
+        close_button.click()
+        
+        # Attendre que la popup soit masquée
+        WebDriverWait(self.browser, 10).until(
+            EC.invisibility_of_element_located((By.ID, 'experienceModal'))
+        )
+        
+        # Vérifier que la popup est masquée
+        display_style = modal.value_of_css_property('display')
+        self.assertEqual(display_style, 'none')
+
+    def test_double_click_project(self):
+        """Teste le comportement du double clic sur une ligne du tableau Projets"""
+        
+        # Accéder à la page data_display
+        self.browser.get(f'{self.live_server_url}/data/')
+        
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        profile_row.click()
+        
+        # Attendre que les données soient chargées
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@id='profile-data']//h2[text()='Projets']"))
+        )
+        
+        # Trouver la ligne du tableau Projets
+        project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.project.title}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(project_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'projectModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'projectModal')
+        self.assertTrue(modal.is_displayed())
+        
+        # Vérifier le contenu de la popup
+        modal_content = self.browser.find_element(By.ID, 'projectModalContent')
+        self.assertIn(self.project.description, modal_content.text)
+        
+        # Vérifier le titre du projet
+        title = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-content-info')
+        self.assertIn(self.project.title, title.text)
+        
+        # Fermer la popup
+        close_button = self.browser.find_element(By.CSS_SELECTOR, '#projectModal button.close')
+        close_button.click()
+        
+        # Attendre que la popup soit masquée
+        WebDriverWait(self.browser, 10).until(
+            EC.invisibility_of_element_located((By.ID, 'projectModal'))
+        )
+        
+        # Vérifier que la popup est masquée
+        display_style = modal.value_of_css_property('display')
+        self.assertEqual(display_style, 'none')
