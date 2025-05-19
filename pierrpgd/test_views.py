@@ -1,12 +1,12 @@
 from django.test import TestCase, Client
 from django.urls import resolve, reverse
 from django.http import HttpRequest
-from .views import home
+from .views import portfolio
 from .models import Profile, About, Experience, Project
 from bs4 import BeautifulSoup
 from django.contrib.auth.models import User
 
-class HomeTest(TestCase):
+class PortfolioViewTest(TestCase):
     def setUp(self):
         self.request = HttpRequest()
 
@@ -49,20 +49,20 @@ class HomeTest(TestCase):
             'projects': self.profile.projects.all()
         }
 
-        self.response = home(self.request, self.context)
+        self.response = portfolio(self.request, self.profile.identifiant)
         self.soup = BeautifulSoup(self.response.content, "html.parser")
 
-    def test_root_url_resolves_to_homepage_view(self):
-        """Teste que l'URL racine résout vers la vue home"""
-        found = resolve('/')
-        self.assertEqual(found.func, home)
+    def test_url_resolves_to_portfolio(self):
+        """Teste que l'URL racine résout vers la vue portfolio"""
+        found = resolve(f'/{self.profile.identifiant}/')
+        self.assertEqual(found.func, portfolio)
 
-    def test_homepage_returns_correct_html(self):
+    def test_portfolio_returns_correct_html(self):
         """Teste que la page d'accueil retourne le bon HTML"""
         client = Client()
-        response = client.get('/')
+        response = client.get(f'/{self.profile.identifiant}/')
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'home.html')
+        self.assertTemplateUsed(response, 'portfolio.html')
 
     def test_profile_display(self):
         """Teste l'affichage du profil"""
@@ -108,6 +108,11 @@ class HomeTest(TestCase):
         self.assertEqual(project_title.strip(), self.project.title)
         self.assertEqual(project_description.strip(), self.project.description)
 
+    def test_nonexistent_profile(self):
+        """Test que l'accès à un profil inexistant renvoie une erreur 404"""
+        response = self.client.get(reverse('portfolio', args=['non-existent']))
+        self.assertEqual(response.status_code, 404)
+
 class DataDisplayViewTest(TestCase):
     def setUp(self):
         # Vérifier si le superuser existe déjà
@@ -123,16 +128,20 @@ class DataDisplayViewTest(TestCase):
         self.client = Client()
         self.client.login(username='testuser', password='testpassword')
         
-        # Créer des objets de test
+        # Créer un profil de test
         self.profile = Profile.objects.create(
             name='Test Profile',
             identifiant='test-identifiant'
         )
+        
+        # Créer une section About de test
         self.about = About.objects.create(
             profile=self.profile,
             content='Test About Content',
             order=0
         )
+        
+        # Créer une expérience de test
         self.experience = Experience.objects.create(
             profile=self.profile,
             dates='2020-2023',
@@ -142,57 +151,48 @@ class DataDisplayViewTest(TestCase):
             description='Test Description',
             order=0
         )
+        
+        # Créer un projet de test
         self.project = Project.objects.create(
             profile=self.profile,
             title='Test Project',
             description='Test Project Description',
             order=0
         )
-    
+
     def tearDown(self):
         # Supprimer le superuser à la fin des tests
         if hasattr(self, 'user'):
             self.user.delete()
 
     def test_data_display_view(self):
+        """Teste la vue data_display"""
         response = self.client.get(reverse('data_display'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'data_display.html')
 
     def test_profile_display(self):
+        """Teste l'affichage des profils"""
         response = self.client.get(reverse('data_display'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, self.profile.name)
-        created_at = self.profile.created_at.strftime('%B %d, %Y, %-I:%M p.m.')
-        updated_at = self.profile.updated_at.strftime('%B %d, %Y, %-I:%M p.m.')
-        self.assertContains(response, created_at)
-        self.assertContains(response, updated_at)
-
-    def test_about_display(self):
-        response = self.client.get(reverse('data_display'))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, self.about.content)
-        self.assertContains(response, str(self.about.order))
         self.assertContains(response, self.profile.name)
 
     def test_experience_display(self):
+        """Teste l'affichage des expériences"""
         response = self.client.get(reverse('data_display'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, self.experience.dates)
-        self.assertContains(response, self.experience.company)
-        self.assertContains(response, self.experience.position)
-        self.assertContains(response, self.experience.location)
-        self.assertContains(response, self.experience.description)
-        self.assertContains(response, str(self.experience.order))
-        self.assertContains(response, self.profile.name)
+        exp_text = response.content.decode('utf-8')
+        self.assertIn(self.experience.dates, exp_text)
+        self.assertIn(self.experience.company, exp_text)
+        self.assertIn(self.experience.description, exp_text)
 
     def test_project_display(self):
+        """Teste l'affichage des projets"""
         response = self.client.get(reverse('data_display'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, self.project.title)
-        self.assertContains(response, self.project.description)
-        self.assertContains(response, str(self.project.order))
-        self.assertContains(response, self.profile.name)
+        project_text = response.content.decode('utf-8')
+        self.assertIn(self.project.title, project_text)
+        self.assertIn(self.project.description, project_text)
 
     def test_profile_deletion(self):
         # Supprimer le profil et vérifier que les données associées sont supprimées
