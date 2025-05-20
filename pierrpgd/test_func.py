@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException
 from .models import Profile, About, Experience, Project
+from selenium.webdriver.common.keys import Keys
 
 class BaseTest(LiveServerTestCase):
     fixtures = ['test_fixtures.json']
@@ -304,3 +305,46 @@ class DataDisplayTest(BaseTest):
         # Vérifier que la popup est masquée
         display_style = modal.value_of_css_property('display')
         self.assertEqual(display_style, 'none')
+
+    def test_content_is_editable(self):
+        """Teste que le contenu de la popup est modifiable par l'utilisateur"""
+
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        profile_row.click()
+        
+        # Attendre que les données soient chargées
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@id='profile-data']//h2[text()='Projets']"))
+        )
+    
+        # Trouver la ligne du tableau Projets
+        project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.project.title}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(project_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'projectModal'))
+        )
+        
+        # Vérifier que les champs sont éditables
+        editable_fields = self.browser.find_elements(By.CSS_SELECTOR, ".editable-field")
+        self.assertGreater(len(editable_fields), 0, "Aucun champ éditable trouvé")
+        
+        # Modifier un champ
+        first_field = editable_fields[0]
+        new_value = "Nouvelle valeur de test"
+        
+        # Effacer et entrer la nouvelle valeur
+        first_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_value).perform()
+
+        # Vérifier que la modification a été sauvegardée
+        updated_value = first_field.text
+        self.assertEqual(updated_value, f"Titre : {new_value}", "La modification n'a pas été sauvegardée")
+

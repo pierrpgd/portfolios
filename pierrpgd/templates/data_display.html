@@ -114,12 +114,13 @@
             border: 1px solid #e0e0e0;
         }
         .modal-content-info {
-            margin-bottom: 15px;
             color: #666;
         }
         .modal-content-info span {
-            font-weight: bold;
             color: #333;
+        }
+        .modal-content-info-title {
+            font-weight: bold;
         }
         .modal button.close {
             position: absolute;
@@ -151,6 +152,25 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
             z-index: 999;
+        }
+
+        .editable-field {
+            margin-bottom: 20px;
+        }
+
+        .editable-content {
+            cursor: text;
+            padding: 10px;
+            border: 2px solid #e0e0e0;  /* Bordure grise claire */
+            transition: border-color 0.2s;
+            border-radius: 4px;  /* Coins légèrement arrondis */
+            background-color: #fff;
+        }
+
+        .editable-content:focus {
+            outline: none;
+            border-color: #80bdff;  /* Bleu plus foncé au focus */
+            background-color: #fff;
         }
     </style>
 {% endblock %}
@@ -354,16 +374,26 @@
                         <div class="modal-content-title">${title}</div>
                         ${modalId === 'experienceModal' ? `
                             <div class="modal-content-info">
-                                <span>Période :</span> ${dates}<br>
-                                <span>Entreprise :</span> ${company}<br>
-                                <span>Localisation :</span> ${location}
+                                <div class="editable-field">
+                                    <span class="modal-content-info-title">Période :</span> <span contenteditable="true" class="editable-content" data-field="dates">${dates}</span>
+                                </div>
+                                <div class="editable-field">
+                                    <span class="modal-content-info-title">Entreprise :</span> <span contenteditable="true" class="editable-content" data-field="company">${company}</span>
+                                </div>
+                                <div class="editable-field">
+                                    <span class="modal-content-info-title">Localisation :</span> <span contenteditable="true" class="editable-content" data-field="location">${location}</span>
+                                </div>
                             </div>
+                            <span class="modal-content-info-title">Description :</span>
                         ` : modalId === 'projectModal' ? `
                             <div class="modal-content-info">
-                                <span>Titre :</span> ${projectTitle}<br>
+                                <div class="editable-field">
+                                    <span class="modal-content-info-title">Titre :</span> <span contenteditable="true" class="editable-content" data-field="title">${projectTitle}</span>
+                                </div>
                             </div>
-                        ` : ''}
-                        <div class="modal-content-text" id="${contentId}">${content}</div>
+                            <span class="modal-content-info-title">Description :</span>
+                        ` : `<span class="modal-content-info-title">Contenu :</span>`}
+                        <div contenteditable="true" class="editable-content" data-field="content">${content}</div>
                     </div>
                 `;
                 document.body.appendChild(modal);
@@ -392,6 +422,103 @@
                     backdrop.style.display = 'none';
                 }
             };
+        }
+
+        function editContent(event) {
+            const modal = event.target.closest('.modal');
+            const infoFields = modal.querySelectorAll('.modal-content-info .editable-content');
+            const textFields = modal.querySelectorAll('.modal-content-text .editable-content');
+            
+            // Cacher les boutons d'édition et montrer les boutons de sauvegarde
+            modal.querySelector('.edit-button').style.display = 'none';
+            modal.querySelector('.save-button').style.display = 'inline';
+            modal.querySelector('.cancel-button').style.display = 'inline';
+            
+            // Transformer les éléments en inputs
+            infoFields.forEach(field => {
+                const originalContent = field.textContent;
+                field.innerHTML = `
+                    <input type="text" value="${originalContent}" 
+                        class="form-control" 
+                        data-original="${originalContent}">
+                `;
+            });
+            
+            textFields.forEach(field => {
+                const originalContent = field.textContent;
+                field.innerHTML = `
+                    <textarea class="form-control" 
+                            rows="4"
+                            data-original="${originalContent}">${originalContent}</textarea>
+                `;
+            });
+        }
+
+        function saveContent(event) {
+            const modal = event.target.closest('.modal');
+            const infoFields = modal.querySelectorAll('.modal-content-info .editable-content');
+            const textFields = modal.querySelectorAll('.modal-content-text .editable-content');
+            
+            // Récupérer les nouvelles valeurs
+            const data = {
+                dates: infoFields[0].querySelector('input').value,
+                company: infoFields[1].querySelector('input').value,
+                location: infoFields[2].querySelector('input').value,
+                content: textFields[0].querySelector('textarea').value
+            };
+            
+            // Sauvegarder les modifications via AJAX
+            fetch('/save_content/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    // Mettre à jour l'interface
+                    infoFields.forEach(field => {
+                        const input = field.querySelector('input');
+                        field.textContent = input.value;
+                    });
+                    textFields.forEach(field => {
+                        const textarea = field.querySelector('textarea');
+                        field.textContent = textarea.value;
+                    });
+                    
+                    // Réinitialiser les boutons
+                    modal.querySelector('.edit-button').style.display = 'inline';
+                    modal.querySelector('.save-button').style.display = 'none';
+                    modal.querySelector('.cancel-button').style.display = 'none';
+                } else {
+                    alert('Erreur lors de la sauvegarde');
+                }
+            });
+        }
+
+        function cancelEdit(event) {
+            const modal = event.target.closest('.modal');
+            const infoFields = modal.querySelectorAll('.modal-content-info .editable-content');
+            const textFields = modal.querySelectorAll('.modal-content-text .editable-content');
+            
+            // Restaurer les valeurs originales
+            infoFields.forEach(field => {
+                const originalContent = field.querySelector('input').dataset.original;
+                field.textContent = originalContent;
+            });
+            
+            textFields.forEach(field => {
+                const originalContent = field.querySelector('textarea').dataset.original;
+                field.textContent = originalContent;
+            });
+            
+            // Réinitialiser les boutons
+            modal.querySelector('.edit-button').style.display = 'inline';
+            modal.querySelector('.save-button').style.display = 'none';
+            modal.querySelector('.cancel-button').style.display = 'none';
         }
     </script>
 {% endblock %}
