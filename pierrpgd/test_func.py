@@ -5,7 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from .models import Profile, About, Experience, Project
 from selenium.webdriver.common.keys import Keys
 
@@ -463,3 +463,174 @@ class DataDisplayTest(BaseTest):
         # Vérifier que la modification a été sauvegardée
         updated_value = first_field.text
         self.assertEqual(updated_value, f"Titre : {new_value}", "La modification n'a pas été sauvegardée")
+
+    def test_modify_and_save_about(self):
+        """Teste la modification et la sauvegarde d'un élément À propos"""
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        profile_row.click()
+        
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.ID, "about-table"))
+        )
+        
+        # Trouver la ligne du tableau À propos
+        about_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'about-table')]//td[contains(text(), '{self.abouts[0].content}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(about_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'aboutModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'aboutModal')
+        self.assertTrue(modal.is_displayed())
+        
+        # Modifier le contenu
+        editable_content = modal.find_element(By.CSS_SELECTOR, '.editable-content')
+        new_content = "Nouveau contenu de test"
+        
+        # Effacer le contenu existant
+        editable_content.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content).perform()
+        
+        # Enregistrer et vérifier
+        save_button = modal.find_element(By.CSS_SELECTOR, '.btn-primary')
+        save_button.click()
+        
+        # Vérifier que la modal commence à se fermer
+        WebDriverWait(self.browser, 10).until(
+            EC.invisibility_of_element_located((By.ID, 'aboutModal'))
+        )
+        
+        # Vérifier côté serveur que la modification est enregistrée
+        about_obj = About.objects.get(id=self.abouts[0].id)
+        self.assertEqual(about_obj.content, new_content)
+        
+        # Vérifier que le tableau est mis à jour
+        updated_row = WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, 
+                f"//div[@id='profile-data']//table[@id='about-table']//td[contains(., '{new_content}')]"))
+        )
+        self.assertTrue(updated_row.is_displayed())
+
+    def test_modify_and_save_experience(self):
+        """Teste la modification et la sauvegarde d'un élément Experience"""
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        profile_row.click()
+        
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.ID, "experience-table"))
+        )
+        
+        # Trouver la ligne du tableau Experience
+        experience_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), '{self.experiences[0].company}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(experience_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'experienceModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'experienceModal')
+        self.assertTrue(modal.is_displayed())
+        
+        # Modifier le contenu
+        dates_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="dates"]')
+        new_content = "Nouveau contenu de test"
+        
+        # Effacer le contenu existant
+        dates_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content).perform()
+        
+        # Enregistrer et vérifier
+        save_button = modal.find_element(By.CSS_SELECTOR, '.btn-primary')
+        save_button.click()
+        
+        # Vérifier que la modal commence à se fermer
+        WebDriverWait(self.browser, 10).until(
+            EC.invisibility_of_element_located((By.ID, 'experienceModal'))
+        )
+        
+        # Vérifier côté serveur que la modification est enregistrée
+        experience_obj = Experience.objects.get(id=self.experiences[0].id)
+        self.assertEqual(experience_obj.dates, new_content)
+        
+        # Vérifier que le tableau est mis à jour
+        updated_row = WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, 
+                f"//div[@id='profile-data']//table[@id='experience-table']//td[contains(., '{new_content}')]"))
+        )
+        self.assertTrue(updated_row.is_displayed())
+
+    def test_modify_and_save_project(self):
+        """Teste la modification et la sauvegarde d'un élément Project"""
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        profile_row.click()
+        
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.ID, "projects-table"))
+        )
+        
+        # Trouver la ligne du tableau Projects
+        project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.projects[0].title}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(project_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'projectModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'projectModal')
+        self.assertTrue(modal.is_displayed())
+        
+        # Modifier le titre
+        title_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="title"]')
+        new_content = "Nouveau contenu de test"
+        
+        # Effacer le contenu existant
+        title_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content).perform()
+        
+        # Enregistrer et vérifier
+        save_button = modal.find_element(By.CSS_SELECTOR, '.btn-primary')
+        save_button.click()
+        
+        # Vérifier que la modal commence à se fermer
+        WebDriverWait(self.browser, 10).until(
+            EC.invisibility_of_element_located((By.ID, 'projectModal'))
+        )
+        
+        # Vérifier côté serveur que la modification est enregistrée
+        project_obj = Project.objects.get(id=self.projects[0].id)
+        self.assertEqual(project_obj.title, new_content)
+        
+        # Vérifier que le tableau est mis à jour
+        updated_row = WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, 
+                f"//div[@id='profile-data']//table[@id='projects-table']//td[contains(., '{new_content}')]"))
+        )
+        self.assertTrue(updated_row.is_displayed())

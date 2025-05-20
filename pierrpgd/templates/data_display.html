@@ -177,10 +177,22 @@
 
 {% block extra_js %}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Variable pour suivre le profil actuellement sélectionné
-            let selectedProfile = null;
+        // Fonction utilitaire pour récupérer le jeton CSRF
+        function getCsrfToken() {
+            // Essayer de récupérer le token depuis les cookies
+            const cookieValue = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1];
+                
+            // Si non trouvé dans les cookies, essayer depuis le DOM
+            return cookieValue || document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+        }
 
+        // Variable pour suivre le profil actuellement sélectionné
+        let selectedProfile = null;  // Déclaration globale
+        
+        document.addEventListener('DOMContentLoaded', function() {
             // Sélection/désélection d'une ligne au clic
             document.querySelectorAll('.table tbody tr').forEach(row => {
                 row.addEventListener('click', function() {
@@ -234,9 +246,10 @@
                                                 </thead>
                                                 <tbody>
                                                     ${data.about.map(about => `
-                                                        <tr class="about-row" data-content="${about.content}">
+                                                        <tr class="about-row" data-id="${about.id}" data-content="${about.content}">
                                                             <td>${about.order}</td>
                                                             <td>${about.content}</td>
+                                                            <input type="hidden" class="about-id" value="${about.id}">
                                                         </tr>
                                                     `).join('')}
                                                 </tbody>
@@ -266,13 +279,14 @@
                                                 </thead>
                                                 <tbody>
                                                     ${data.experience.map(exp => `
-                                                        <tr class="experience-row" data-content="${exp.description}" data-dates="${exp.dates}" data-company="${exp.company}" data-location="${exp.location}">
+                                                        <tr class="experience-row" data-id="${exp.id}" data-description="${exp.description}" data-dates="${exp.dates}" data-company="${exp.company}" data-location="${exp.location}">
                                                             <td>${exp.order}</td>
                                                             <td>${exp.dates}</td>
                                                             <td>${exp.position}</td>
                                                             <td>${exp.company}</td>
                                                             <td>${exp.location}</td>
                                                             <td>${exp.description}</td>
+                                                            <input type="hidden" class="experience-id" value="${exp.id}">
                                                         </tr>
                                                     `).join('')}
                                                 </tbody>
@@ -299,10 +313,11 @@
                                                 </thead>
                                                 <tbody>
                                                     ${data.projects.map(project => `
-                                                        <tr class="project-row" data-title="${project.title}" data-content="${project.description}">
+                                                        <tr class="project-row" data-id="${project.id}" data-title="${project.title}" data-description="${project.description}">
                                                             <td>${project.order}</td>
                                                             <td>${project.title}</td>
                                                             <td>${project.description}</td>
+                                                            <input type="hidden" class="project-id" value="${project.id}">
                                                         </tr>
                                                     `).join('')}
                                                 </tbody>
@@ -350,7 +365,14 @@
 
         // Fonction pour afficher une popup générique
         function showPopup(row, modalId, contentId) {
-            const content = row.getAttribute('data-content');
+
+            let content;
+            if (modalId === 'experienceModal' || modalId === 'projectModal') {
+                content = row.getAttribute('data-description');
+            } else {
+                content = row.getAttribute('data-content');
+            }
+
             const dates = row.getAttribute('data-dates');
             const company = row.getAttribute('data-company');
             const location = row.getAttribute('data-location');
@@ -362,6 +384,7 @@
             // Créer la popup si elle n'existe pas déjà
             let modal = document.getElementById(modalId);
             let backdrop = document.getElementById('modalBackdrop');
+
             if (!modal) {
                 modal = document.createElement('div');
                 modal.id = modalId;
@@ -385,6 +408,7 @@
                                 </div>
                             </div>
                             <span class="modal-content-info-title">Description :</span>
+                            <div contenteditable="true" class="editable-content" data-field="description">${content}</div>
                         ` : modalId === 'projectModal' ? `
                             <div class="modal-content-info">
                                 <div class="editable-field">
@@ -392,8 +416,14 @@
                                 </div>
                             </div>
                             <span class="modal-content-info-title">Description :</span>
-                        ` : `<span class="modal-content-info-title">Contenu :</span>`}
-                        <div contenteditable="true" class="editable-content" data-field="content">${content}</div>
+                            <div contenteditable="true" class="editable-content" data-field="description">${content}</div>
+                        ` : `<span class="modal-content-info-title">Contenu :</span>
+                            <div contenteditable="true" class="editable-content" data-field="content">${content}</div>`}
+                    </div>
+                    <div class="w-100 text-end mb-3">
+                        <button type="button" class="btn btn-primary" onclick="saveModalContent(this.closest('.modal'))">
+                            Enregistrer
+                        </button>
                     </div>
                 `;
                 document.body.appendChild(modal);
@@ -404,6 +434,9 @@
                 backdrop.className = 'modal-backdrop';
                 document.body.appendChild(backdrop);
             }
+
+            // Récupérer l'ID de la ligne cliquée
+            modal.dataset.rowId = row.dataset.id;
             
             // Afficher la popup et le fond
             modal.style.display = 'block';
@@ -422,120 +455,24 @@
                     backdrop.style.display = 'none';
                 }
             };
-        }
 
-        function editContent(event) {
-            const modal = event.target.closest('.modal');
-            const infoFields = modal.querySelectorAll('.modal-content-info .editable-content');
-            const textFields = modal.querySelectorAll('.modal-content-text .editable-content');
-            
-            // Cacher les boutons d'édition et montrer les boutons de sauvegarde
-            modal.querySelector('.edit-button').style.display = 'none';
-            modal.querySelector('.save-button').style.display = 'inline';
-            modal.querySelector('.cancel-button').style.display = 'inline';
-            
-            // Transformer les éléments en inputs
-            infoFields.forEach(field => {
-                const originalContent = field.textContent;
-                field.innerHTML = `
-                    <input type="text" value="${originalContent}" 
-                        class="form-control" 
-                        data-original="${originalContent}">
-                `;
-            });
-            
-            textFields.forEach(field => {
-                const originalContent = field.textContent;
-                field.innerHTML = `
-                    <textarea class="form-control" 
-                            rows="4"
-                            data-original="${originalContent}">${originalContent}</textarea>
-                `;
-            });
-        }
-
-        function saveContent(event) {
-            const modal = event.target.closest('.modal');
-            const infoFields = modal.querySelectorAll('.modal-content-info .editable-content');
-            const textFields = modal.querySelectorAll('.modal-content-text .editable-content');
-            
-            // Récupérer les nouvelles valeurs
-            const data = {
-                dates: infoFields[0].querySelector('input').value,
-                company: infoFields[1].querySelector('input').value,
-                location: infoFields[2].querySelector('input').value,
-                content: textFields[0].querySelector('textarea').value
-            };
-            
-            // Sauvegarder les modifications via AJAX
-            fetch('/save_content/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    // Mettre à jour l'interface
-                    infoFields.forEach(field => {
-                        const input = field.querySelector('input');
-                        field.textContent = input.value;
+            // Réattacher les gestionnaires d'événements aux nouvelles lignes
+            setTimeout(() => {
+                document.querySelectorAll(`.${modalId.replace('Modal', '')}-row`).forEach(row => {
+                    row.addEventListener('dblclick', function() {
+                        showPopup(row, modalId, contentId);
                     });
-                    textFields.forEach(field => {
-                        const textarea = field.querySelector('textarea');
-                        field.textContent = textarea.value;
-                    });
-                    
-                    // Réinitialiser les boutons
-                    modal.querySelector('.edit-button').style.display = 'inline';
-                    modal.querySelector('.save-button').style.display = 'none';
-                    modal.querySelector('.cancel-button').style.display = 'none';
-                } else {
-                    alert('Erreur lors de la sauvegarde');
-                }
-            });
-        }
-
-        function cancelEdit(event) {
-            const modal = event.target.closest('.modal');
-            const infoFields = modal.querySelectorAll('.modal-content-info .editable-content');
-            const textFields = modal.querySelectorAll('.modal-content-text .editable-content');
-            
-            // Restaurer les valeurs originales
-            infoFields.forEach(field => {
-                const originalContent = field.querySelector('input').dataset.original;
-                field.textContent = originalContent;
-            });
-            
-            textFields.forEach(field => {
-                const originalContent = field.querySelector('textarea').dataset.original;
-                field.textContent = originalContent;
-            });
-            
-            // Réinitialiser les boutons
-            modal.querySelector('.edit-button').style.display = 'inline';
-            modal.querySelector('.save-button').style.display = 'none';
-            modal.querySelector('.cancel-button').style.display = 'none';
+                });
+            }, 100);
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Fonction pour supprimer une modal
-            const removeModal = function(modal) {
-                const backdrop = document.getElementById('modalBackdrop');
-                if (backdrop) {
-                    backdrop.remove();
-                }
-                modal.remove();
-            };
-
             // Ajouter un gestionnaire d'événements pour les boutons de fermeture
             document.body.addEventListener('click', function(e) {
                 if (e.target && e.target.classList.contains('close')) {
                     const modal = e.target.closest('.modal');
                     if (modal) {
+                        modal.style.display = 'none';
                         removeModal(modal);
                     }
                 }
@@ -547,6 +484,9 @@
                 const modal = document.querySelector('.modal');
                 if (backdrop && e.target === backdrop) {
                     // Seulement si le clic est sur le backdrop (pas sur la modal)
+                    if (modal) {
+                        modal.style.display = 'none';
+                    }
                     removeModal(modal);
                 }
             });
@@ -559,6 +499,215 @@
                 }
             });
         });
+
+        // Fonction pour supprimer une modal
+        function removeModal(modal) {
+            if (!modal) return;
+            const backdrop = document.getElementById('modalBackdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+            modal.remove();
+        }
+
+        async function saveModalContent(modal) {
+            console.log('[saveModalContent] Début de la fonction');
+            const modalId = modal.id;
+            console.log('[saveModalContent] ID de la modale:', modalId);
+
+            // Récupérer l'ID stocké dans la modale
+            const rowId = modal.dataset.rowId;
+            if (!rowId) {
+                console.error('ID de ligne non trouvé');
+                return;
+            }
+
+            const csrfToken = getCsrfToken();
+            console.log('[saveModalContent] Jeton CSRF:', csrfToken ? 'trouvé' : 'non trouvé');
+            
+            // Récupérer tous les champs éditables
+            const contentData = {};
+            const editableFields = modal.querySelectorAll('.editable-content');
+            
+            editableFields.forEach(field => {
+                const fieldName = field.dataset.field;
+                contentData[fieldName] = field.textContent.trim();
+                console.log(`[saveModalContent] Champ ${fieldName}:`, contentData[fieldName]); // Log pour débogage
+            });
+            
+            const requestData = {
+                modalId: modalId,
+                data: {
+                    id: rowId,
+                    ...contentData  // Spread operator pour inclure directement les champs
+                },
+                debug: true,
+                timestamp: new Date().toISOString(),
+                user_agent: navigator.userAgent,
+                url: window.location.href
+            };
+            
+            console.log('[saveModalContent] Données à envoyer:', requestData);
+            
+            try {
+                console.log('[saveModalContent] Envoi de la requête à /save_modal_content/...');
+                const response = await fetch('/save_modal_content/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                        'X-Debug-Request': 'true'  
+                    },
+                    credentials: 'same-origin',  
+                    body: JSON.stringify(requestData)
+                });
+                
+                console.log('[saveModalContent] Réponse reçue, statut:', response.status);
+                
+                // Afficher les en-têtes de la réponse pour le débogage
+                console.log('[saveModalContent] En-têtes de la réponse:');
+                for (const [key, value] of response.headers.entries()) {
+                    console.log(`  ${key}: ${value}`);
+                }
+                
+                // Essayer d'analyser la réponse comme JSON
+                let result;
+                try {
+                    const responseText = await response.text();
+                    console.log('[saveModalContent] Réponse brute:', responseText);
+                    
+                    if (responseText) {
+                        result = JSON.parse(responseText);
+                        console.log('[saveModalContent] Réponse parsée:', result);
+                    } else {
+                        console.error('[saveModalContent] La réponse est vide');
+                        throw new Error('La réponse du serveur est vide');
+                    }
+                } catch (error) {
+                    console.error('[saveModalContent] Erreur lors de l\'analyse de la réponse:', error);
+                    alert('Erreur de format de la réponse du serveur. Voir la console pour plus de détails.');
+                    return;
+                }
+                
+                // Vérifier si la réponse contient une erreur
+                if (result && result.error) {
+                    const errorMsg = result.error.message || result.error;
+                    console.error('[saveModalContent] Erreur du serveur:', errorMsg);
+                    alert('Erreur: ' + errorMsg);
+                    return;
+                }
+                
+                if (result.success) {
+                    console.log('[saveModalContent] Succès de la sauvegarde, fermeture de la modale...');
+                    // Cacher la modale d'abord pour un meilleur feedback visuel
+                    modal.style.display = 'none';
+                    console.log('[saveModalContent] Modale cachée, suppression...');
+                    // Supprimer la modale et son backdrop
+                    setTimeout(() => {
+                        removeModal(modal);
+                        console.log('[saveModalContent] Modale supprimée');
+                    }, 300);
+                    
+                    refreshData();
+
+                } else {
+                    console.error('[saveModalContent] Erreur du serveur:', result.error || 'Erreur inconnue');
+                }
+            } catch (error) {
+                console.error('[saveModalContent] Erreur lors de la sauvegarde:', error);
+            }
+        }
+
+        async function refreshData() {
+            console.log('[refreshData] Rafraîchissement des données...');
+            
+            try {
+                const response = await fetch(`/load_profile_data/?identifiant=${selectedProfile}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('[refreshData] Erreur:', data.error);
+                    return;
+                }
+                
+                updateProfileData(data);
+                console.log('[refreshData] Données rafraîchies avec succès');
+            } catch (error) {
+                console.error('[refreshData] Erreur:', error);
+            }
+        }
+        
+        function updateProfileData(data) {
+            console.log('[updateProfileData] Mise à jour de l\'interface...');
+            
+            // Mise à jour de la section About
+            if (data.about && data.about.length > 0) {
+                const aboutTable = document.querySelector('#about-table tbody');
+                if (aboutTable) {
+                    aboutTable.innerHTML = data.about.map(about => `
+                        <tr class="about-row" data-id="${about.id}" data-content="${about.content}">
+                            <td>${about.order}</td>
+                            <td>${about.content}</td>
+                        </tr>
+                    `).join('');
+
+                    // Réattacher les événements
+                    document.querySelectorAll('.about-row').forEach(row => {
+                        row.addEventListener('dblclick', function() {
+                            showPopup(row, 'aboutModal', 'aboutModalContent');
+                        });
+                    });
+                }
+            }
+            
+            // Mise à jour de la section Experience
+            if (data.experience && data.experience.length > 0) {
+                const expTable = document.querySelector('#experience-table tbody');
+                if (expTable) {
+                    expTable.innerHTML = data.experience.map(exp => `
+                        <tr class="experience-row" data-id="${exp.id}" data-dates="${exp.dates}" data-position="${exp.position}" data-company="${exp.company}" data-location="${exp.location}" data-description="${exp.description}">
+                            <td>${exp.order}</td>
+                            <td>${exp.dates}</td>
+                            <td>${exp.position}</td>
+                            <td>${exp.company}</td>
+                            <td>${exp.location}</td>
+                            <td>${exp.description}</td>
+                        </tr>
+                    `).join('');
+
+                    // Réattacher les événements
+                    document.querySelectorAll('.experience-row').forEach(row => {
+                        row.addEventListener('dblclick', function() {
+                            showPopup(row, 'experienceModal', 'experienceModalContent');
+                        });
+                    });
+                }
+            }
+            
+            // Mise à jour de la section Projects
+            if (data.projects && data.projects.length > 0) {
+                const projectsTable = document.querySelector('#projects-table tbody');
+                if (projectsTable) {
+                    projectsTable.innerHTML = data.projects.map(project => `
+                        <tr class="project-row" data-id="${project.id}" 
+                            data-title="${project.title}" data-content="${project.description}">
+                            <td>${project.order}</td>
+                            <td>${project.title}</td>
+                            <td>${project.description}</td>
+                        </tr>
+                    `).join('');
+
+                    // Réattacher les événements
+                    document.querySelectorAll('.project-row').forEach(row => {
+                        row.addEventListener('dblclick', function() {
+                            showPopup(row, 'projectModal', 'projectModalContent');
+                        });
+                    });
+                }
+            }
+            
+            console.log('[updateProfileData] Interface mise à jour');
+        }
     </script>
 {% endblock %}
 

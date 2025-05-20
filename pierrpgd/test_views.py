@@ -425,3 +425,119 @@ class AddProfileViewTest(BaseTest):
         self.assertEqual(self.response.status_code, 200)
         self.assertTemplateUsed(self.response, 'add_profile.html')
         self.assertContains(self.response, 'Cet identifiant est déjà utilisé')
+
+class SaveModalContentViewTest(BaseTest):
+
+    def test_update_about_api(self):
+        """Teste la mise à jour d'un élément About via l'API"""
+        # Données pour la mise à jour
+        updated_data = {
+            'content': 'Nouveau contenu de test',
+            'order': 2,
+            'id': self.abouts[0].id
+        }
+        
+        # Effectuer la mise à jour via l'API
+        response = self.client.post(
+            reverse('save_modal_content'),
+            {
+                'modalId': 'aboutModal',
+                'data': updated_data
+            },
+            content_type='application/json'
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        
+        # Vérifier que les modifications ont été sauvegardées
+        updated_about = About.objects.get(id=self.abouts[0].id)
+        self.assertEqual(updated_about.content, updated_data['content'])
+        self.assertEqual(updated_about.order, updated_data['order'])
+
+    def test_update_experience_api(self):
+        """Teste la mise à jour d'un élément Experience via l'API"""
+        # Données pour la mise à jour
+        updated_data = {
+            'dates': '2024-2025',
+            'company': 'Entreprise mise à jour',
+            'location': 'Endroit mis à jour',
+            'position': 'Poste mis à jour',
+            'description': 'Description mise à jour',
+            'order': 2,
+            'id': self.experiences[0].id
+        }
+        
+        # Effectuer la mise à jour via l'API
+        response = self.client.post(
+            reverse('save_modal_content'),
+            {
+                'modalId': 'experienceModal',
+                'data': updated_data
+            },
+            content_type='application/json'
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        
+        # Vérifier que les modifications ont été sauvegardées
+        updated_experience = Experience.objects.get(id=self.experiences[0].id)
+        self.assertEqual(updated_experience.company, updated_data['company'])
+        self.assertEqual(updated_experience.dates, updated_data['dates'])
+        self.assertEqual(updated_experience.location, updated_data['location'])
+        self.assertEqual(updated_experience.position, updated_data['position'])
+        self.assertEqual(updated_experience.description, updated_data['description'])
+        self.assertEqual(updated_experience.order, updated_data['order'])
+
+    def test_update_project_api(self):
+        """Teste la mise à jour d'un élément Project via l'API"""
+        # Données pour la mise à jour
+        updated_data = {
+            'title': 'Titre mis à jour',
+            'description': 'Description mise à jour',
+            'order': 2,
+            'id': self.projects[0].id
+        }
+        
+        # Effectuer la mise à jour via l'API
+        response = self.client.post(
+            reverse('save_modal_content'),
+            {
+                'modalId': 'projectModal',
+                'data': updated_data
+            },
+            content_type='application/json'
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        
+        # Vérifier que les modifications ont été sauvegardées
+        updated_project = Project.objects.get(id=self.projects[0].id)
+        self.assertEqual(updated_project.title, updated_data['title'])
+        self.assertEqual(updated_project.description, updated_data['description'])
+        self.assertEqual(updated_project.order, updated_data['order'])
+        
+        # Effectuer la mise à jour via l'API
+        response = self.client.post(
+            reverse('save_modal_content'),
+            {
+                'modalId': 'experienceModal',
+                'data': updated_data
+            },
+            content_type='application/json'
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        
+        # Vérifier que les modifications ont été sauvegardées
+        updated_project = Project.objects.get(id=self.projects[0].id)
+        self.assertEqual(updated_project.title, updated_data['title'])
+        self.assertEqual(updated_project.description, updated_data['description'])
+        self.assertEqual(updated_project.order, updated_data['order'])
