@@ -232,10 +232,13 @@
                             // Créer le HTML pour les données
                             const html = `
                                 <div class="card mb-4">
-                                    <div class="card-header">
-                                        <h2>À propos</h2>
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h2 class="mb-0">À propos</h2>
+                                        <button id="addAboutSectionButton" class="btn btn-primary btn-sm" onclick="addAboutSection()">
+                                            <i class="fas fa-plus"></i> Ajouter une section
+                                        </button>
                                     </div>
-                                    <div class="card-body">
+                                    <div id="about-table-container" class="card-body">
                                         ${data.about.length > 0 ? `
                                             <table id="about-table" class="table table-hover">
                                                 <thead>
@@ -261,10 +264,13 @@
                                 </div>
 
                                 <div class="card mb-4">
-                                    <div class="card-header">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
                                         <h2>Expériences</h2>
+                                        <button id="addExperienceSectionButton" class="btn btn-primary btn-sm" onclick="addExperienceSection()">
+                                            <i class="fas fa-plus"></i> Ajouter une expérience
+                                        </button>
                                     </div>
-                                    <div class="card-body">
+                                    <div id="experience-table-container" class="card-body">
                                         ${data.experience.length > 0 ? `
                                             <table id="experience-table" class="table table-hover">
                                                 <thead>
@@ -298,10 +304,13 @@
                                 </div>
 
                                 <div class="card mb-4">
-                                    <div class="card-header">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
                                         <h2>Projets</h2>
+                                        <button id="addProjectSectionButton" class="btn btn-primary btn-sm" onclick="addProjectSection()">
+                                            <i class="fas fa-plus"></i> Ajouter un projet
+                                        </button>
                                     </div>
-                                    <div class="card-body">
+                                    <div id="projects-table-container" class="card-body">
                                         ${data.projects.length > 0 ? `
                                             <table id="projects-table" class="table table-hover">
                                                 <thead>
@@ -363,6 +372,61 @@
             });
         });
 
+        // Fonction pour ajouter une nouvelle section À propos
+        function addAboutSection() {
+            // Créer un élément row factice avec des attributs vides
+            const dummyRow = document.createElement('div');
+            dummyRow.setAttribute('data-content', '');
+            
+            // Ouvrir la popup avec le contenu vide
+            showPopup(dummyRow, 'aboutModal', 'aboutModalContent');
+            
+            // Rendre tous les champs éditables
+            const modal = document.getElementById('aboutModal');
+            modal.querySelectorAll('.editable-content').forEach(el => {
+                el.contentEditable = true;
+                el.focus();
+            });
+        }
+
+        // Fonction pour ajouter une nouvelle section À propos
+        function addExperienceSection() {
+            // Créer un élément row factice avec des attributs vides
+            const dummyRow = document.createElement('div');
+            dummyRow.setAttribute('data-dates', '');
+            dummyRow.setAttribute('data-company', '');
+            dummyRow.setAttribute('data-location', '');
+            dummyRow.setAttribute('data-description', '');
+            
+            // Ouvrir la popup avec le contenu vide
+            showPopup(dummyRow, 'experienceModal', 'experienceModalContent');
+            
+            // Rendre tous les champs éditables
+            const modal = document.getElementById('experienceModal');
+            modal.querySelectorAll('.editable-content').forEach(el => {
+                el.contentEditable = true;
+                el.focus();
+            });
+        }
+
+        // Fonction pour ajouter une nouvelle section À propos
+        function addProjectSection() {
+            // Créer un élément row factice avec des attributs vides
+            const dummyRow = document.createElement('div');
+            dummyRow.setAttribute('data-title', '');
+            dummyRow.setAttribute('data-description', '');
+            
+            // Ouvrir la popup avec le contenu vide
+            showPopup(dummyRow, 'projectModal', 'projectModalContent');
+            
+            // Rendre tous les champs éditables
+            const modal = document.getElementById('projectModal');
+            modal.querySelectorAll('.editable-content').forEach(el => {
+                el.contentEditable = true;
+                el.focus();
+            });
+        }
+
         // Fonction pour afficher une popup générique
         function showPopup(row, modalId, contentId) {
 
@@ -421,7 +485,7 @@
                             <div contenteditable="true" class="editable-content" data-field="content">${content}</div>`}
                     </div>
                     <div class="w-100 text-end mb-3">
-                        <button type="button" class="btn btn-primary" onclick="saveModalContent(this.closest('.modal'))">
+                        <button id="${modalId}ValidateButton" type="button" class="btn btn-primary" onclick="saveModalContent(this.closest('.modal'))">
                             Enregistrer
                         </button>
                     </div>
@@ -436,7 +500,9 @@
             }
 
             // Récupérer l'ID de la ligne cliquée
-            modal.dataset.rowId = row.dataset.id;
+            if (row.dataset.hasOwnProperty('id')) {
+                modal.dataset.rowId = row.dataset.id;
+            }
             
             // Afficher la popup et le fond
             modal.style.display = 'block';
@@ -511,46 +577,31 @@
         }
 
         async function saveModalContent(modal) {
-            console.log('[saveModalContent] Début de la fonction');
             const modalId = modal.id;
-            console.log('[saveModalContent] ID de la modale:', modalId);
-
-            // Récupérer l'ID stocké dans la modale
-            const rowId = modal.dataset.rowId;
-            if (!rowId) {
-                console.error('ID de ligne non trouvé');
-                return;
-            }
-
-            const csrfToken = getCsrfToken();
-            console.log('[saveModalContent] Jeton CSRF:', csrfToken ? 'trouvé' : 'non trouvé');
             
-            // Récupérer tous les champs éditables
-            const contentData = {};
-            const editableFields = modal.querySelectorAll('.editable-content');
-            
-            editableFields.forEach(field => {
-                const fieldName = field.dataset.field;
-                contentData[fieldName] = field.textContent.trim();
-                console.log(`[saveModalContent] Champ ${fieldName}:`, contentData[fieldName]); // Log pour débogage
-            });
-            
+            // Gestion des nouvelles sections
+            const isNew = !modal.dataset.hasOwnProperty('rowId');
             const requestData = {
                 modalId: modalId,
-                data: {
-                    id: rowId,
-                    ...contentData  // Spread operator pour inclure directement les champs
-                },
-                debug: true,
-                timestamp: new Date().toISOString(),
-                user_agent: navigator.userAgent,
-                url: window.location.href
+                isNew: isNew,
+                data: {}
             };
-            
-            console.log('[saveModalContent] Données à envoyer:', requestData);
-            
+
+            // Récupérer les champs éditables
+            const editableFields = modal.querySelectorAll('.editable-content');
+            editableFields.forEach(field => {
+                requestData.data[field.dataset.field] = field.textContent.trim();
+            });
+
+            requestData.data.profile = selectedProfile;
+
+            // Ajouter l'ID seulement pour les modifications
+            if (!isNew) {
+                requestData.data.id = modal.dataset.rowId;
+            }
+
+            const csrfToken = getCsrfToken();       
             try {
-                console.log('[saveModalContent] Envoi de la requête à /save_modal_content/...');
                 const response = await fetch('/save_modal_content/', {
                     method: 'POST',
                     headers: {
@@ -562,23 +613,12 @@
                     body: JSON.stringify(requestData)
                 });
                 
-                console.log('[saveModalContent] Réponse reçue, statut:', response.status);
-                
-                // Afficher les en-têtes de la réponse pour le débogage
-                console.log('[saveModalContent] En-têtes de la réponse:');
-                for (const [key, value] of response.headers.entries()) {
-                    console.log(`  ${key}: ${value}`);
-                }
-                
-                // Essayer d'analyser la réponse comme JSON
                 let result;
                 try {
                     const responseText = await response.text();
-                    console.log('[saveModalContent] Réponse brute:', responseText);
                     
                     if (responseText) {
                         result = JSON.parse(responseText);
-                        console.log('[saveModalContent] Réponse parsée:', result);
                     } else {
                         console.error('[saveModalContent] La réponse est vide');
                         throw new Error('La réponse du serveur est vide');
@@ -598,14 +638,11 @@
                 }
                 
                 if (result.success) {
-                    console.log('[saveModalContent] Succès de la sauvegarde, fermeture de la modale...');
                     // Cacher la modale d'abord pour un meilleur feedback visuel
                     modal.style.display = 'none';
-                    console.log('[saveModalContent] Modale cachée, suppression...');
                     // Supprimer la modale et son backdrop
                     setTimeout(() => {
                         removeModal(modal);
-                        console.log('[saveModalContent] Modale supprimée');
                     }, 300);
                     
                     refreshData();
@@ -619,8 +656,6 @@
         }
 
         async function refreshData() {
-            console.log('[refreshData] Rafraîchissement des données...');
-            
             try {
                 const response = await fetch(`/load_profile_data/?identifiant=${selectedProfile}`);
                 const data = await response.json();
@@ -631,18 +666,35 @@
                 }
                 
                 updateProfileData(data);
-                console.log('[refreshData] Données rafraîchies avec succès');
             } catch (error) {
                 console.error('[refreshData] Erreur:', error);
             }
         }
         
         function updateProfileData(data) {
-            console.log('[updateProfileData] Mise à jour de l\'interface...');
-            
             // Mise à jour de la section About
             if (data.about && data.about.length > 0) {
-                const aboutTable = document.querySelector('#about-table tbody');
+                let aboutTable = document.querySelector('#about-table tbody');
+
+                if (!aboutTable) {
+                    aboutTable = document.querySelector('#about-table-container');
+
+                    aboutTable.innerHTML = `
+                        <table id="about-table" class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Ordre</th>
+                                    <th>Contenu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    `;
+                }
+
+                aboutTable = document.querySelector('#about-table tbody');
+
                 if (aboutTable) {
                     aboutTable.innerHTML = data.about.map(about => `
                         <tr class="about-row" data-id="${about.id}" data-content="${about.content}">
@@ -662,7 +714,31 @@
             
             // Mise à jour de la section Experience
             if (data.experience && data.experience.length > 0) {
-                const expTable = document.querySelector('#experience-table tbody');
+                let expTable = document.querySelector('#experience-table tbody');
+
+                if (!expTable) {
+                    expTable = document.querySelector('#experience-table-container');
+
+                    expTable.innerHTML = `
+                        <table id="experience-table" class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Ordre</th>
+                                    <th>Période</th>
+                                    <th>Poste</th>
+                                    <th>Entreprise</th>
+                                    <th>Localisation</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    `;
+                }
+
+                expTable = document.querySelector('#experience-table tbody');
+
                 if (expTable) {
                     expTable.innerHTML = data.experience.map(exp => `
                         <tr class="experience-row" data-id="${exp.id}" data-dates="${exp.dates}" data-position="${exp.position}" data-company="${exp.company}" data-location="${exp.location}" data-description="${exp.description}">
@@ -686,7 +762,28 @@
             
             // Mise à jour de la section Projects
             if (data.projects && data.projects.length > 0) {
-                const projectsTable = document.querySelector('#projects-table tbody');
+                let projectsTable = document.querySelector('#projects-table tbody');
+
+                if (!projectsTable) {
+                    projectsTable = document.querySelector('#projects-table-container');
+
+                    projectsTable.innerHTML = `
+                        <table id="projects-table" class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Ordre</th>
+                                    <th>Titre</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    `;
+                }
+
+                projectsTable = document.querySelector('#projects-table tbody');
+
                 if (projectsTable) {
                     projectsTable.innerHTML = data.projects.map(project => `
                         <tr class="project-row" data-id="${project.id}" 
@@ -705,8 +802,6 @@
                     });
                 }
             }
-            
-            console.log('[updateProfileData] Interface mise à jour');
         }
     </script>
 {% endblock %}

@@ -26,7 +26,6 @@ def portfolio(request, identifiant):
         return render(request, 'portfolio.html', context)
     
     except Exception as e:
-        settings.DEBUG and print(f"Erreur dans la vue portfolio: {str(e)}")
         raise
 
 def data_display(request):
@@ -114,34 +113,82 @@ def add_profile(request):
 def save_modal_content(request):
     if request.method == 'POST':
         try:
+            # Parsing et validation
             data = json.loads(request.body)
-            modalId = data.get('modalId')
-            content = data.get('data')
             
-            # Trouver l'objet à mettre à jour
+            modalId = data.get('modalId')
+            if not modalId:
+                return JsonResponse({'success': False, 'error': 'modalId manquant'}, status=400)
+                
+            isNew = data.get('isNew', False)
+            content = data.get('data', {})
+            
+            # Gestion du profil
+            profile_id = content.get('profile')
+            if isNew:
+                if not profile_id:
+                    return JsonResponse({'success': False, 'error': 'Profile ID manquant'}, status=400)
+                else:
+                    try:
+                        profile = Profile.objects.get(identifiant=profile_id)
+                    except Profile.DoesNotExist:
+                        return JsonResponse({'success': False, 'error': 'Profil introuvable'}, status=404)
+                    except Exception as e:
+                        return JsonResponse({'success': False, 'error': e}, status=400)
+            
+            # Création/mise à jour
             obj = None
             if modalId == 'aboutModal':
-                obj = About.objects.get(id=content.get('id'))
-                obj.content = content.get('content', obj.content)
-                obj.order = content.get('order', obj.order)
+                if isNew:
+                    obj = About.objects.create(content=content.get('content', ''), profile=profile)
+                else:
+                    obj = About.objects.get(id=content.get('id'))
+                    obj.content = content.get('content', obj.content)
+                    obj.order = content.get('order', obj.order)
             elif modalId == 'experienceModal':
-                obj = Experience.objects.get(id=content.get('id'))
-                obj.dates = content.get('dates', obj.dates)
-                obj.position = content.get('position', obj.position)
-                obj.company = content.get('company', obj.company)
-                obj.location = content.get('location', obj.location)
-                obj.description = content.get('description', obj.description)
-                obj.order = content.get('order', obj.order)
+                if isNew:
+                    obj = Experience.objects.create(
+                        dates=content.get('dates', ''),
+                        position=content.get('position', ''),
+                        company=content.get('company', ''),
+                        location=content.get('location', ''),
+                        description=content.get('description', ''),
+                        profile=profile
+                    )
+                else:
+                    obj = Experience.objects.get(id=content.get('id'))
+                    obj.dates = content.get('dates', obj.dates)
+                    obj.position = content.get('position', obj.position)
+                    obj.company = content.get('company', obj.company)
+                    obj.location = content.get('location', obj.location)
+                    obj.description = content.get('description', obj.description)
+                    obj.order = content.get('order', obj.order)
             elif modalId == 'projectModal':
-                obj = Project.objects.get(id=content.get('id'))
-                obj.title = content.get('title', obj.title)
-                obj.description = content.get('description', obj.description)
-                obj.order = content.get('order', obj.order)
+                if isNew:
+                    obj = Project.objects.create(
+                        title=content.get('title', ''),
+                        description=content.get('description', ''),
+                        profile=profile
+                    )
+                else:
+                    obj = Project.objects.get(id=content.get('id'))
+                    obj.title = content.get('title', obj.title)
+                    obj.description = content.get('description', obj.description)
+                    obj.order = content.get('order', obj.order)
+            else:
+                return JsonResponse({'success': False, 'error': 'Type de modal inconnu'}, status=400)
             
             if obj:
                 obj.save()
-                return JsonResponse({'success': True})
+                return JsonResponse({'success': True, 'id': obj.id})
+                
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'error': 'Données JSON invalides'}, status=400)
+            
         except Exception as e:
-            print(f"Erreur lors de la sauvegarde: {str(e)}")
+            return JsonResponse({
+                'success': False, 
+                'error': str(e)
+            }, status=500)
     
-    return JsonResponse({'success': False})
+    return JsonResponse({'success': False, 'error': 'Méthode non autorisée'}, status=405)
