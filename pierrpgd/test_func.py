@@ -39,9 +39,9 @@ class BaseTest(LiveServerTestCase):
 
     def getData(self):
         self.profile = Profile.objects.get(identifiant='test-profile')
-        self.about = About.objects.get(profile=self.profile)
-        self.experience = Experience.objects.get(profile=self.profile)
-        self.project = Project.objects.get(profile=self.profile)
+        self.about = About.objects.filter(profile=self.profile).order_by('order')
+        self.experiences = Experience.objects.filter(profile=self.profile).order_by('order')
+        self.projects = Project.objects.filter(profile=self.profile).order_by('order')
 
 class PortfolioPageTest(BaseTest):
 
@@ -186,11 +186,11 @@ class DataDisplayTest(BaseTest):
             self.assertTrue(modal.is_displayed())
             
             # Vérifier que le contenu de la popup est correct
-            modal_content = self.browser.find_element(By.ID, 'aboutModalContent')
+            modal_content = self.browser.find_element(By.CSS_SELECTOR, '#aboutModal .modal-content')
             self.assertIn('Test About Content', modal_content.text)
             
             # Fermer la popup
-            close_button = self.browser.find_element(By.CSS_SELECTOR, '#aboutModal button.close')
+            close_button = self.browser.find_element(By.CSS_SELECTOR, '#aboutModal .modal-header button.close')
             close_button.click()
             
             # Attendre que la popup soit masquée
@@ -219,7 +219,7 @@ class DataDisplayTest(BaseTest):
         )
         
         # Trouver la ligne du tableau Expériences
-        experience_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), '{self.experience.description}')]/..")
+        experience_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), '{self.experiences[0].description}')]/..")
         
         # Effectuer un double clic
         action = ActionChains(self.browser)
@@ -235,17 +235,17 @@ class DataDisplayTest(BaseTest):
         self.assertTrue(modal.is_displayed())
         
         # Vérifier le contenu de la popup
-        modal_content = self.browser.find_element(By.ID, 'experienceModalContent')
-        self.assertIn(self.experience.description, modal_content.text)
+        modal_content = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-content')
+        self.assertIn(self.experiences[0].description, modal_content.text)
         
         # Vérifier les informations de l'expérience
         info = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-content-info')
-        self.assertIn(self.experience.dates, info.text)
-        self.assertIn(self.experience.company, info.text)
-        self.assertIn(self.experience.location, info.text)
+        self.assertIn(self.experiences[0].dates, info.text)
+        self.assertIn(self.experiences[0].company, info.text)
+        self.assertIn(self.experiences[0].location, info.text)
         
         # Fermer la popup
-        close_button = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal button.close')
+        close_button = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-header button.close')
         close_button.click()
         
         # Attendre que la popup soit masquée
@@ -270,7 +270,7 @@ class DataDisplayTest(BaseTest):
         )
         
         # Trouver la ligne du tableau Projets
-        project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.project.title}')]/..")
+        project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.projects[0].title}')]/..")
         
         # Effectuer un double clic
         action = ActionChains(self.browser)
@@ -286,15 +286,15 @@ class DataDisplayTest(BaseTest):
         self.assertTrue(modal.is_displayed())
         
         # Vérifier le contenu de la popup
-        modal_content = self.browser.find_element(By.ID, 'projectModalContent')
-        self.assertIn(self.project.description, modal_content.text)
+        modal_content = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-content')
+        self.assertIn(self.projects[0].description, modal_content.text)
         
         # Vérifier le titre du projet
         title = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-content-info')
-        self.assertIn(self.project.title, title.text)
+        self.assertIn(self.projects[0].title, title.text)
         
         # Fermer la popup
-        close_button = self.browser.find_element(By.CSS_SELECTOR, '#projectModal button.close')
+        close_button = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-header button.close')
         close_button.click()
         
         # Attendre que la popup soit masquée
@@ -319,7 +319,7 @@ class DataDisplayTest(BaseTest):
         )
     
         # Trouver la ligne du tableau Projets
-        project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.project.title}')]/..")
+        project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.projects[0].title}')]/..")
         
         # Effectuer un double clic
         action = ActionChains(self.browser)

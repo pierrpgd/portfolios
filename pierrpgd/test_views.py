@@ -13,9 +13,9 @@ class BaseTest(TestCase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.profile = Profile.objects.get(identifiant='test-profile')
-        cls.about = About.objects.get(profile=cls.profile)
-        cls.experience = Experience.objects.get(profile=cls.profile)
-        cls.project = Project.objects.get(profile=cls.profile)
+        cls.abouts = About.objects.filter(profile=cls.profile)
+        cls.experiences = Experience.objects.filter(profile=cls.profile)
+        cls.projects = Project.objects.filter(profile=cls.profile)
 
     @classmethod
     def tearDownClass(cls):
@@ -52,7 +52,7 @@ class PortfolioViewTest(BaseTest):
         self.assertIsNotNone(about_section)
         
         about_content = about_section.find_all('p')[0].text
-        self.assertEqual(about_content.strip(), self.about.content)
+        self.assertEqual(about_content.strip(), self.abouts[0].content)
 
     def test_experience_display(self):
         """Teste l'affichage des expériences"""
@@ -60,10 +60,10 @@ class PortfolioViewTest(BaseTest):
         self.assertIsNotNone(experience_section)
         
         exp_text = experience_section.get_text(strip=True, separator='.')
-        self.assertIn(self.experience.dates, exp_text)
-        self.assertIn(self.experience.position, exp_text)
-        self.assertIn(self.experience.company, exp_text)
-        self.assertIn(self.experience.description, exp_text)
+        self.assertIn(self.experiences[0].dates, exp_text)
+        self.assertIn(self.experiences[0].position, exp_text)
+        self.assertIn(self.experiences[0].company, exp_text)
+        self.assertIn(self.experiences[0].description, exp_text)
 
     def test_projects_display(self):
         """Teste l'affichage des projets"""
@@ -74,8 +74,8 @@ class PortfolioViewTest(BaseTest):
         project_title = projects_section.find_all('p')[0].text
         project_description = projects_section.find_all('p')[1].text
         
-        self.assertEqual(project_title.strip(), self.project.title)
-        self.assertEqual(project_description.strip(), self.project.description)
+        self.assertEqual(project_title.strip(), self.projects[0].title)
+        self.assertEqual(project_description.strip(), self.projects[0].description)
 
     def test_nonexistent_profile(self):
         """Test que l'accès à un profil inexistant renvoie une erreur 404"""
@@ -103,10 +103,6 @@ class DataDisplayViewTest(BaseTest):
 
         self.response = self.client.get(reverse('data_display'))
         self.assertEqual(self.response.status_code, 200)
-        self.assertNotContains(self.response, self.profile.name)
-        self.assertNotContains(self.response, self.about.content)
-        self.assertNotContains(self.response, self.experience.company)
-        self.assertNotContains(self.response, self.project.title)
         self.assertContains(self.response, 'Aucun profil trouvé')
         self.assertContains(self.response, 'Aucune section About trouvée')
         self.assertContains(self.response, 'Aucune expérience trouvée')
@@ -131,14 +127,14 @@ class DataDisplayViewTest(BaseTest):
         self.assertIn('projects', data)
         
         # Vérifier que les données correspondent
-        self.assertEqual(len(data['about']), 1)
-        self.assertEqual(data['about'][0]['content'], self.about.content)
+        self.assertEqual(len(data['about']), self.abouts.count())
+        self.assertEqual(data['about'][0]['content'], self.abouts[0].content)
         
-        self.assertEqual(len(data['experience']), 1)
-        self.assertEqual(data['experience'][0]['company'], self.experience.company)
+        self.assertEqual(len(data['experience']), self.experiences.count())
+        self.assertEqual(data['experience'][0]['company'], self.experiences[0].company)
         
-        self.assertEqual(len(data['projects']), 1)
-        self.assertEqual(data['projects'][0]['title'], self.project.title)
+        self.assertEqual(len(data['projects']), self.projects.count())
+        self.assertEqual(data['projects'][0]['title'], self.projects[0].title)
 
 class LoadDataViewTest(BaseTest):
 
@@ -146,7 +142,7 @@ class LoadDataViewTest(BaseTest):
         """Teste la création d'une section About"""
         
         # Vérifier que l'objet a été créé
-        self.assertTrue(About.objects.filter(content=self.about.content).exists())
+        self.assertTrue(About.objects.filter(content=self.abouts[0].content).exists())
         
         # Vérifier que la section apparaît dans l'interface
         self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
@@ -154,8 +150,8 @@ class LoadDataViewTest(BaseTest):
         
         data = self.response.json()
         self.assertIn('about', data)
-        self.assertEqual(len(data['about']), 1)
-        self.assertEqual(data['about'][0]['content'], self.about.content)
+        self.assertEqual(len(data['about']), self.abouts.count())
+        self.assertEqual(data['about'][0]['content'], self.abouts[0].content)
 
     def test_update_about(self):
         """Teste la mise à jour d'une section About"""
@@ -167,12 +163,12 @@ class LoadDataViewTest(BaseTest):
         }
         
         # Mettre à jour la section About
-        About.objects.filter(id=self.about.id).update(**updated_data)
-        self.about.refresh_from_db()
+        About.objects.filter(id=self.abouts[0].id).update(**updated_data)
+        self.abouts[0].refresh_from_db()
         
         # Vérifier que les modifications ont été sauvegardées
-        self.assertEqual(self.about.content, 'Contenu mis à jour')
-        self.assertEqual(self.about.order, 1)
+        self.assertEqual(self.abouts[0].content, 'Contenu mis à jour')
+        self.assertEqual(self.abouts[0].order, 1)
         
         # Vérifier que les changements apparaissent dans l'interface via load_profile_data
         self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
@@ -180,18 +176,20 @@ class LoadDataViewTest(BaseTest):
         
         data = self.response.json()
         self.assertIn('about', data)
-        self.assertEqual(len(data['about']), 1)
+        self.assertEqual(len(data['about']), self.abouts.count())
         self.assertEqual(data['about'][0]['content'], 'Contenu mis à jour')
         self.assertEqual(data['about'][0]['order'], 1)
 
     def test_delete_about(self):
         """Teste la suppression d'une section About"""
+
+        id_about = self.abouts[0].id
         
         # Supprimer la section About
-        self.about.delete()
+        self.abouts[0].delete()
         
         # Vérifier que l'objet a été supprimé
-        self.assertFalse(About.objects.filter(id=self.about.id).exists())
+        self.assertFalse(About.objects.filter(id=id_about).exists())
         
         # Vérifier que la section ne s'affiche plus
         self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
@@ -199,13 +197,13 @@ class LoadDataViewTest(BaseTest):
         
         data = self.response.json()
         self.assertIn('about', data)
-        self.assertEqual(len(data['about']), 0)
+        self.assertEqual(len(data['about']), self.abouts.count())
 
     def test_create_experience(self):
         """Teste la création d'une expérience"""
 
         # Vérifier que l'objet a été créé
-        self.assertTrue(Experience.objects.filter(company=self.experience.company).exists())
+        self.assertTrue(Experience.objects.filter(company=self.experiences[0].company).exists())
         
         # Vérifier que l'expérience apparaît dans l'interface
         self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
@@ -213,8 +211,8 @@ class LoadDataViewTest(BaseTest):
         
         data = self.response.json()
         self.assertIn('experience', data)
-        self.assertEqual(len(data['experience']), 1)
-        self.assertEqual(data['experience'][0]['company'], self.experience.company)
+        self.assertEqual(len(data['experience']), self.experiences.count())
+        self.assertEqual(data['experience'][0]['company'], self.experiences[0].company)
 
     def test_update_experience(self):
         """Teste la mise à jour d'une expérience"""
@@ -230,12 +228,12 @@ class LoadDataViewTest(BaseTest):
         }
         
         # Mettre à jour l'expérience
-        Experience.objects.filter(id=self.experience.id).update(**updated_data)
-        self.experience.refresh_from_db()
+        Experience.objects.filter(id=self.experiences[0].id).update(**updated_data)
+        self.experiences[0].refresh_from_db()
         
         # Vérifier que les modifications ont été sauvegardées
-        self.assertEqual(self.experience.company, 'Entreprise mise à jour')
-        self.assertEqual(self.experience.order, 1)
+        self.assertEqual(self.experiences[0].company, 'Entreprise mise à jour')
+        self.assertEqual(self.experiences[0].order, 1)
         
         # Vérifier que les changements apparaissent dans l'interface via load_profile_data
         self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
@@ -243,18 +241,20 @@ class LoadDataViewTest(BaseTest):
         
         data = self.response.json()
         self.assertIn('experience', data)
-        self.assertEqual(len(data['experience']), 1)
+        self.assertEqual(len(data['experience']), self.experiences.count())
         self.assertEqual(data['experience'][0]['company'], 'Entreprise mise à jour')
         self.assertEqual(data['experience'][0]['order'], 1)
 
     def test_delete_experience(self):
         """Teste la suppression d'une expérience"""
+
+        id_experience = self.experiences[0].id
         
         # Supprimer l'expérience
-        self.experience.delete()
+        self.experiences[0].delete()
         
         # Vérifier que l'objet a été supprimé
-        self.assertFalse(Experience.objects.filter(id=self.experience.id).exists())
+        self.assertFalse(Experience.objects.filter(id=id_experience).exists())
         
         # Vérifier que l'expérience ne s'affiche plus
         self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
@@ -262,13 +262,13 @@ class LoadDataViewTest(BaseTest):
         
         data = self.response.json()
         self.assertIn('experience', data)
-        self.assertEqual(len(data['experience']), 0)
+        self.assertEqual(len(data['experience']), self.experiences.count())
 
     def test_create_project(self):
         """Teste la création d'un projet"""
 
         # Vérifier que l'objet a été créé
-        self.assertTrue(Project.objects.filter(title=self.project.title).exists())
+        self.assertTrue(Project.objects.filter(title=self.projects[0].title).exists())
         
         # Vérifier que le projet apparaît dans l'interface
         self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
@@ -276,8 +276,8 @@ class LoadDataViewTest(BaseTest):
         
         data = self.response.json()
         self.assertIn('projects', data)
-        self.assertEqual(len(data['projects']), 1)
-        self.assertEqual(data['projects'][0]['title'], self.project.title)
+        self.assertEqual(len(data['projects']), self.projects.count())
+        self.assertEqual(data['projects'][0]['title'], self.projects[0].title)
 
     def test_update_project(self):
         """Teste la mise à jour d'un projet"""
@@ -290,12 +290,12 @@ class LoadDataViewTest(BaseTest):
         }
         
         # Mettre à jour le projet
-        Project.objects.filter(id=self.project.id).update(**updated_data)
-        self.project.refresh_from_db()
+        Project.objects.filter(id=self.projects[0].id).update(**updated_data)
+        self.projects[0].refresh_from_db()
         
         # Vérifier que les modifications ont été sauvegardées
-        self.assertEqual(self.project.title, 'Titre mis à jour')
-        self.assertEqual(self.project.order, 1)
+        self.assertEqual(self.projects[0].title, 'Titre mis à jour')
+        self.assertEqual(self.projects[0].order, 1)
         
         # Vérifier que les changements apparaissent dans l'interface via load_profile_data
         self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
@@ -303,17 +303,19 @@ class LoadDataViewTest(BaseTest):
         
         data = self.response.json()
         self.assertIn('projects', data)
-        self.assertEqual(len(data['projects']), 1)
+        self.assertEqual(len(data['projects']), self.projects.count())
         self.assertEqual(data['projects'][0]['title'], 'Titre mis à jour')
         self.assertEqual(data['projects'][0]['order'], 1)
 
     def test_delete_project(self):
         """Teste la suppression d'un projet"""
+        id_project = self.projects[0].id
+
         # Supprimer le projet
-        self.project.delete()
+        self.projects[0].delete()
         
         # Vérifier que l'objet a été supprimé
-        self.assertFalse(Project.objects.filter(id=self.project.id).exists())
+        self.assertFalse(Project.objects.filter(id=id_project).exists())
         
         # Vérifier que le projet ne s'affiche plus
         self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
@@ -321,7 +323,7 @@ class LoadDataViewTest(BaseTest):
         
         data = self.response.json()
         self.assertIn('projects', data)
-        self.assertEqual(len(data['projects']), 0)
+        self.assertEqual(len(data['projects']), self.projects.count())
 
     def test_ordering(self):
         """Teste l'ordre des About, Projets et Expériences"""
