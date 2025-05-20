@@ -39,7 +39,7 @@ class BaseTest(LiveServerTestCase):
 
     def getData(self):
         self.profile = Profile.objects.get(identifiant='test-profile')
-        self.about = About.objects.filter(profile=self.profile).order_by('order')
+        self.abouts = About.objects.filter(profile=self.profile).order_by('order')
         self.experiences = Experience.objects.filter(profile=self.profile).order_by('order')
         self.projects = Project.objects.filter(profile=self.profile).order_by('order')
 
@@ -194,14 +194,50 @@ class DataDisplayTest(BaseTest):
             close_button.click()
             
             # Attendre que la popup soit masquée
+            try:
+                WebDriverWait(self.browser, 10).until(
+                    EC.invisibility_of_element_located((By.ID, 'aboutModal'))
+                )
+            except:
+                # La modal a été supprimée, donc elle n'est plus dans le DOM
+                pass
+            
+            # Vérifier que la modal n'est plus présente dans le DOM
+            with self.assertRaises(NoSuchElementException):
+                self.browser.find_element(By.ID, 'aboutModal')
+            
+            # Trouver la ligne du tableau Expériences pour la deuxième expérience
+            about_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'about-table')]//td[contains(text(), '{self.abouts[1].content}')]/..")
+
+            # Effectuer un double clic
+            action = ActionChains(self.browser)
+            action.double_click(about_row).perform()
+            
+            # Attendre que la popup soit visible
             WebDriverWait(self.browser, 10).until(
-                EC.invisibility_of_element_located((By.ID, 'aboutModal'))
+                EC.visibility_of_element_located((By.ID, 'aboutModal'))
             )
             
-            # Vérifier que la popup est masquée (display: none)
+            # Vérifier que la popup est visible
             modal = self.browser.find_element(By.ID, 'aboutModal')
-            display_style = modal.value_of_css_property('display')
-            self.assertEqual(display_style, 'none')
+            self.assertTrue(modal.is_displayed())
+
+            # Vérifier le contenu de la popup
+            modal_content = self.browser.find_element(By.CSS_SELECTOR, '#aboutModal .modal-content')
+            self.assertIn(self.abouts[1].content, modal_content.text)
+            
+            # Fermer la popup
+            close_button = self.browser.find_element(By.CSS_SELECTOR, '#aboutModal .modal-header button.close')
+            close_button.click()
+            
+            # Attendre que la popup soit masquée
+            try:
+                WebDriverWait(self.browser, 10).until(
+                    EC.invisibility_of_element_located((By.ID, 'aboutModal'))
+                )
+            except:
+                # La modal a été supprimée, donc elle n'est plus dans le DOM
+                pass
             
         except NoSuchElementException:
             self.fail("La popup n'a pas été trouvée")
@@ -249,13 +285,56 @@ class DataDisplayTest(BaseTest):
         close_button.click()
         
         # Attendre que la popup soit masquée
+        try:
+            WebDriverWait(self.browser, 10).until(
+                EC.invisibility_of_element_located((By.ID, 'experienceModal'))
+            )
+        except:
+            # La modal a été supprimée, donc elle n'est plus dans le DOM
+            pass
+        
+        # Vérifier que la modal n'est plus présente dans le DOM
+        with self.assertRaises(NoSuchElementException):
+            self.browser.find_element(By.ID, 'experienceModal')
+        
+        # Trouver la ligne du tableau Expériences pour la deuxième expérience
+        experience_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), '{self.experiences[1].description}')]/..")
+
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(experience_row).perform()
+        
+        # Attendre que la popup soit visible
         WebDriverWait(self.browser, 10).until(
-            EC.invisibility_of_element_located((By.ID, 'experienceModal'))
+            EC.visibility_of_element_located((By.ID, 'experienceModal'))
         )
         
-        # Vérifier que la popup est masquée
-        display_style = modal.value_of_css_property('display')
-        self.assertEqual(display_style, 'none')
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'experienceModal')
+        self.assertTrue(modal.is_displayed())
+
+        # Vérifier le contenu de la popup
+        modal_content = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-content')
+        self.assertIn(self.experiences[1].description, modal_content.text)
+        
+        # Vérifier les informations de l'expérience
+        info = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-content-info')
+        self.assertIn(self.experiences[1].dates, info.text)
+        self.assertIn(self.experiences[1].company, info.text)
+        self.assertIn(self.experiences[1].location, info.text)
+        
+        # Fermer la popup
+        close_button = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-header button.close')
+        close_button.click()
+        
+        # Attendre que la popup soit masquée
+        try:
+            WebDriverWait(self.browser, 10).until(
+                EC.invisibility_of_element_located((By.ID, 'experienceModal'))
+            )
+        except:
+            # La modal a été supprimée, donc elle n'est plus dans le DOM
+            pass
 
     def test_double_click_project(self):
         """Teste le comportement du double clic sur une ligne du tableau Projets"""
@@ -298,13 +377,50 @@ class DataDisplayTest(BaseTest):
         close_button.click()
         
         # Attendre que la popup soit masquée
+        try:
+            WebDriverWait(self.browser, 10).until(
+                EC.invisibility_of_element_located((By.ID, 'projectModal'))
+            )
+        except:
+            # La modal a été supprimée, donc elle n'est plus dans le DOM
+            pass
+        
+        # Vérifier que la modal n'est plus présente dans le DOM
+        with self.assertRaises(NoSuchElementException):
+            self.browser.find_element(By.ID, 'projectModal')
+        
+        # Trouver la ligne du tableau Projets pour la deuxième expérience
+        project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.projects[1].title}')]/..")
+
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(project_row).perform()
+        
+        # Attendre que la popup soit visible
         WebDriverWait(self.browser, 10).until(
-            EC.invisibility_of_element_located((By.ID, 'projectModal'))
+            EC.visibility_of_element_located((By.ID, 'projectModal'))
         )
         
-        # Vérifier que la popup est masquée
-        display_style = modal.value_of_css_property('display')
-        self.assertEqual(display_style, 'none')
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'projectModal')
+        self.assertTrue(modal.is_displayed())
+
+        # Vérifier le contenu de la popup
+        modal_content = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-content')
+        self.assertIn(self.projects[1].description, modal_content.text)
+        
+        # Fermer la popup
+        close_button = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-header button.close')
+        close_button.click()
+        
+        # Attendre que la popup soit masquée
+        try:
+            WebDriverWait(self.browser, 10).until(
+                EC.invisibility_of_element_located((By.ID, 'projectModal'))
+            )
+        except:
+            # La modal a été supprimée, donc elle n'est plus dans le DOM
+            pass
 
     def test_content_is_editable(self):
         """Teste que le contenu de la popup est modifiable par l'utilisateur"""
@@ -333,7 +449,7 @@ class DataDisplayTest(BaseTest):
         # Vérifier que les champs sont éditables
         editable_fields = self.browser.find_elements(By.CSS_SELECTOR, ".editable-field")
         self.assertGreater(len(editable_fields), 0, "Aucun champ éditable trouvé")
-        
+
         # Modifier un champ
         first_field = editable_fields[0]
         new_value = "Nouvelle valeur de test"
@@ -347,4 +463,3 @@ class DataDisplayTest(BaseTest):
         # Vérifier que la modification a été sauvegardée
         updated_value = first_field.text
         self.assertEqual(updated_value, f"Titre : {new_value}", "La modification n'a pas été sauvegardée")
-

@@ -520,6 +520,45 @@
             modal.querySelector('.save-button').style.display = 'none';
             modal.querySelector('.cancel-button').style.display = 'none';
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fonction pour supprimer une modal
+            const removeModal = function(modal) {
+                const backdrop = document.getElementById('modalBackdrop');
+                if (backdrop) {
+                    backdrop.remove();
+                }
+                modal.remove();
+            };
+
+            // Ajouter un gestionnaire d'événements pour les boutons de fermeture
+            document.body.addEventListener('click', function(e) {
+                if (e.target && e.target.classList.contains('close')) {
+                    const modal = e.target.closest('.modal');
+                    if (modal) {
+                        removeModal(modal);
+                    }
+                }
+            });
+
+            // Ajouter un gestionnaire d'événements pour le clic en dehors de la modal
+            document.body.addEventListener('click', function(e) {
+                const backdrop = document.getElementById('modalBackdrop');
+                const modal = document.querySelector('.modal');
+                if (backdrop && e.target === backdrop) {
+                    // Seulement si le clic est sur le backdrop (pas sur la modal)
+                    removeModal(modal);
+                }
+            });
+
+            // Empêcher la fermeture lors du clic à l'intérieur de la modal
+            document.body.addEventListener('click', function(e) {
+                const modal = document.querySelector('.modal');
+                if (modal && modal.contains(e.target)) {
+                    e.stopPropagation();
+                }
+            });
+        });
     </script>
 {% endblock %}
 
