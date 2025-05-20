@@ -1,10 +1,15 @@
 from django.db import models
+from django.utils import timezone
 
 class Profile(models.Model):
     identifiant = models.CharField(max_length=100, unique=True, null=False, blank=False, default='default')
     name = models.CharField(max_length=100)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+
+    def save(self, *args, **kwargs):
+        self.updated_at = timezone.now()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

@@ -1,55 +1,31 @@
-from django.test import TestCase, Client
+from django.test import TestCase
 from django.urls import resolve, reverse
 from django.http import HttpRequest
 from django.utils.html import escape
 from .views import portfolio
 from .models import Profile, About, Experience, Project
 from bs4 import BeautifulSoup
-from django.contrib.auth.models import User
 
-class PortfolioViewTest(TestCase):
+class BaseTest(TestCase):
+    fixtures = ['test_fixtures.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.profile = Profile.objects.get(identifiant='test-profile')
+        cls.about = About.objects.get(profile=cls.profile)
+        cls.experience = Experience.objects.get(profile=cls.profile)
+        cls.project = Project.objects.get(profile=cls.profile)
+
+    @classmethod
+    def tearDownClass(cls):
+        if hasattr(cls, 'user'):
+            cls.user.delete()
+        super().tearDownClass()
+
+class PortfolioViewTest(BaseTest):
     def setUp(self):
         self.request = HttpRequest()
-
-        # Créer un profil de test
-        self.profile = Profile.objects.create(
-            name='Test Profile',
-            identifiant='test-identifiant'
-        )
-        
-        # Créer une section About de test
-        self.about = About.objects.create(
-            profile=self.profile,
-            content='Test About Content',
-            order=1
-        )
-        
-        # Créer une expérience de test
-        self.experience = Experience.objects.create(
-            profile=self.profile,
-            dates='2023-2024',
-            company='Test Company',
-            location='Test Location',
-            position='Test Position',
-            description='Test Description',
-            order=1
-        )
-        
-        # Créer un projet de test
-        self.project = Project.objects.create(
-            profile=self.profile,
-            title='Test Project',
-            description='Test Project Description',
-            order=1
-        )
-
-        self.context = {
-            'profile': self.profile,
-            'about': self.profile.about.all(),
-            'experience': self.profile.experience.all(),
-            'projects': self.profile.projects.all()
-        }
-
         self.response = portfolio(self.request, self.profile.identifiant)
         self.soup = BeautifulSoup(self.response.content, "html.parser")
 
@@ -60,36 +36,29 @@ class PortfolioViewTest(TestCase):
 
     def test_portfolio_returns_correct_html(self):
         """Teste que la page d'accueil retourne le bon HTML"""
-        client = Client()
-        response = client.get(f'/{self.profile.identifiant}/')
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'portfolio.html')
+        self.response = self.client.get(f'/{self.profile.identifiant}/')
+        self.assertEqual(self.response.status_code, 200)
+        self.assertTemplateUsed(self.response, 'portfolio.html')
 
     def test_profile_display(self):
         """Teste l'affichage du profil"""
-        
-        # Vérifier le nom du profil
         name_element = self.soup.find(id="name")
         self.assertIsNotNone(name_element)
         self.assertEqual(name_element.text.strip(), self.profile.name)
 
     def test_about_display(self):
         """Teste l'affichage des sections About"""
-        
         about_section = self.soup.find(id="about")
         self.assertIsNotNone(about_section)
         
-        # Vérifier que le contenu About est présent
         about_content = about_section.find_all('p')[0].text
         self.assertEqual(about_content.strip(), self.about.content)
 
     def test_experience_display(self):
         """Teste l'affichage des expériences"""
-        
         experience_section = self.soup.find(id="experience")
         self.assertIsNotNone(experience_section)
         
-        # Vérifier que les informations de l'expérience sont présentes
         exp_text = experience_section.get_text(strip=True, separator='.')
         self.assertIn(self.experience.dates, exp_text)
         self.assertIn(self.experience.position, exp_text)
@@ -98,7 +67,6 @@ class PortfolioViewTest(TestCase):
 
     def test_projects_display(self):
         """Teste l'affichage des projets"""
-        
         projects_section = self.soup.find(id="projects")
         self.assertIsNotNone(projects_section)
         
@@ -111,103 +79,53 @@ class PortfolioViewTest(TestCase):
 
     def test_nonexistent_profile(self):
         """Test que l'accès à un profil inexistant renvoie une erreur 404"""
-        response = self.client.get(reverse('portfolio', args=['non-existent']))
-        self.assertEqual(response.status_code, 404)
+        self.response = self.client.get(reverse('portfolio', args=['non-existent']))
+        self.assertEqual(self.response.status_code, 404)
 
-class DataDisplayViewTest(TestCase):
+class DataDisplayViewTest(BaseTest):
     def setUp(self):
-        """Configuration commune pour tous les tests"""
-        # Vérifier si le superuser existe déjà
-        if not User.objects.filter(username='testuser').exists():
-            self.user = User.objects.create_superuser(
-                username='testuser',
-                email='test@example.com',
-                password='testpassword'
-            )
-        else:
-            self.user = User.objects.get(username='testuser')
-        
-        self.client = Client()
-        self.client.login(username='testuser', password='testpassword')
-        
-        # Créer un profil de test avec ses éléments liés
-        self.profile = Profile.objects.create(
-            name='Test Profile',
-            identifiant='test-profile'
-        )
-        
-        # Créer une section About de test
-        self.about = About.objects.create(
-            profile=self.profile,
-            content='Test About Content',
-            order=0
-        )
-        
-        # Créer une expérience de test
-        self.experience = Experience.objects.create(
-            profile=self.profile,
-            dates='2020-2023',
-            company='Test Company',
-            position='Test Position',
-            location='Test Location',
-            description='Test Description',
-            order=0
-        )
-        
-        # Créer un projet de test
-        self.project = Project.objects.create(
-            profile=self.profile,
-            title='Test Project',
-            description='Test Project Description',
-            order=0
-        )
-
-    def tearDown(self):
-        # Supprimer le superuser à la fin des tests
-        if hasattr(self, 'user'):
-            self.user.delete()
+        self.response = self.client.get(reverse('data_display'))
 
     def test_data_display_view(self):
         """Teste la vue data_display"""
-        response = self.client.get(reverse('data_display'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'data_display.html')
+        self.assertEqual(self.response.status_code, 200)
+        self.assertTemplateUsed(self.response, 'data_display.html')
 
     def test_profile_display(self):
         """Teste l'affichage des profils"""
-        response = self.client.get(reverse('data_display'))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, self.profile.name)
+        self.response = self.client.get(reverse('data_display'))
+        self.assertEqual(self.response.status_code, 200)
+        self.assertContains(self.response, self.profile.name)
 
     def test_profile_deletion(self):
         # Supprimer le profil et vérifier que les données associées sont supprimées
         Profile.objects.all().delete()
 
-        response = self.client.get(reverse('data_display'))
-        self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, self.profile.name)
-        self.assertNotContains(response, self.about.content)
-        self.assertNotContains(response, self.experience.company)
-        self.assertNotContains(response, self.project.title)
-        self.assertContains(response, 'Aucun profil trouvé')
-        self.assertContains(response, 'Aucune section About trouvée')
-        self.assertContains(response, 'Aucune expérience trouvée')
-        self.assertContains(response, 'Aucun projet trouvé')
+        self.response = self.client.get(reverse('data_display'))
+        self.assertEqual(self.response.status_code, 200)
+        self.assertNotContains(self.response, self.profile.name)
+        self.assertNotContains(self.response, self.about.content)
+        self.assertNotContains(self.response, self.experience.company)
+        self.assertNotContains(self.response, self.project.title)
+        self.assertContains(self.response, 'Aucun profil trouvé')
+        self.assertContains(self.response, 'Aucune section About trouvée')
+        self.assertContains(self.response, 'Aucune expérience trouvée')
+        self.assertContains(self.response, 'Aucun projet trouvé')
 
     def test_profile_selection_and_data_display(self):
         """
         Teste la sélection d'un profil et l'affichage des données liées
         """
         # Accéder à la page data_display
-        response = self.client.get(reverse('data_display'))
-        self.assertEqual(response.status_code, 200)
+        self.response = self.client.get(reverse('data_display'))
+        self.assertEqual(self.response.status_code, 200)
         
         # Simuler le clic sur la ligne du profil
-        response = self.client.get(reverse('load_profile_data') + f'?identifiant={self.profile.identifiant}')
-        self.assertEqual(response.status_code, 200)
+        self.response = self.client.get(reverse('load_profile_data') + f'?identifiant={self.profile.identifiant}')
+        self.assertEqual(self.response.status_code, 200)
         
         # Vérifier que les données sont correctement chargées
-        data = response.json()
+        data = self.response.json()
         self.assertIn('about', data)
         self.assertIn('experience', data)
         self.assertIn('projects', data)
@@ -222,65 +140,25 @@ class DataDisplayViewTest(TestCase):
         self.assertEqual(len(data['projects']), 1)
         self.assertEqual(data['projects'][0]['title'], self.project.title)
 
-class LoadDataViewTest(TestCase):
-    def setUp(self):
-        """Configuration commune pour tous les tests"""
-        # Vérifier si le superuser existe déjà
-        if not User.objects.filter(username='testuser').exists():
-            self.user = User.objects.create_superuser(
-                username='testuser',
-                email='test@example.com',
-                password='testpassword'
-            )
-        else:
-            self.user = User.objects.get(username='testuser')
-        
-        self.client = Client()
-        self.client.login(username='testuser', password='testpassword')
-        
-        # Créer un profil de test
-        self.profile = Profile.objects.create(
-            name='Test Profile',
-            identifiant='test-profile'
-        )
-
-    def tearDown(self):
-        # Supprimer le superuser à la fin des tests
-        if hasattr(self, 'user'):
-            self.user.delete()
+class LoadDataViewTest(BaseTest):
 
     def test_create_about(self):
         """Teste la création d'une section About"""
-        # Données pour la création
-        about_data = {
-            'profile': self.profile,
-            'content': 'Nouvelle section About',
-            'order': 0
-        }
-        
-        # Créer une nouvelle section About
-        About.objects.create(**about_data)
         
         # Vérifier que l'objet a été créé
-        self.assertTrue(About.objects.filter(content='Nouvelle section About').exists())
+        self.assertTrue(About.objects.filter(content=self.about.content).exists())
         
         # Vérifier que la section apparaît dans l'interface
-        response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
-        self.assertEqual(response.status_code, 200)
+        self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
         
-        data = response.json()
+        data = self.response.json()
         self.assertIn('about', data)
         self.assertEqual(len(data['about']), 1)
-        self.assertEqual(data['about'][0]['content'], 'Nouvelle section About')
+        self.assertEqual(data['about'][0]['content'], self.about.content)
 
     def test_update_about(self):
         """Teste la mise à jour d'une section About"""
-        # Créer une section About pour le test
-        about = About.objects.create(
-            profile=self.profile,
-            content='Contenu initial',
-            order=0
-        )
         
         # Données pour la mise à jour
         updated_data = {
@@ -288,19 +166,19 @@ class LoadDataViewTest(TestCase):
             'order': 1
         }
         
-        # Mettre à jour la section About en utilisant les méthodes natives
-        About.objects.filter(id=about.id).update(**updated_data)
+        # Mettre à jour la section About
+        About.objects.filter(id=self.about.id).update(**updated_data)
+        self.about.refresh_from_db()
         
         # Vérifier que les modifications ont été sauvegardées
-        about.refresh_from_db()
-        self.assertEqual(about.content, 'Contenu mis à jour')
-        self.assertEqual(about.order, 1)
+        self.assertEqual(self.about.content, 'Contenu mis à jour')
+        self.assertEqual(self.about.order, 1)
         
         # Vérifier que les changements apparaissent dans l'interface via load_profile_data
-        response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
-        self.assertEqual(response.status_code, 200)
+        self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
         
-        data = response.json()
+        data = self.response.json()
         self.assertIn('about', data)
         self.assertEqual(len(data['about']), 1)
         self.assertEqual(data['about'][0]['content'], 'Contenu mis à jour')
@@ -308,91 +186,62 @@ class LoadDataViewTest(TestCase):
 
     def test_delete_about(self):
         """Teste la suppression d'une section About"""
-        # Créer une section About pour le test
-        about = About.objects.create(
-            profile=self.profile,
-            content='Contenu à supprimer',
-            order=0
-        )
         
         # Supprimer la section About
-        About.objects.filter(id=about.id).delete()
+        self.about.delete()
         
         # Vérifier que l'objet a été supprimé
-        self.assertFalse(About.objects.filter(id=about.id).exists())
+        self.assertFalse(About.objects.filter(id=self.about.id).exists())
         
         # Vérifier que la section ne s'affiche plus
-        response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
-        self.assertEqual(response.status_code, 200)
+        self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
         
-        data = response.json()
+        data = self.response.json()
         self.assertIn('about', data)
         self.assertEqual(len(data['about']), 0)
 
     def test_create_experience(self):
         """Teste la création d'une expérience"""
-        # Données pour la création
-        experience_data = {
-            'profile': self.profile,
-            'dates': '2023-2024',
-            'company': 'Nouvelle entreprise',
-            'location': 'Nouveau lieu',
-            'position': 'Nouveau poste',
-            'description': 'Nouvelle description',
-            'order': 0
-        }
-        
-        # Créer une nouvelle expérience
-        Experience.objects.create(**experience_data)
-        
+
         # Vérifier que l'objet a été créé
-        self.assertTrue(Experience.objects.filter(company='Nouvelle entreprise').exists())
+        self.assertTrue(Experience.objects.filter(company=self.experience.company).exists())
         
         # Vérifier que l'expérience apparaît dans l'interface
-        response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
-        self.assertEqual(response.status_code, 200)
+        self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
         
-        data = response.json()
+        data = self.response.json()
         self.assertIn('experience', data)
         self.assertEqual(len(data['experience']), 1)
-        self.assertEqual(data['experience'][0]['company'], 'Nouvelle entreprise')
+        self.assertEqual(data['experience'][0]['company'], self.experience.company)
 
     def test_update_experience(self):
         """Teste la mise à jour d'une expérience"""
-        # Créer une expérience pour le test
-        experience = Experience.objects.create(
-            profile=self.profile,
-            dates='2023-2024',
-            company='Entreprise initiale',
-            location='Lieu initial',
-            position='Poste initial',
-            description='Description initiale',
-            order=0
-        )
         
         # Données pour la mise à jour
         updated_data = {
             'dates': '2024-2025',
             'company': 'Entreprise mise à jour',
-            'location': 'Lieu mis à jour',
+            'location': 'Endroit mis à jour',
             'position': 'Poste mis à jour',
             'description': 'Description mise à jour',
             'order': 1
         }
         
-        # Mettre à jour l'expérience en utilisant les méthodes natives
-        Experience.objects.filter(id=experience.id).update(**updated_data)
+        # Mettre à jour l'expérience
+        Experience.objects.filter(id=self.experience.id).update(**updated_data)
+        self.experience.refresh_from_db()
         
         # Vérifier que les modifications ont été sauvegardées
-        experience.refresh_from_db()
-        self.assertEqual(experience.company, 'Entreprise mise à jour')
-        self.assertEqual(experience.order, 1)
+        self.assertEqual(self.experience.company, 'Entreprise mise à jour')
+        self.assertEqual(self.experience.order, 1)
         
         # Vérifier que les changements apparaissent dans l'interface via load_profile_data
-        response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
-        self.assertEqual(response.status_code, 200)
+        self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
         
-        data = response.json()
+        data = self.response.json()
         self.assertIn('experience', data)
         self.assertEqual(len(data['experience']), 1)
         self.assertEqual(data['experience'][0]['company'], 'Entreprise mise à jour')
@@ -400,65 +249,38 @@ class LoadDataViewTest(TestCase):
 
     def test_delete_experience(self):
         """Teste la suppression d'une expérience"""
-        # Créer une expérience pour le test
-        experience = Experience.objects.create(
-            profile=self.profile,
-            dates='2023-2024',
-            company='Entreprise à supprimer',
-            location='Lieu à supprimer',
-            position='Poste à supprimer',
-            description='Description à supprimer',
-            order=0
-        )
         
         # Supprimer l'expérience
-        experience.delete()
+        self.experience.delete()
         
         # Vérifier que l'objet a été supprimé
-        self.assertFalse(Experience.objects.filter(id=experience.id).exists())
+        self.assertFalse(Experience.objects.filter(id=self.experience.id).exists())
         
         # Vérifier que l'expérience ne s'affiche plus
-        response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
-        self.assertEqual(response.status_code, 200)
+        self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
         
-        data = response.json()
+        data = self.response.json()
         self.assertIn('experience', data)
         self.assertEqual(len(data['experience']), 0)
 
     def test_create_project(self):
         """Teste la création d'un projet"""
-        # Données pour la création
-        project_data = {
-            'profile': self.profile,
-            'title': 'Nouveau projet',
-            'description': 'Description du nouveau projet',
-            'order': 0
-        }
-        
-        # Créer un nouveau projet
-        Project.objects.create(**project_data)
-        
+
         # Vérifier que l'objet a été créé
-        self.assertTrue(Project.objects.filter(title='Nouveau projet').exists())
+        self.assertTrue(Project.objects.filter(title=self.project.title).exists())
         
         # Vérifier que le projet apparaît dans l'interface
-        response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
-        self.assertEqual(response.status_code, 200)
+        self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
         
-        data = response.json()
+        data = self.response.json()
         self.assertIn('projects', data)
         self.assertEqual(len(data['projects']), 1)
-        self.assertEqual(data['projects'][0]['title'], 'Nouveau projet')
+        self.assertEqual(data['projects'][0]['title'], self.project.title)
 
     def test_update_project(self):
         """Teste la mise à jour d'un projet"""
-        # Créer un projet pour le test
-        project = Project.objects.create(
-            profile=self.profile,
-            title='Titre initial',
-            description='Description initiale',
-            order=0
-        )
         
         # Données pour la mise à jour
         updated_data = {
@@ -467,20 +289,19 @@ class LoadDataViewTest(TestCase):
             'order': 1
         }
         
-        # Mettre à jour le projet en utilisant les méthodes natives
-        Project.objects.filter(id=project.id).update(**updated_data)
+        # Mettre à jour le projet
+        Project.objects.filter(id=self.project.id).update(**updated_data)
+        self.project.refresh_from_db()
         
         # Vérifier que les modifications ont été sauvegardées
-        project.refresh_from_db()
-        self.assertEqual(project.title, 'Titre mis à jour')
-        self.assertEqual(project.order, 1)
+        self.assertEqual(self.project.title, 'Titre mis à jour')
+        self.assertEqual(self.project.order, 1)
         
         # Vérifier que les changements apparaissent dans l'interface via load_profile_data
-        response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
-        self.assertEqual(response.status_code, 200)
+        self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
         
-        # Vérifier que les données retournées correspondent aux changements
-        data = response.json()
+        data = self.response.json()
         self.assertIn('projects', data)
         self.assertEqual(len(data['projects']), 1)
         self.assertEqual(data['projects'][0]['title'], 'Titre mis à jour')
@@ -488,30 +309,27 @@ class LoadDataViewTest(TestCase):
 
     def test_delete_project(self):
         """Teste la suppression d'un projet"""
-        # Créer un projet pour le test
-        project = Project.objects.create(
-            profile=self.profile,
-            title='Projet à supprimer',
-            description='Description à supprimer',
-            order=0
-        )
-        
         # Supprimer le projet
-        project.delete()
+        self.project.delete()
         
         # Vérifier que l'objet a été supprimé
-        self.assertFalse(Project.objects.filter(id=project.id).exists())
+        self.assertFalse(Project.objects.filter(id=self.project.id).exists())
         
         # Vérifier que le projet ne s'affiche plus
-        response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
-        self.assertEqual(response.status_code, 200)
+        self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
         
-        data = response.json()
+        data = self.response.json()
         self.assertIn('projects', data)
         self.assertEqual(len(data['projects']), 0)
 
     def test_ordering(self):
         """Teste l'ordre des About, Projets et Expériences"""
+
+        About.objects.all().delete()
+        Project.objects.all().delete()
+        Experience.objects.all().delete()
+
         # Créer des About avec différents ordres
         about1 = About.objects.create(profile=self.profile, content='About 1', order=2)
         about2 = About.objects.create(profile=self.profile, content='About 2', order=1)
@@ -528,10 +346,10 @@ class LoadDataViewTest(TestCase):
         experience3 = Experience.objects.create(profile=self.profile, company='Experience 3', order=0, dates='2025')
         
         # Vérifier l'ordre via load_profile_data
-        response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
-        self.assertEqual(response.status_code, 200)
+        self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
         
-        data = response.json()
+        data = self.response.json()
         
         # Vérifier l'ordre des About
         abouts = data['about']
@@ -554,32 +372,18 @@ class LoadDataViewTest(TestCase):
         self.assertEqual(experiences[1]['company'], 'Experience 2')  # Order = 1
         self.assertEqual(experiences[2]['company'], 'Experience 1')  # Order = 2
 
-class AddProfileViewTest(TestCase):
+class AddProfileViewTest(BaseTest):
     def setUp(self):
-        self.client = Client()
         self.url = reverse('add_profile')
-        
-        # Créer un superuser pour les tests
-        self.user = User.objects.create_superuser(
-            username='testuser',
-            email='test@example.com',
-            password='testpassword'
-        )
-        self.client.login(username='testuser', password='testpassword')
-
-    def tearDown(self):
-        # Supprimer le superuser à la fin des tests
-        if hasattr(self, 'user'):
-            self.user.delete()
 
     def test_add_profile_view_get(self):
         """Teste que la vue add_profile affiche le formulaire"""
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'add_profile.html')
-        self.assertContains(response, 'Ajouter un profil')
-        self.assertContains(response, 'Identifiant')
-        self.assertContains(response, 'Nom')
+        self.response = self.client.get(self.url)
+        self.assertEqual(self.response.status_code, 200)
+        self.assertTemplateUsed(self.response, 'add_profile.html')
+        self.assertContains(self.response, 'Ajouter un profil')
+        self.assertContains(self.response, 'Identifiant')
+        self.assertContains(self.response, 'Nom')
 
     def test_add_profile_success(self):
         """Teste la création réussie d'un profil"""
@@ -587,9 +391,9 @@ class AddProfileViewTest(TestCase):
             'identifiant': 'new-profile',
             'name': 'New Profile'
         }
-        response = self.client.post(self.url, data)
-        self.assertEqual(response.status_code, 302)  # Redirection
-        self.assertRedirects(response, reverse('data_display'))
+        self.response = self.client.post(self.url, data)
+        self.assertEqual(self.response.status_code, 302)  # Redirection
+        self.assertRedirects(self.response, reverse('data_display'))
         
         # Vérifier que le profil a été créé
         profile = Profile.objects.get(identifiant='new-profile')
@@ -601,10 +405,10 @@ class AddProfileViewTest(TestCase):
             'identifiant': 'invalid identifiant',
             'name': 'Test Profile'
         }
-        response = self.client.post(self.url, data)
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'add_profile.html')
-        self.assertContains(response, escape('L\'identifiant ne doit pas contenir d\'espace'))
+        self.response = self.client.post(self.url, data)
+        self.assertEqual(self.response.status_code, 200)
+        self.assertTemplateUsed(self.response, 'add_profile.html')
+        self.assertContains(self.response, escape('L\'identifiant ne doit pas contenir d\'espace'))
 
     def test_add_profile_duplicate_identifiant(self):
         """Teste la création avec un identifiant déjà existant"""
@@ -615,7 +419,7 @@ class AddProfileViewTest(TestCase):
             'identifiant': 'existing',
             'name': 'Test Profile'
         }
-        response = self.client.post(self.url, data)
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'add_profile.html')
-        self.assertContains(response, 'Cet identifiant est déjà utilisé')
+        self.response = self.client.post(self.url, data)
+        self.assertEqual(self.response.status_code, 200)
+        self.assertTemplateUsed(self.response, 'add_profile.html')
+        self.assertContains(self.response, 'Cet identifiant est déjà utilisé')

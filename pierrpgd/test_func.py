@@ -1,5 +1,4 @@
-from django.test import TestCase, Client, LiveServerTestCase
-from django.contrib.auth.models import User
+from django.test import LiveServerTestCase
 from django.urls import reverse
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -9,31 +8,54 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException
 from .models import Profile, About, Experience, Project
 
-url_portfolio = 'http://localhost:8000/pierrpgd'
+class BaseTest(LiveServerTestCase):
+    fixtures = ['test_fixtures.json']
 
-class PortfolioPageTest(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
 
-    def setUp(self):
         options = webdriver.ChromeOptions()
         options.add_argument('--headless')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
-        self.browser = webdriver.Chrome(options=options)
+        cls.browser = webdriver.Chrome(options=options)
 
-    def tearDown(self):
-        self.browser.quit()
+    @classmethod
+    def tearDownClass(cls):
+        cls.browser.quit()
+        super().tearDownClass()
+
+    def setUpPortfolio(self):
+        self.getData()
+        self.url = f"{self.live_server_url}/{self.profile.identifiant}"
+        self.browser.get(self.url)
+
+    def setUpData(self):
+        self.getData()
+        self.url = f"{self.live_server_url}/data"
+        self.browser.get(self.url)
+
+    def getData(self):
+        self.profile = Profile.objects.get(identifiant='test-profile')
+        self.about = About.objects.get(profile=self.profile)
+        self.experience = Experience.objects.get(profile=self.profile)
+        self.project = Project.objects.get(profile=self.profile)
+
+class PortfolioPageTest(BaseTest):
+
+    def setUp(self):
+        super().setUpClass()
+        self.setUpPortfolio()
 
     def test_project_is_installed_and_working(self):
-        self.browser.get(url_portfolio)
-        self.assertIn("Pierrick Pagaud | Portfolio", self.browser.title)
+        self.assertIn(f"{self.profile.name} | Portfolio", self.browser.title)
 
     def test_portfolio_contains_a_navbar(self):
-        self.browser.get(url_portfolio)
         navbar = self.browser.find_element(By.TAG_NAME, "nav")
         self.assertIsNotNone(navbar)
 
     def test_boostrap_is_charged(self):
-        self.browser.get(url_portfolio)
         links = self.browser.find_elements(By.TAG_NAME, "link")
         bootstrap_loaded = any(
             "bootstrap" in link.get_attribute("href") for link in links if link.get_attribute("rel") == "stylesheet"
@@ -41,102 +63,35 @@ class PortfolioPageTest(TestCase):
         self.assertTrue(bootstrap_loaded, "Bootstrap CSS is not charged.")
 
     def test_two_columns(self):
-        self.browser.get(url_portfolio)
         cols = self.browser.find_elements(By.CSS_SELECTOR, "[id*='col']")
-
         self.assertEqual(len(cols), 2, "Portfolio doesn't have 2 columns.")
 
     def test_visible_title_is_my_name(self):
-        self.browser.get(url_portfolio)
         name = self.browser.find_element(By.ID, "name")
-        self.assertEqual(name.text, 'Pierrick Pagaud', "My name doesn't appear on the portfolio.")
-
-class NavBarTest(TestCase):
-
-    def setUp(self):
-        options = webdriver.ChromeOptions()
-        options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        self.browser = webdriver.Chrome(options=options)
-
-    def tearDown(self):
-        self.browser.quit()
+        self.assertEqual(name.text, self.profile.name, "Profile name doesn't appear on the portfolio.")
 
     def test_navbar_contains_links(self):
-        self.browser.get(url_portfolio)
         navbar = self.browser.find_element(By.TAG_NAME, "nav")
 
         links = navbar.find_elements(By.TAG_NAME, "a")
         self.assertEqual(len(links), 4, "Navigation bar doesn't have 4 links.")
 
-        self.assertEqual(links[0].get_attribute('href'), f'{url_portfolio}/', "Navigation bar doesn't have my name.")
-        self.assertEqual(links[1].get_attribute('href'), f'{url_portfolio}/#about', "Navigation bar doesn't have an 'About' item.")
-        self.assertEqual(links[2].get_attribute('href'), f'{url_portfolio}/#experience', "Navigation bar doesn't have an 'Experience' item.")
-        self.assertEqual(links[3].get_attribute('href'), f'{url_portfolio}/#projects', "Navigation bar doesn't have an 'Projects' item.")
+        self.assertEqual(links[0].get_attribute('href'), f'{self.url}/', "Navigation bar doesn't have my name.")
+        self.assertEqual(links[1].get_attribute('href'), f'{self.url}/#about', "Navigation bar doesn't have an 'About' item.")
+        self.assertEqual(links[2].get_attribute('href'), f'{self.url}/#experience', "Navigation bar doesn't have an 'Experience' item.")
+        self.assertEqual(links[3].get_attribute('href'), f'{self.url}/#projects', "Navigation bar doesn't have an 'Projects' item.")
 
-class DataDisplayTest(LiveServerTestCase):
+class DataDisplayTest(BaseTest):
+
     def setUp(self):
-        # Vérifier si le superuser existe déjà
-        if not User.objects.filter(username='testuser').exists():
-            self.user = User.objects.create_superuser(
-                username='testuser',
-                email='test@example.com',
-                password='testpassword'
-            )
-        else:
-            self.user = User.objects.get(username='testuser')
-        
-        self.client = Client()
-        self.client.login(username='testuser', password='testpassword')
-        
-        # Créer un profil de test avec ses éléments liés
-        self.profile = Profile.objects.create(
-            name='Test Profile',
-            identifiant='test-profile'
-        )
-        
-        self.about = About.objects.create(
-            profile=self.profile,
-            content='Test About Content',
-            order=1
-        )
-        
-        self.experience = Experience.objects.create(
-            profile=self.profile,
-            dates='2023-2024',
-            company='Test Company',
-            location='Test Location',
-            position='Test Position',
-            description='Test Description',
-            order=1
-        )
-        
-        self.project = Project.objects.create(
-            profile=self.profile,
-            title='Test Project',
-            description='Test Project Description',
-            order=1
-        )
-
-        options = webdriver.ChromeOptions()
-        options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        self.browser = webdriver.Chrome(options=options)
-        
-    def tearDown(self):
-        # Supprimer le superuser à la fin des tests
-        if hasattr(self, 'user'):
-            self.user.delete()
+        super().setUp()
+        self.setUpData()
 
     def test_profile_selection_toggle_and_data_display_or_hide(self):
         """
         Teste la sélection d'un profil et l'affichage des données liées avec Selenium
         """
-        # Accéder à la page data_display
-        self.browser.get(f'{self.live_server_url}/data/')
-        
+
         # Trouver la ligne du profil dans le tableau
         profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.name}')]/..")
         
@@ -179,29 +134,29 @@ class DataDisplayTest(LiveServerTestCase):
         self.assertEqual(len(project_title), 0)
 
     def test_profile_add_button_exists(self):
-        response = self.client.get(reverse('data_display'))
-        self.assertEqual(response.status_code, 200)
+        """Teste la présence du bouton d'ajout de profil"""
+
+        # Vérifier la présence du titre de la page
+        page_title = self.browser.find_element(By.CSS_SELECTOR, "h1").text
+        self.assertEqual(page_title, "Données de la Base de Données")
         
         # Vérifier la présence du bouton d'ajout
-        self.assertContains(response, 'Ajouter un profil')
+        add_button = self.browser.find_element(By.CSS_SELECTOR, "div.card-header a.btn-primary")
+        self.assertIsNotNone(add_button)
         
-        # Vérifier l'existence du lien vers la page d'ajout
+        # Vérifier que le bouton contient le texte correct
+        self.assertIn('Ajouter un profil', add_button.text)
+        
+        # Vérifier que le bouton contient l'icône Font Awesome
+        icon = add_button.find_element(By.CSS_SELECTOR, "i.fas")
+        self.assertIsNotNone(icon)
+        
+        # Vérifier que le bouton pointe vers la bonne URL
         add_profile_url = reverse('add_profile')
-        self.assertContains(response, f'href="{add_profile_url}"')
-        
-        # Vérifier que le bouton est dans la section des profils
-        content = response.content.decode('utf-8')
-        profiles_section_start = content.find('<div class="card mb-4">')
-        profiles_section_end = content.find('</div>', profiles_section_start)
-        profiles_section = content[profiles_section_start:profiles_section_end]
-        
-        self.assertIn('Ajouter un profil', profiles_section)
+        self.assertEqual(add_button.get_attribute('href'), f"{self.live_server_url}{add_profile_url}")
 
     def test_double_click_about(self):
         """Teste le comportement du double clic sur une ligne du tableau À propos"""
-        
-        # Accéder à la page data_display
-        self.browser.get(f'{self.live_server_url}/data/')
         
         # Sélectionner le profil
         profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
@@ -253,9 +208,6 @@ class DataDisplayTest(LiveServerTestCase):
     def test_double_click_experience(self):
         """Teste le comportement du double clic sur une ligne du tableau Expériences"""
         
-        # Accéder à la page data_display
-        self.browser.get(f'{self.live_server_url}/data/')
-        
         # Sélectionner le profil
         profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
         profile_row.click()
@@ -306,9 +258,6 @@ class DataDisplayTest(LiveServerTestCase):
 
     def test_double_click_project(self):
         """Teste le comportement du double clic sur une ligne du tableau Projets"""
-        
-        # Accéder à la page data_display
-        self.browser.get(f'{self.live_server_url}/data/')
         
         # Sélectionner le profil
         profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
