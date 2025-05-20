@@ -1,0 +1,873 @@
+from django.test import LiveServerTestCase
+from django.urls import reverse
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from pierrpgd.models import Profile, About, Experience, Project
+from selenium.webdriver.common.keys import Keys
+import time
+
+class BaseTest(LiveServerTestCase):
+    fixtures = ['test_fixtures.json']
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+        options = webdriver.ChromeOptions()
+        options.add_argument('--headless')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        cls.browser = webdriver.Chrome(options=options)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.browser.quit()
+        super().tearDownClass()
+
+    def setUpPortfolio(self):
+        self.getData()
+        self.url = f"{self.live_server_url}/{self.profile.identifiant}"
+        self.browser.get(self.url)
+
+    def setUpData(self):
+        self.getData()
+        self.url = f"{self.live_server_url}/data"
+        self.browser.get(self.url)
+
+    def getData(self):
+        self.profile = Profile.objects.get(identifiant='test-profile')
+        self.abouts = About.objects.filter(profile=self.profile).order_by('order')
+        self.experiences = Experience.objects.filter(profile=self.profile).order_by('order')
+        self.projects = Project.objects.filter(profile=self.profile).order_by('order')
+
+class ProfileTest(BaseTest):
+
+    def setUp(self):
+        super().setUp()
+        self.setUpData()
+
+    def test_profile_selection_toggle_and_data_display_or_hide(self):
+        """
+        Teste la sélection d'un profil et l'affichage des données liées avec Selenium
+        """
+
+        # Trouver la ligne du profil dans le tableau
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.name}')]/..")
+        
+        # Cliquer sur la ligne du profil
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre que les données soient chargées
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@id='profile-data']//h2[text()='À propos']"))
+        )
+
+        # Vérifier l'affichage des données About
+        about_content = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'about-table')]//td[contains(text(), 'Test About Content')]")
+        self.assertTrue(about_content.is_displayed())
+
+        # Vérifier l'affichage des données Experience
+        experience_company = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), 'Test Company')]")
+        self.assertTrue(experience_company.is_displayed())
+
+        # Vérifier l'affichage des données Project
+        project_title = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), 'Test Project')]")
+        self.assertTrue(project_title.is_displayed())
+
+        # Cliquer à nouveau sur la ligne du profil pour le désélectionner
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre que les données soient masquées
+        WebDriverWait(self.browser, 10).until(
+            EC.invisibility_of_element_located((By.XPATH, "//div[@id='profile-data']//h2[text()='À propos']"))
+        )
+        
+        # Vérifier que les données sont masquées
+        about_content = self.browser.find_elements(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'about-table')]//td[contains(text(), 'Test About Content')]")
+        self.assertEqual(len(about_content), 0)
+        
+        experience_company = self.browser.find_elements(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), 'Test Company')]")
+        self.assertEqual(len(experience_company), 0)
+        
+        project_title = self.browser.find_elements(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), 'Test Project')]")
+        self.assertEqual(len(project_title), 0)
+
+    def test_profile_add_button_exists(self):
+        """Teste la présence du bouton d'ajout de profil"""
+
+        # Vérifier la présence du titre de la page
+        page_title = self.browser.find_element(By.CSS_SELECTOR, "h1").text
+        self.assertEqual(page_title, "Données de la Base de Données")
+        
+        # Vérifier la présence du bouton d'ajout
+        add_button = self.browser.find_element(By.CSS_SELECTOR, "div.card-header a.btn-primary")
+        self.assertIsNotNone(add_button)
+        
+        # Vérifier que le bouton contient le texte correct
+        self.assertIn('Ajouter un profil', add_button.text)
+        
+        # Vérifier que le bouton contient l'icône Font Awesome
+        icon = add_button.find_element(By.CSS_SELECTOR, "i.fas")
+        self.assertIsNotNone(icon)
+        
+        # Vérifier que le bouton pointe vers la bonne URL
+        add_profile_url = reverse('add_profile')
+        self.assertEqual(add_button.get_attribute('href'), f"{self.live_server_url}{add_profile_url}")
+
+class PopupTest(BaseTest):
+
+    def setUp(self):
+        super().setUp()
+        self.setUpData()
+
+    def test_double_click_about(self):
+        """Teste le comportement du double clic sur une ligne du tableau À propos"""
+        
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre que les données soient chargées
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@id='profile-data']//h2[text()='À propos']"))
+        )
+        
+        # Trouver la ligne du tableau À propos
+        about_row = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'about-table')]//td[contains(text(), 'Test About Content')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(about_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'aboutModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        try:
+            modal = self.browser.find_element(By.ID, 'aboutModal')
+            self.assertTrue(modal.is_displayed())
+            
+            # Vérifier que le contenu de la popup est correct
+            modal_content = self.browser.find_element(By.CSS_SELECTOR, '#aboutModal .modal-content')
+            self.assertIn('Test About Content', modal_content.text)
+            
+            # Fermer la popup
+            close_button = self.browser.find_element(By.CSS_SELECTOR, '#aboutModal .modal-header button.close')
+            self.browser.execute_script("arguments[0].click();", close_button)
+            
+            # Attendre que la popup soit masquée
+            try:
+                WebDriverWait(self.browser, 10).until(
+                    EC.invisibility_of_element_located((By.ID, 'aboutModal'))
+                )
+            except:
+                # La modal a été supprimée, donc elle n'est plus dans le DOM
+                pass
+            
+            # Vérifier que la modal n'est plus présente dans le DOM
+            with self.assertRaises(NoSuchElementException):
+                self.browser.find_element(By.ID, 'aboutModal')
+            
+            # Trouver la ligne du tableau Expériences pour la deuxième expérience
+            about_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'about-table')]//td[contains(text(), '{self.abouts[1].content}')]/..")
+
+            # Effectuer un double clic
+            action = ActionChains(self.browser)
+            action.double_click(about_row).perform()
+            
+            # Attendre que la popup soit visible
+            WebDriverWait(self.browser, 10).until(
+                EC.visibility_of_element_located((By.ID, 'aboutModal'))
+            )
+            
+            # Vérifier que la popup est visible
+            modal = self.browser.find_element(By.ID, 'aboutModal')
+            self.assertTrue(modal.is_displayed())
+
+            # Vérifier le contenu de la popup
+            modal_content = self.browser.find_element(By.CSS_SELECTOR, '#aboutModal .modal-content')
+            self.assertIn(self.abouts[1].content, modal_content.text)
+            
+            # Fermer la popup
+            close_button = self.browser.find_element(By.CSS_SELECTOR, '#aboutModal .modal-header button.close')
+            self.browser.execute_script("arguments[0].click();", close_button)
+            
+            # Attendre que la popup soit masquée
+            try:
+                WebDriverWait(self.browser, 10).until(
+                    EC.invisibility_of_element_located((By.ID, 'aboutModal'))
+                )
+            except:
+                # La modal a été supprimée, donc elle n'est plus dans le DOM
+                pass
+            
+        except NoSuchElementException:
+            self.fail("La popup n'a pas été trouvée")
+
+    def test_double_click_experience(self):
+        """Teste le comportement du double clic sur une ligne du tableau Expériences"""
+        
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre que les données soient chargées
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@id='profile-data']//h2[text()='Expériences']"))
+        )
+        
+        # Trouver la ligne du tableau Expériences
+        experience_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), '{self.experiences[0].description}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(experience_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'experienceModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'experienceModal')
+        self.assertTrue(modal.is_displayed())
+        
+        # Vérifier le contenu de la popup
+        modal_content = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-content')
+        self.assertIn(self.experiences[0].description, modal_content.text)
+        
+        # Vérifier les informations de l'expérience
+        info = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-content-info')
+        self.assertIn(self.experiences[0].dates, info.text)
+        self.assertIn(self.experiences[0].company, info.text)
+        self.assertIn(self.experiences[0].location, info.text)
+        
+        # Fermer la popup
+        close_button = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-header button.close')
+        self.browser.execute_script("arguments[0].click();", close_button)
+        
+        # Attendre que la popup soit masquée
+        try:
+            WebDriverWait(self.browser, 10).until(
+                EC.invisibility_of_element_located((By.ID, 'experienceModal'))
+            )
+        except:
+            # La modal a été supprimée, donc elle n'est plus dans le DOM
+            pass
+        
+        # Vérifier que la modal n'est plus présente dans le DOM
+        with self.assertRaises(NoSuchElementException):
+            self.browser.find_element(By.ID, 'experienceModal')
+        
+        # Trouver la ligne du tableau Expériences pour la deuxième expérience
+        experience_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), '{self.experiences[1].description}')]/..")
+
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(experience_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'experienceModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'experienceModal')
+        self.assertTrue(modal.is_displayed())
+
+        # Vérifier le contenu de la popup
+        modal_content = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-content')
+        self.assertIn(self.experiences[1].description, modal_content.text)
+        
+        # Vérifier les informations de l'expérience
+        info = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-content-info')
+        self.assertIn(self.experiences[1].dates, info.text)
+        self.assertIn(self.experiences[1].company, info.text)
+        self.assertIn(self.experiences[1].location, info.text)
+        
+        # Fermer la popup
+        close_button = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-header button.close')
+        self.browser.execute_script("arguments[0].click();", close_button)
+        
+        # Attendre que la popup soit masquée
+        try:
+            WebDriverWait(self.browser, 10).until(
+                EC.invisibility_of_element_located((By.ID, 'experienceModal'))
+            )
+        except:
+            # La modal a été supprimée, donc elle n'est plus dans le DOM
+            pass
+
+    def test_double_click_project(self):
+        """Teste le comportement du double clic sur une ligne du tableau Projets"""
+        
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre que les données soient chargées
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@id='profile-data']//h2[text()='Projets']"))
+        )
+        
+        # Trouver la ligne du tableau Projets
+        project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.projects[0].title}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(project_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'projectModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'projectModal')
+        self.assertTrue(modal.is_displayed())
+        
+        # Vérifier le contenu de la popup
+        modal_content = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-content')
+        self.assertIn(self.projects[0].description, modal_content.text)
+        
+        # Vérifier le titre du projet
+        title = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-content-info')
+        self.assertIn(self.projects[0].title, title.text)
+        
+        # Fermer la popup
+        close_button = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-header button.close')
+        self.browser.execute_script("arguments[0].click();", close_button)
+        
+        # Attendre que la popup soit masquée
+        try:
+            WebDriverWait(self.browser, 10).until(
+                EC.invisibility_of_element_located((By.ID, 'projectModal'))
+            )
+        except:
+            # La modal a été supprimée, donc elle n'est plus dans le DOM
+            pass
+        
+        # Vérifier que la modal n'est plus présente dans le DOM
+        with self.assertRaises(NoSuchElementException):
+            self.browser.find_element(By.ID, 'projectModal')
+        
+        # Trouver la ligne du tableau Projets pour la deuxième expérience
+        project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.projects[1].title}')]/..")
+
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(project_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'projectModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'projectModal')
+        self.assertTrue(modal.is_displayed())
+
+        # Vérifier le contenu de la popup
+        modal_content = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-content')
+        self.assertIn(self.projects[1].description, modal_content.text)
+        
+        # Fermer la popup
+        close_button = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-header button.close')
+        self.browser.execute_script("arguments[0].click();", close_button)
+        
+        # Attendre que la popup soit masquée
+        try:
+            WebDriverWait(self.browser, 10).until(
+                EC.invisibility_of_element_located((By.ID, 'projectModal'))
+            )
+        except:
+            # La modal a été supprimée, donc elle n'est plus dans le DOM
+            pass
+
+    def test_content_is_editable(self):
+        """Teste que le contenu de la popup est modifiable par l'utilisateur"""
+
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre que les données soient chargées
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@id='profile-data']//h2[text()='Projets']"))
+        )
+    
+        # Trouver la ligne du tableau Projets
+        project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.projects[0].title}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(project_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'projectModal'))
+        )
+        
+        # Vérifier que les champs sont éditables
+        editable_fields = self.browser.find_elements(By.CSS_SELECTOR, ".editable-field")
+        self.assertGreater(len(editable_fields), 0, "Aucun champ éditable trouvé")
+
+        # Modifier un champ
+        first_field = editable_fields[0]
+        new_value = "Nouvelle valeur de test"
+        
+        # Effacer et entrer la nouvelle valeur
+        first_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_value).perform()
+
+        # Vérifier que la modification a été sauvegardée
+        updated_value = first_field.text
+        self.assertEqual(updated_value, f"Titre : {new_value}", "La modification n'a pas été sauvegardée")
+
+class ModifyAndSaveTest(BaseTest):
+
+    def setUp(self):
+        super().setUp()
+        self.setUpData()
+
+    def test_modify_and_save_about(self):
+        """Teste la modification et la sauvegarde d'un élément À propos"""
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.ID, "about-table"))
+        )
+        
+        # Trouver la ligne du tableau À propos
+        about_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'about-table')]//td[contains(text(), '{self.abouts[0].content}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(about_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'aboutModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'aboutModal')
+        self.assertTrue(modal.is_displayed())
+        
+        # Modifier le contenu
+        editable_content = modal.find_element(By.CSS_SELECTOR, '.editable-content')
+        new_content = "Nouveau contenu de test"
+        
+        # Effacer le contenu existant
+        editable_content.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content).perform()
+        
+        # Enregistrer et vérifier
+        save_button = modal.find_element(By.CSS_SELECTOR, '.btn-primary')
+        self.browser.execute_script("arguments[0].click();", save_button)
+        
+        # Vérifier que la modal commence à se fermer
+        WebDriverWait(self.browser, 10).until(
+            EC.invisibility_of_element_located((By.ID, 'aboutModal'))
+        )
+        
+        # Vérifier côté serveur que la modification est enregistrée
+        about_obj = About.objects.get(id=self.abouts[0].id)
+        self.assertEqual(about_obj.content, new_content)
+        
+        # Vérifier que le tableau est mis à jour
+        updated_row = WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, 
+                f"//div[@id='profile-data']//table[@id='about-table']//td[contains(., '{new_content}')]"))
+        )
+        self.assertTrue(updated_row.is_displayed())
+
+    def test_modify_and_save_experience(self):
+        """Teste la modification et la sauvegarde d'un élément Experience"""
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.ID, "experience-table"))
+        )
+        
+        # Trouver la ligne du tableau Experience
+        experience_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), '{self.experiences[0].company}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(experience_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'experienceModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'experienceModal')
+        self.assertTrue(modal.is_displayed())
+        
+        # Modifier le contenu
+        dates_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="dates"]')
+        new_content = "Nouveau contenu de test"
+        
+        # Effacer le contenu existant
+        dates_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content).perform()
+        
+        # Enregistrer et vérifier
+        save_button = modal.find_element(By.CSS_SELECTOR, '.btn-primary')
+        self.browser.execute_script("arguments[0].click();", save_button)
+        
+        # Vérifier que la modal commence à se fermer
+        WebDriverWait(self.browser, 10).until(
+            EC.invisibility_of_element_located((By.ID, 'experienceModal'))
+        )
+        
+        # Vérifier côté serveur que la modification est enregistrée
+        experience_obj = Experience.objects.get(id=self.experiences[0].id)
+        self.assertEqual(experience_obj.dates, new_content)
+        
+        # Vérifier que le tableau est mis à jour
+        updated_row = WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, 
+                f"//div[@id='profile-data']//table[@id='experience-table']//td[contains(., '{new_content}')]"))
+        )
+        self.assertTrue(updated_row.is_displayed())
+
+    def test_modify_and_save_project(self):
+        """Teste la modification et la sauvegarde d'un élément Project"""
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.ID, "projects-table"))
+        )
+        
+        # Trouver la ligne du tableau Projects
+        project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.projects[0].title}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(project_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'projectModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'projectModal')
+        self.assertTrue(modal.is_displayed())
+        
+        # Modifier le titre
+        title_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="title"]')
+        new_content = "Nouveau contenu de test"
+        
+        # Effacer le contenu existant
+        title_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content).perform()
+        
+        # Enregistrer et vérifier
+        save_button = modal.find_element(By.CSS_SELECTOR, '.btn-primary')
+        self.browser.execute_script("arguments[0].click();", save_button)
+        
+        # Vérifier que la modal commence à se fermer
+        WebDriverWait(self.browser, 10).until(
+            EC.invisibility_of_element_located((By.ID, 'projectModal'))
+        )
+        
+        # Vérifier côté serveur que la modification est enregistrée
+        project_obj = Project.objects.get(id=self.projects[0].id)
+        self.assertEqual(project_obj.title, new_content)
+        
+        # Vérifier que le tableau est mis à jour
+        updated_row = WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, 
+                f"//div[@id='profile-data']//table[@id='projects-table']//td[contains(., '{new_content}')]"))
+        )
+        self.assertTrue(updated_row.is_displayed())
+
+class AddSectionTest(BaseTest):
+
+    def setUp(self):
+        super().setUp()
+        self.setUpData()
+
+    def test_add_about_section(self):
+        """
+        Teste l'ajout d'une section À propos via l'interface
+        1. Ouvre la page data_display
+        2. Clique sur 'Ajouter une section'
+        3. Remplit le champ 'Contenu'
+        4. Valide et vérifie l'affichage
+        """
+        
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.ID, "about-table"))
+        )
+        
+        # Cliquer sur le bouton d'ajout
+        add_button = self.browser.find_element(By.ID, "addAboutSectionButton")
+        
+        # Cliquer via JavaScript pour éviter les problèmes d'interception
+        self.browser.execute_script("arguments[0].click();", add_button)
+        
+        # Attendre que la modal soit visible
+        modal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "aboutModal"))
+        )
+        
+        # Remplir le champ contenu
+        content_field = modal.find_element(By.CSS_SELECTOR, "[data-field='content']")
+        content_field.send_keys("Nouveau contenu de test")
+        
+        # Cliquer sur valider
+        validate_button = modal.find_element(By.ID, "aboutModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+        
+        # Vérifier l'affichage dans le tableau
+        WebDriverWait(self.browser, 20).until(
+            EC.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, "#about-table tbody tr"), 
+                "Nouveau contenu de test"
+            )
+        )
+        
+        # Vérification finale
+        rows = self.browser.find_elements(By.CSS_SELECTOR, "#about-table tbody tr")
+        self.assertTrue(any("Nouveau contenu de test" in row.text for row in rows))
+
+    def test_add_experience_section(self):
+        """
+        Teste l'ajout d'une section Expérience via l'interface
+        1. Ouvre la page data_display
+        2. Clique sur 'Ajouter une section'
+        3. Remplit le champ 'Contenu'
+        4. Valide et vérifie l'affichage
+        """
+        
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.ID, "experience-table"))
+        )
+        
+        # Scroll vers l'élément
+        add_button = self.browser.find_element(By.ID, "addExperienceSectionButton")
+        self.browser.execute_script("arguments[0].scrollIntoView(true);", add_button)
+        
+        # Attendre que l'élément soit cliquable
+        WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.ID, "addExperienceSectionButton"))
+        )
+        
+        # Cliquer via JavaScript pour éviter les problèmes d'interception
+        self.browser.execute_script("arguments[0].click();", add_button)
+        
+        # Attendre que la modal soit visible
+        modal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "experienceModal"))
+        )
+        
+        # Remplir le champ contenu
+        content_field = modal.find_element(By.CSS_SELECTOR, "[data-field='description']")
+        content_field.send_keys("Nouveau contenu de test")
+        
+        # Cliquer sur valider
+        validate_button = modal.find_element(By.ID, "experienceModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+        
+        # Vérifier l'affichage dans le tableau
+        WebDriverWait(self.browser, 20).until(
+            EC.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, "#experience-table tbody tr"), 
+                "Nouveau contenu de test"
+            )
+        )
+        
+        # Vérification finale
+        rows = self.browser.find_elements(By.CSS_SELECTOR, "#experience-table tbody tr")
+        self.assertTrue(any("Nouveau contenu de test" in row.text for row in rows))
+
+    def test_add_project_section(self):
+        """
+        Teste l'ajout d'une section Projets via l'interface
+        1. Ouvre la page data_display
+        2. Clique sur 'Ajouter une section'
+        3. Remplit le champ 'Contenu'
+        4. Valide et vérifie l'affichage
+        """
+        
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.ID, "projects-table"))
+        )
+        
+        # Cliquer sur le bouton d'ajout
+        add_button = self.browser.find_element(By.ID, "addProjectSectionButton")
+        
+        # Scroll vers l'élément
+        self.browser.execute_script("arguments[0].scrollIntoView(true);", add_button)
+        
+        # Attendre que l'élément soit cliquable
+        WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.ID, "addProjectSectionButton"))
+        )
+        
+        # Cliquer via JavaScript pour éviter les problèmes d'interception
+        self.browser.execute_script("arguments[0].click();", add_button)
+        
+        # Attendre que la modal soit visible
+        modal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "projectModal"))
+        )
+        
+        # Remplir le champ contenu
+        content_field = modal.find_element(By.CSS_SELECTOR, "[data-field='description']")
+        content_field.send_keys("Nouveau contenu de test")
+        
+        # Cliquer sur valider
+        validate_button = modal.find_element(By.ID, "projectModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+        
+        # Vérifier l'affichage dans le tableau
+        WebDriverWait(self.browser, 20).until(
+            EC.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, "#projects-table tbody tr"), 
+                "Nouveau contenu de test"
+            )
+        )
+        
+        # Vérification finale
+        rows = self.browser.find_elements(By.CSS_SELECTOR, "#projects-table tbody tr")
+        self.assertTrue(any("Nouveau contenu de test" in row.text for row in rows))
+
+class DeleteSectionTest(BaseTest):
+
+    def setUp(self):
+        super().setUp()
+        self.setUpData()
+
+    def test_delete_profile(self):
+        """Vérifie que le clic sur supprimer affiche la modal de confirmation"""
+        # Sélectionner le profil
+        delete_button = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, ".delete-profile"))
+        )
+        self.browser.execute_script("arguments[0].click();", delete_button)
+
+        # Vérifier l'affichage de la modal
+        WebDriverWait(self.browser, 5).until(
+            EC.visibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas apparue après le clic"
+        )
+        
+        # Vérifier que le bouton de confirmation est présent
+        confirm_button = self.browser.find_element(By.ID, "confirmDeleteButton")
+        self.assertTrue(confirm_button.is_displayed(), "Le bouton de confirmation n'est pas visible")
+
+    def test_delete_about(self):
+        """Vérifie que le clic sur supprimer affiche la modal de confirmation"""
+        # Sélectionner le profil
+        profile_row = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/.."))
+        )
+        self.browser.execute_script("arguments[0].click();", profile_row)
+
+        # Attendre et cliquer sur le bouton de suppression
+        delete_button = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, ".delete-about"))
+        )
+        self.browser.execute_script("arguments[0].click();", delete_button)
+
+        # Vérifier l'affichage de la modal
+        WebDriverWait(self.browser, 5).until(
+            EC.visibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas apparue après le clic"
+        )
+        
+        # Vérifier que le bouton de confirmation est présent
+        confirm_button = self.browser.find_element(By.ID, "confirmDeleteButton")
+        self.assertTrue(confirm_button.is_displayed(), "Le bouton de confirmation n'est pas visible")
+
+    def test_delete_experience_section(self):
+        """Vérifie que le clic sur supprimer affiche la modal de confirmation"""
+        # Sélectionner le profil
+        profile_row = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/.."))
+        )
+        self.browser.execute_script("arguments[0].click();", profile_row)
+
+        # Attendre et cliquer sur le bouton de suppression
+        delete_button = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, ".delete-experience"))
+        )
+        self.browser.execute_script("arguments[0].click();", delete_button)
+
+        # Vérifier l'affichage de la modal
+        WebDriverWait(self.browser, 5).until(
+            EC.visibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas apparue après le clic"
+        )
+        
+        # Vérifier que le bouton de confirmation est présent
+        confirm_button = self.browser.find_element(By.ID, "confirmDeleteButton")
+        self.assertTrue(confirm_button.is_displayed(), "Le bouton de confirmation n'est pas visible")
+
+    def test_delete_project_section(self):
+        """Vérifie que le clic sur supprimer affiche la modal de confirmation"""
+        # Sélectionner le profil
+        profile_row = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/.."))
+        )
+        self.browser.execute_script("arguments[0].click();", profile_row)
+
+        # Attendre et cliquer sur le bouton de suppression
+        delete_button = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, ".delete-project"))
+        )
+        self.browser.execute_script("arguments[0].click();", delete_button)
+
+        # Vérifier l'affichage de la modal
+        WebDriverWait(self.browser, 5).until(
+            EC.visibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas apparue après le clic"
+        )
+        
+        # Vérifier que le bouton de confirmation est présent
+        confirm_button = self.browser.find_element(By.ID, "confirmDeleteButton")
+        self.assertTrue(confirm_button.is_displayed(), "Le bouton de confirmation n'est pas visible")

@@ -2,8 +2,8 @@ from django.test import TestCase
 from django.urls import resolve, reverse
 from django.http import HttpRequest
 from django.utils.html import escape
-from .views import portfolio
-from .models import Profile, About, Experience, Project
+from pierrpgd.views import portfolio
+from pierrpgd.models import Profile, About, Experience, Project
 from bs4 import BeautifulSoup
 
 class BaseTest(TestCase):

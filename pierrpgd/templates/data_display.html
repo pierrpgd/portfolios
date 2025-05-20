@@ -132,7 +132,6 @@
             cursor: pointer;
             color: #6c757d;
             transition: color 0.2s;
-            margin: 0;
         }
         .modal button.close:hover {
             color: #343a40;
@@ -172,10 +171,47 @@
             border-color: #80bdff;  /* Bleu plus foncé au focus */
             background-color: #fff;
         }
+
+        #confirmDeleteModal {
+          background-color: transparent !important;
+          box-shadow: none !important;
+        }
+        
+        #confirmDeleteModal .modal-dialog {
+          border: none !important;
+          box-shadow: none !important;
+        }
+
+        #confirmDeleteModal .modal-content {
+          border: none;
+          border-radius: 8px;
+          box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+          background-color: rgba(255, 255, 255);
+        }
+
+        #confirmDeleteModal .modal-header {
+          border-bottom: none;
+          border-radius: 8px 8px 0 0;
+          background-color: rgba(220, 53, 69);
+        }
+
+        #confirmDeleteModal .modal-footer {
+          border-top: none;
+          padding-bottom: 1.5rem;
+          background-color: rgba(248, 249, 250);
+        }
+
+        @media (max-width: 576px) {
+          #confirmDeleteModal .modal-dialog {
+            width: 95%;
+            margin: 0.5rem auto;
+          }
+        }
     </style>
 {% endblock %}
 
 {% block extra_js %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         // Fonction utilitaire pour récupérer le jeton CSRF
         function getCsrfToken() {
@@ -240,11 +276,12 @@
                                     </div>
                                     <div id="about-table-container" class="card-body">
                                         ${data.about.length > 0 ? `
-                                            <table id="about-table" class="table table-hover">
+                                            <table id="about-table" class="table table-striped">
                                                 <thead>
                                                     <tr>
                                                         <th>Ordre</th>
                                                         <th>Contenu</th>
+                                                        <th class="text-end"></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -252,6 +289,11 @@
                                                         <tr class="about-row" data-id="${about.id}" data-content="${about.content}">
                                                             <td>${about.order}</td>
                                                             <td>${about.content}</td>
+                                                            <td class="text-end">
+                                                                <button class="btn btn-danger btn-sm delete-about" data-id="${about.id}">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+                                                            </td>
                                                             <input type="hidden" class="about-id" value="${about.id}">
                                                         </tr>
                                                     `).join('')}
@@ -272,7 +314,7 @@
                                     </div>
                                     <div id="experience-table-container" class="card-body">
                                         ${data.experience.length > 0 ? `
-                                            <table id="experience-table" class="table table-hover">
+                                            <table id="experience-table" class="table table-striped">
                                                 <thead>
                                                     <tr>
                                                         <th>Ordre</th>
@@ -281,6 +323,7 @@
                                                         <th>Entreprise</th>
                                                         <th>Localisation</th>
                                                         <th>Description</th>
+                                                        <th class="text-end"></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -292,6 +335,11 @@
                                                             <td>${exp.company}</td>
                                                             <td>${exp.location}</td>
                                                             <td>${exp.description}</td>
+                                                            <td class="text-end">
+                                                                <button class="btn btn-danger btn-sm delete-experience" data-id="${exp.id}">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+                                                            </td>
                                                             <input type="hidden" class="experience-id" value="${exp.id}">
                                                         </tr>
                                                     `).join('')}
@@ -312,12 +360,13 @@
                                     </div>
                                     <div id="projects-table-container" class="card-body">
                                         ${data.projects.length > 0 ? `
-                                            <table id="projects-table" class="table table-hover">
+                                            <table id="projects-table" class="table table-striped">
                                                 <thead>
                                                     <tr>
                                                         <th>Ordre</th>
                                                         <th>Titre</th>
                                                         <th>Description</th>
+                                                        <th class="text-end"></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -326,6 +375,11 @@
                                                             <td>${project.order}</td>
                                                             <td>${project.title}</td>
                                                             <td>${project.description}</td>
+                                                            <td class="text-end">
+                                                                <button class="btn btn-danger btn-sm delete-project" data-id="${project.id}">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+                                                            </td>
                                                             <input type="hidden" class="project-id" value="${project.id}">
                                                         </tr>
                                                     `).join('')}
@@ -680,11 +734,12 @@
                     aboutTable = document.querySelector('#about-table-container');
 
                     aboutTable.innerHTML = `
-                        <table id="about-table" class="table table-hover">
+                        <table id="about-table" class="table table-striped">
                             <thead>
                                 <tr>
                                     <th>Ordre</th>
                                     <th>Contenu</th>
+                                    <th class="text-end"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -700,6 +755,12 @@
                         <tr class="about-row" data-id="${about.id}" data-content="${about.content}">
                             <td>${about.order}</td>
                             <td>${about.content}</td>
+                            <td class="text-end">
+                                <button class="btn btn-danger btn-sm delete-about" data-id="${about.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                            <input type="hidden" class="about-id" value="${about.id}">
                         </tr>
                     `).join('');
 
@@ -729,6 +790,7 @@
                                     <th>Entreprise</th>
                                     <th>Localisation</th>
                                     <th>Description</th>
+                                    <th class="text-end"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -741,13 +803,19 @@
 
                 if (expTable) {
                     expTable.innerHTML = data.experience.map(exp => `
-                        <tr class="experience-row" data-id="${exp.id}" data-dates="${exp.dates}" data-position="${exp.position}" data-company="${exp.company}" data-location="${exp.location}" data-description="${exp.description}">
+                        <tr class="experience-row" data-id="${exp.id}" data-description="${exp.description}" data-dates="${exp.dates}" data-company="${exp.company}" data-location="${exp.location}">
                             <td>${exp.order}</td>
                             <td>${exp.dates}</td>
                             <td>${exp.position}</td>
                             <td>${exp.company}</td>
                             <td>${exp.location}</td>
                             <td>${exp.description}</td>
+                            <td class="text-end">
+                                <button class="btn btn-danger btn-sm delete-experience" data-id="${exp.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                            <input type="hidden" class="experience-id" value="${exp.id}">
                         </tr>
                     `).join('');
 
@@ -768,12 +836,13 @@
                     projectsTable = document.querySelector('#projects-table-container');
 
                     projectsTable.innerHTML = `
-                        <table id="projects-table" class="table table-hover">
+                        <table id="projects-table" class="table table-striped">
                             <thead>
                                 <tr>
                                     <th>Ordre</th>
                                     <th>Titre</th>
                                     <th>Description</th>
+                                    <th class="text-end"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -791,6 +860,12 @@
                             <td>${project.order}</td>
                             <td>${project.title}</td>
                             <td>${project.description}</td>
+                            <td class="text-end">
+                                <button class="btn btn-danger btn-sm delete-project" data-id="${project.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                            <input type="hidden" class="project-id" value="${project.id}">
                         </tr>
                     `).join('');
 
@@ -803,6 +878,50 @@
                 }
             }
         }
+
+        // Variables globales
+        let currentDeleteType = null;
+        let currentDeleteId = null;
+
+        $(document).ready(function() {
+          $('#confirmDeleteButton').click(function() {
+            const url = `/${currentDeleteType}/${currentDeleteId}/`;
+            
+            fetch(url, {
+              method: 'DELETE',
+              headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'Content-Type': 'application/json'
+              }
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                $(`[data-id="${currentDeleteId}"]`).closest('tr').remove();
+              } else {
+                alert('Erreur lors de la suppression');
+              }
+              $('#confirmDeleteModal').modal('hide');
+            });
+          });
+
+          $(document).on('click', '.delete-profile, .delete-about, .delete-experience, .delete-project', function() {
+            const btn = $(this);
+            currentDeleteId = btn.data('id');
+            
+            if (btn.hasClass('delete-profile')) {
+              currentDeleteType = 'delete_profile';
+            } else if (btn.hasClass('delete-about')) {
+              currentDeleteType = 'delete_about';
+            } else if (btn.hasClass('delete-experience')) {
+              currentDeleteType = 'delete_experience';
+            } else {
+              currentDeleteType = 'delete_project';
+            }
+            
+            $('#confirmDeleteModal').modal('show');
+          });
+        });
     </script>
 {% endblock %}
 
@@ -828,6 +947,7 @@
                                 <th>Nom</th>
                                 <th>Créé le</th>
                                 <th>Mis à jour le</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -837,6 +957,11 @@
                                     <td>{{ profile.name }}</td>
                                     <td>{{ profile.created_at|date:"F j, Y, g:i a" }}</td>
                                     <td>{{ profile.updated_at|date:"F j, Y, g:i a" }}</td>
+                                    <td class="text-end">
+                                        <button class="btn btn-danger btn-sm delete-profile" data-id="${profile.id}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -854,5 +979,26 @@
                 Sélectionnez un profil pour voir ses données
             </div>
         </div>
+    </div>
+
+    <!-- Modal de Confirmation de Suppression -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white py-3">
+            <h5 class="modal-title mb-0" id="confirmDeleteModalLabel">Confirmer la suppression</h5>
+            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body p-4">
+            <p class="mb-0 text-center">Êtes-vous sûr de vouloir supprimer cet élément ?<br>Cette action est irréversible.</p>
+          </div>
+          <div class="modal-footer justify-content-center py-3">
+            <button type="button" class="btn btn-outline-secondary mx-2" data-dismiss="modal">Annuler</button>
+            <button type="button" class="btn btn-danger mx-2" id="confirmDeleteButton">Supprimer définitivement</button>
+          </div>
+        </div>
+      </div>
     </div>
 {% endblock %}

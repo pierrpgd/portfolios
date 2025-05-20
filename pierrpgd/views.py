@@ -3,6 +3,7 @@ from django.http import JsonResponse, Http404
 from .models import Profile, About, Experience, Project
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 import json
 
 def portfolio(request, identifiant):
@@ -192,3 +193,30 @@ def save_modal_content(request):
             }, status=500)
     
     return JsonResponse({'success': False, 'error': 'Méthode non autorisée'}, status=405)
+
+@require_http_methods(["DELETE"])
+def delete_about(request, about_id):
+    try:
+        about = About.objects.get(id=about_id)
+        about.delete()
+        return JsonResponse({'success': True})
+    except About.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'About not found'}, status=404)
+
+@require_http_methods(["DELETE"])
+def delete_experience(request, experience_id):
+    try:
+        experience = Experience.objects.get(id=experience_id)
+        experience.delete()
+        return JsonResponse({'success': True})
+    except Experience.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Experience not found'}, status=404)
+
+@require_http_methods(["DELETE"])
+def delete_project(request, project_id):
+    try:
+        project = Project.objects.get(id=project_id)
+        project.delete()
+        return JsonResponse({'success': True})
+    except Project.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)

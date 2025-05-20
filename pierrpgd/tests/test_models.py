@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.db import IntegrityError
-from .models import Profile, About, Experience, Project
+from pierrpgd.models import Profile, About, Experience, Project
 
 class ProfileModelTest(TestCase):
     def setUp(self):
