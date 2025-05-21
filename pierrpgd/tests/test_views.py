@@ -117,7 +117,7 @@ class DataDisplayViewTest(BaseTest):
         self.assertEqual(self.response.status_code, 200)
         
         # Simuler le clic sur la ligne du profil
-        self.response = self.client.get(reverse('load_profile_data') + f'?identifiant={self.profile.identifiant}')
+        self.response = self.client.get(reverse('load_data') + f'?identifiant={self.profile.identifiant}')
         self.assertEqual(self.response.status_code, 200)
         
         # Vérifier que les données sont correctement chargées
@@ -138,6 +138,62 @@ class DataDisplayViewTest(BaseTest):
 
 class LoadDataViewTest(BaseTest):
 
+    def test_create_profile(self):
+        """Teste la création d'un profil"""
+        
+        # Vérifier que l'objet a été créé
+        self.assertTrue(Profile.objects.filter(identifiant=self.profile.identifiant).exists())
+        
+        # Vérifier que la section apparaît dans l'interface
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
+        
+        data = self.response.json()
+        self.assertIn('profile', data)
+        self.assertEqual(data['profile']['name'], self.profile.name)
+        self.assertEqual(data['profile']['identifiant'], self.profile.identifiant)
+
+    def test_update_profile(self):
+        """Teste la mise à jour d'un profil"""
+        
+        # Données pour la mise à jour
+        updated_data = {
+            'name': 'Nom mis à jour',
+            'identifiant': 'identifiant mis à jour'
+        }
+        
+        # Mettre à jour la section About
+        Profile.objects.filter(id=self.profile.id).update(**updated_data)
+        self.profile.refresh_from_db()
+        
+        # Vérifier que les modifications ont été sauvegardées
+        self.assertEqual(self.profile.name, 'Nom mis à jour')
+        self.assertEqual(self.profile.identifiant, 'identifiant mis à jour')
+        
+        # Vérifier que les changements apparaissent dans l'interface via load_data
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
+        
+        data = self.response.json()
+        self.assertIn('profile', data)
+        self.assertEqual(data['profile']['name'], 'Nom mis à jour')
+        self.assertEqual(data['profile']['identifiant'], 'identifiant mis à jour')
+
+    def test_delete_profile(self):
+        """Teste la suppression d'un profil"""
+
+        id_profile = self.profile.id
+        
+        # Supprimer le profil
+        self.profile.delete()
+        
+        # Vérifier que l'objet a été supprimé
+        self.assertFalse(Profile.objects.filter(id=id_profile).exists())
+        
+        # Vérifier que la section ne s'affiche plus
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 404)
+
     def test_create_about(self):
         """Teste la création d'une section About"""
         
@@ -145,7 +201,7 @@ class LoadDataViewTest(BaseTest):
         self.assertTrue(About.objects.filter(content=self.abouts[0].content).exists())
         
         # Vérifier que la section apparaît dans l'interface
-        self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
         self.assertEqual(self.response.status_code, 200)
         
         data = self.response.json()
@@ -170,8 +226,8 @@ class LoadDataViewTest(BaseTest):
         self.assertEqual(self.abouts[0].content, 'Contenu mis à jour')
         self.assertEqual(self.abouts[0].order, 1)
         
-        # Vérifier que les changements apparaissent dans l'interface via load_profile_data
-        self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        # Vérifier que les changements apparaissent dans l'interface via load_data
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
         self.assertEqual(self.response.status_code, 200)
         
         data = self.response.json()
@@ -192,7 +248,7 @@ class LoadDataViewTest(BaseTest):
         self.assertFalse(About.objects.filter(id=id_about).exists())
         
         # Vérifier que la section ne s'affiche plus
-        self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
         self.assertEqual(self.response.status_code, 200)
         
         data = self.response.json()
@@ -206,7 +262,7 @@ class LoadDataViewTest(BaseTest):
         self.assertTrue(Experience.objects.filter(company=self.experiences[0].company).exists())
         
         # Vérifier que l'expérience apparaît dans l'interface
-        self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
         self.assertEqual(self.response.status_code, 200)
         
         data = self.response.json()
@@ -235,8 +291,8 @@ class LoadDataViewTest(BaseTest):
         self.assertEqual(self.experiences[0].company, 'Entreprise mise à jour')
         self.assertEqual(self.experiences[0].order, 1)
         
-        # Vérifier que les changements apparaissent dans l'interface via load_profile_data
-        self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        # Vérifier que les changements apparaissent dans l'interface via load_data
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
         self.assertEqual(self.response.status_code, 200)
         
         data = self.response.json()
@@ -257,7 +313,7 @@ class LoadDataViewTest(BaseTest):
         self.assertFalse(Experience.objects.filter(id=id_experience).exists())
         
         # Vérifier que l'expérience ne s'affiche plus
-        self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
         self.assertEqual(self.response.status_code, 200)
         
         data = self.response.json()
@@ -271,7 +327,7 @@ class LoadDataViewTest(BaseTest):
         self.assertTrue(Project.objects.filter(title=self.projects[0].title).exists())
         
         # Vérifier que le projet apparaît dans l'interface
-        self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
         self.assertEqual(self.response.status_code, 200)
         
         data = self.response.json()
@@ -297,8 +353,8 @@ class LoadDataViewTest(BaseTest):
         self.assertEqual(self.projects[0].title, 'Titre mis à jour')
         self.assertEqual(self.projects[0].order, 1)
         
-        # Vérifier que les changements apparaissent dans l'interface via load_profile_data
-        self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        # Vérifier que les changements apparaissent dans l'interface via load_data
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
         self.assertEqual(self.response.status_code, 200)
         
         data = self.response.json()
@@ -318,7 +374,7 @@ class LoadDataViewTest(BaseTest):
         self.assertFalse(Project.objects.filter(id=id_project).exists())
         
         # Vérifier que le projet ne s'affiche plus
-        self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
         self.assertEqual(self.response.status_code, 200)
         
         data = self.response.json()
@@ -347,8 +403,8 @@ class LoadDataViewTest(BaseTest):
         experience2 = Experience.objects.create(profile=self.profile, company='Experience 2', order=1, dates='2024')
         experience3 = Experience.objects.create(profile=self.profile, company='Experience 3', order=0, dates='2025')
         
-        # Vérifier l'ordre via load_profile_data
-        self.response = self.client.get(reverse('load_profile_data'), {'identifiant': self.profile.identifiant})
+        # Vérifier l'ordre via load_data
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
         self.assertEqual(self.response.status_code, 200)
         
         data = self.response.json()
@@ -374,74 +430,108 @@ class LoadDataViewTest(BaseTest):
         self.assertEqual(experiences[1]['company'], 'Experience 2')  # Order = 1
         self.assertEqual(experiences[2]['company'], 'Experience 1')  # Order = 2
 
-class AddProfileViewTest(BaseTest):
-    def setUp(self):
-        self.url = reverse('add_profile')
+class SaveDataTest(BaseTest):
 
-    def test_add_profile_view_get(self):
-        """Teste que la vue add_profile affiche le formulaire"""
-        self.response = self.client.get(self.url)
-        self.assertEqual(self.response.status_code, 200)
-        self.assertTemplateUsed(self.response, 'add_profile.html')
-        self.assertContains(self.response, 'Ajouter un profil')
-        self.assertContains(self.response, 'Identifiant')
-        self.assertContains(self.response, 'Nom')
-
-    def test_add_profile_success(self):
-        """Teste la création réussie d'un profil"""
+    def test_create_profile(self):
+        """Teste la création d'un profil"""
+        # Données pour la création
         data = {
-            'identifiant': 'new-profile',
-            'name': 'New Profile'
+            'name': 'Test Profile',
+            'identifiant': 'test_identifiant'
         }
-        self.response = self.client.post(self.url, data)
-        self.assertEqual(self.response.status_code, 302)  # Redirection
-        self.assertRedirects(self.response, reverse('data_display'))
+        
+        # Effectuer la création via l'API
+        response = self.client.post(
+            reverse('save_data'),
+            {
+                'modalId': 'profileModal',
+                'isNew': True,
+                'data': data
+            },
+            content_type='application/json'
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
         
         # Vérifier que le profil a été créé
-        profile = Profile.objects.get(identifiant='new-profile')
-        self.assertEqual(profile.name, 'New Profile')
+        self.assertEqual(result['success'], True)
+        self.assertTrue(Profile.objects.filter(identifiant=data['identifiant']).exists())
 
-    def test_add_profile_invalid_identifiant(self):
-        """Teste la création avec un identifiant invalide (contient des espaces)"""
-        data = {
-            'identifiant': 'invalid identifiant',
-            'name': 'Test Profile'
+    def test_update_profile(self):
+        """Teste la mise à jour d'un profil"""
+        # Données pour la mise à jour
+        updated_data = {
+            'name': 'Nouveau nom de test',
+            'identifiant': 'new_identifiant',
+            'id': self.profile.id
         }
-        self.response = self.client.post(self.url, data)
-        self.assertEqual(self.response.status_code, 200)
-        self.assertTemplateUsed(self.response, 'add_profile.html')
-        self.assertContains(self.response, escape('L\'identifiant ne doit pas contenir d\'espace'))
-
-    def test_add_profile_duplicate_identifiant(self):
-        """Teste la création avec un identifiant déjà existant"""
-        # Créer un profil avec un identifiant existant
-        Profile.objects.create(identifiant='existing', name='Existing Profile')
         
+        # Effectuer la mise à jour via l'API
+        response = self.client.post(
+            reverse('save_data'),
+            {
+                'modalId': 'profileModal',
+                'isNew': False,
+                'data': updated_data
+            },
+            content_type='application/json'
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        
+        # Vérifier que les modifications ont été sauvegardées
+        updated_profile = Profile.objects.get(id=self.profile.id)
+        self.assertEqual(updated_profile.name, updated_data['name'])
+        self.assertEqual(updated_profile.identifiant, updated_data['identifiant'])
+
+    def test_create_about(self):
+        """Teste la création d'un élément About via l'API"""
+        # Données pour la création
         data = {
-            'identifiant': 'existing',
-            'name': 'Test Profile'
+            'content': 'Contenu de test',
+            'order': 1,
+            'profile': self.profile.identifiant
         }
-        self.response = self.client.post(self.url, data)
-        self.assertEqual(self.response.status_code, 200)
-        self.assertTemplateUsed(self.response, 'add_profile.html')
-        self.assertContains(self.response, 'Cet identifiant est déjà utilisé')
+        
+        # Effectuer la création via l'API
+        response = self.client.post(
+            reverse('save_data'),
+            {
+                'modalId': 'aboutModal',
+                'isNew': True,
+                'data': data
+            },
+            content_type='application/json'
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        
+        # Vérifier que le profil a été créé
+        self.assertEqual(result['success'], True)
+        self.assertTrue(About.objects.filter(order=data['order']).exists())
 
-class ApiTest(BaseTest):
-
-    def test_update_about_api(self):
+    def test_update_about(self):
         """Teste la mise à jour d'un élément About via l'API"""
         # Données pour la mise à jour
         updated_data = {
             'content': 'Nouveau contenu de test',
             'order': 2,
-            'id': self.abouts[0].id
+            'id': self.abouts[0].id,
+            'profile': self.profile.id
         }
         
         # Effectuer la mise à jour via l'API
         response = self.client.post(
-            reverse('save_modal_content'),
+            reverse('save_data'),
             {
                 'modalId': 'aboutModal',
+                'isNew': False,
                 'data': updated_data
             },
             content_type='application/json'
@@ -456,7 +546,39 @@ class ApiTest(BaseTest):
         self.assertEqual(updated_about.content, updated_data['content'])
         self.assertEqual(updated_about.order, updated_data['order'])
 
-    def test_update_experience_api(self):
+    def test_create_experience(self):
+        """Teste la création d'un élément Experience via l'API"""
+        # Données pour la création
+        data = {
+            'dates': '2024-2025',
+            'company': 'Entreprise de test',
+            'location': 'Endroit de test',
+            'position': 'Poste de test',
+            'description': 'Description de test',
+            'order': 2,
+            'profile': self.profile.identifiant
+        }
+        
+        # Effectuer la création via l'API
+        response = self.client.post(
+            reverse('save_data'),
+            {
+                'modalId': 'experienceModal',
+                'isNew': True,
+                'data': data
+            },
+            content_type='application/json'
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        
+        # Vérifier que le profil a été créé
+        self.assertEqual(result['success'], True)
+        self.assertTrue(Experience.objects.filter(order=data['order']).exists())
+
+    def test_update_experience(self):
         """Teste la mise à jour d'un élément Experience via l'API"""
         # Données pour la mise à jour
         updated_data = {
@@ -471,9 +593,10 @@ class ApiTest(BaseTest):
         
         # Effectuer la mise à jour via l'API
         response = self.client.post(
-            reverse('save_modal_content'),
+            reverse('save_data'),
             {
                 'modalId': 'experienceModal',
+                'isNew': False,
                 'data': updated_data
             },
             content_type='application/json'
@@ -492,8 +615,37 @@ class ApiTest(BaseTest):
         self.assertEqual(updated_experience.description, updated_data['description'])
         self.assertEqual(updated_experience.order, updated_data['order'])
 
-    def test_update_project_api(self):
-        """Teste la mise à jour d'un élément Project via l'API"""
+    def test_create_project(self):
+        """Teste la création d'un élément Project via l'API"""
+        # Données pour la création
+        data = {
+            'title': 'Titre de test',
+            'description': 'Description de test',
+            'order': 2,
+            'profile': self.profile.identifiant
+        }
+        
+        # Effectuer la création via l'API
+        response = self.client.post(
+            reverse('save_data'),
+            {
+                'modalId': 'projectModal',
+                'isNew': True,
+                'data': data
+            },
+            content_type='application/json'
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        
+        # Vérifier que le profil a été créé
+        self.assertEqual(result['success'], True)
+        self.assertTrue(Project.objects.filter(order=data['order']).exists())
+
+    def test_update_project(self):
+        """Teste la mise à jour d'un élément Project"""
         # Données pour la mise à jour
         updated_data = {
             'title': 'Titre mis à jour',
@@ -504,9 +656,10 @@ class ApiTest(BaseTest):
         
         # Effectuer la mise à jour via l'API
         response = self.client.post(
-            reverse('save_modal_content'),
+            reverse('save_data'),
             {
                 'modalId': 'projectModal',
+                'isNew': False,
                 'data': updated_data
             },
             content_type='application/json'
@@ -524,9 +677,10 @@ class ApiTest(BaseTest):
         
         # Effectuer la mise à jour via l'API
         response = self.client.post(
-            reverse('save_modal_content'),
+            reverse('save_data'),
             {
-                'modalId': 'experienceModal',
+                'modalId': 'projectModal',
+                'isNew': False,
                 'data': updated_data
             },
             content_type='application/json'
@@ -542,10 +696,12 @@ class ApiTest(BaseTest):
         self.assertEqual(updated_project.description, updated_data['description'])
         self.assertEqual(updated_project.order, updated_data['order'])
 
-    def test_delete_profile_api(self):
-        """Teste la suppression d'un profil via l'API"""
+class DeleteDataTest(BaseTest):
 
-        # Effectuer la suppression via l'API
+    def test_delete_profile(self):
+        """Teste la suppression d'un profil"""
+
+        # Effectuer la suppression
         response = self.client.delete(
             reverse('delete_profile', args=[self.profile.id])
         )
@@ -563,12 +719,12 @@ class ApiTest(BaseTest):
         self.assertFalse(Experience.objects.filter(profile=self.profile).exists())
         self.assertFalse(Project.objects.filter(profile=self.profile).exists())
 
-    def test_delete_about_api(self):
-        """Teste la suppression d'un About via l'API"""
+    def test_delete_about(self):
+        """Teste la suppression d'un About"""
 
         about_id = self.abouts[0].id
 
-        # Effectuer la suppression via l'API
+        # Effectuer la suppression
         response = self.client.delete(
             reverse('delete_about', args=[about_id])
         )
@@ -581,12 +737,12 @@ class ApiTest(BaseTest):
         self.assertEqual(result['success'], True)
         self.assertFalse(About.objects.filter(id=about_id).exists())
 
-    def test_delete_experience_api(self):
-        """Teste la suppression d'une expérience via l'API"""
+    def test_delete_experience(self):
+        """Teste la suppression d'une expérience"""
 
         experience_id = self.experiences[0].id
 
-        # Effectuer la suppression via l'API
+        # Effectuer la suppression
         response = self.client.delete(
             reverse('delete_experience', args=[experience_id])
         )
@@ -599,12 +755,12 @@ class ApiTest(BaseTest):
         self.assertEqual(result['success'], True)
         self.assertFalse(Experience.objects.filter(id=experience_id).exists())
 
-    def test_delete_project_api(self):
-        """Teste la suppression d'un projet via l'API"""
+    def test_delete_project(self):
+        """Teste la suppression d'un projet"""
 
         project_id = self.projects[0].id
 
-        # Effectuer la suppression via l'API
+        # Effectuer la suppression
         response = self.client.delete(
             reverse('delete_project', args=[project_id])
         )

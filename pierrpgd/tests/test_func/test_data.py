@@ -1,5 +1,4 @@
 from django.test import LiveServerTestCase
-from django.urls import reverse
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -30,11 +29,21 @@ class BaseTest(LiveServerTestCase):
         super().tearDownClass()
 
     def setUpPortfolio(self):
+        """
+        Sets up the test for the portfolio page.
+
+        Opens the portfolio page and logs in with the test user.
+        """
         self.getData()
         self.url = f"{self.live_server_url}/{self.profile.identifiant}"
         self.browser.get(self.url)
 
     def setUpData(self):
+        """
+        Sets up the test for the data page.
+
+        Opens the data page and logs in with the test user.
+        """     
         self.getData()
         self.url = f"{self.live_server_url}/data"
         self.browser.get(self.url)
@@ -106,28 +115,6 @@ class ProfileTest(BaseTest):
         
         project_title = self.browser.find_elements(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), 'Test Project')]")
         self.assertEqual(len(project_title), 0)
-
-    def test_profile_add_button_exists(self):
-        """Teste la présence du bouton d'ajout de profil"""
-
-        # Vérifier la présence du titre de la page
-        page_title = self.browser.find_element(By.CSS_SELECTOR, "h1").text
-        self.assertEqual(page_title, "Données de la Base de Données")
-        
-        # Vérifier la présence du bouton d'ajout
-        add_button = self.browser.find_element(By.CSS_SELECTOR, "div.card-header a.btn-primary")
-        self.assertIsNotNone(add_button)
-        
-        # Vérifier que le bouton contient le texte correct
-        self.assertIn('Ajouter un profil', add_button.text)
-        
-        # Vérifier que le bouton contient l'icône Font Awesome
-        icon = add_button.find_element(By.CSS_SELECTOR, "i.fas")
-        self.assertIsNotNone(icon)
-        
-        # Vérifier que le bouton pointe vers la bonne URL
-        add_profile_url = reverse('add_profile')
-        self.assertEqual(add_button.get_attribute('href'), f"{self.live_server_url}{add_profile_url}")
 
 class PopupTest(BaseTest):
 
@@ -620,11 +607,99 @@ class ModifyAndSaveTest(BaseTest):
         )
         self.assertTrue(updated_row.is_displayed())
 
-class AddSectionTest(BaseTest):
+class AddElementTest(BaseTest):
 
     def setUp(self):
         super().setUp()
         self.setUpData()
+
+    def test_add_profile(self):
+        """
+        Teste l'ajout d'un profil via l'interface
+        1. Ouvre la page data_display
+        2. Clique sur 'Ajouter un profil'
+        3. Remplit les champs 'Identifiant' et 'Nom'
+        4. Valide et vérifie l'affichage
+        """
+
+        # Cliquer sur le bouton d'ajout
+        add_button = self.browser.find_element(By.ID, "addProfileButton")
+        
+        # Cliquer via JavaScript pour éviter les problèmes d'interception
+        self.browser.execute_script("arguments[0].click();", add_button)
+        
+        # Attendre que la modal soit visible
+        modal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "profileModal"))
+        )
+        
+        # Remplir le champ identifiant
+        identifiant_field = modal.find_element(By.CSS_SELECTOR, "[data-field='identifiant']")
+        identifiant_field.send_keys("Nouveau_profil")
+        
+        # Remplir le champ nom
+        name_field = modal.find_element(By.CSS_SELECTOR, "[data-field='name']")
+        name_field.send_keys("Nouveau_profil")
+        
+        # Cliquer sur valider
+        validate_button = modal.find_element(By.ID, "profileModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+        
+        # Vérifier l'affichage dans le tableau
+        WebDriverWait(self.browser, 10).until(
+            lambda driver: any("Nouveau_profil" in el.text 
+                           for el in driver.find_elements(By.CSS_SELECTOR, "#profile-table tbody tr"))
+        )
+        
+        # Vérification finale
+        rows = self.browser.find_elements(By.CSS_SELECTOR, "#profile-table tbody tr")
+        self.assertTrue(any("Nouveau_profil" in row.text for row in rows))
+
+    def test_add_profile_in_empty_table(self):
+        """
+        Teste l'ajout d'un profil via l'interface
+        1. Ouvre la page data_display
+        2. Clique sur 'Ajouter un profil'
+        3. Remplit les champs 'Identifiant' et 'Nom'
+        4. Valide et vérifie l'affichage
+        """
+
+        Profile.objects.all().delete()
+        self.browser.refresh()
+
+        # Cliquer sur le bouton d'ajout
+        add_button = self.browser.find_element(By.ID, "addProfileButton")
+        
+        # Cliquer via JavaScript pour éviter les problèmes d'interception
+        self.browser.execute_script("arguments[0].click();", add_button)
+        
+        # Attendre que la modal soit visible
+        modal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "profileModal"))
+        )
+        
+        # Remplir le champ identifiant
+        identifiant_field = modal.find_element(By.CSS_SELECTOR, "[data-field='identifiant']")
+        identifiant_field.send_keys("Nouveau_profil")
+        
+        # Remplir le champ nom
+        name_field = modal.find_element(By.CSS_SELECTOR, "[data-field='name']")
+        name_field.send_keys("Nouveau_profil")
+        
+        # Cliquer sur valider
+        validate_button = modal.find_element(By.ID, "profileModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+        
+        # Vérifier l'affichage dans le tableau
+        WebDriverWait(self.browser, 10).until(
+            lambda driver: any("Nouveau_profil" in el.text 
+                           for el in driver.find_elements(By.CSS_SELECTOR, "#profile-table tbody tr"))
+        )
+        
+        # Vérification finale
+        rows = self.browser.find_elements(By.CSS_SELECTOR, "#profile-table tbody tr")
+        self.assertTrue(any("Nouveau_profil" in row.text for row in rows))
+        
 
     def test_add_about_section(self):
         """
@@ -787,7 +862,7 @@ class AddSectionTest(BaseTest):
         rows = self.browser.find_elements(By.CSS_SELECTOR, "#projects-table tbody tr")
         self.assertTrue(any("Nouveau contenu de test" in row.text for row in rows))
 
-class DeleteSectionTest(BaseTest):
+class DeleteElementTest(BaseTest):
 
     def setUp(self):
         super().setUp()
@@ -941,6 +1016,10 @@ class DeleteSectionTest(BaseTest):
     def test_delete_profile_and_confirm(self):
         """Vérifie que le clic sur supprimer affiche la modal de confirmation et le bouton de confirmation fonctionne"""
 
+        first_profile = Profile.objects.order_by('id').first()
+        Profile.objects.exclude(pk=first_profile.pk).delete()
+        self.browser.refresh()
+
         # Sélectionner le profil
         profile_row = WebDriverWait(self.browser, 10).until(
             EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/.."))
@@ -981,6 +1060,9 @@ class DeleteSectionTest(BaseTest):
             self.assertFalse(profile_row.is_displayed(), "La ligne du profil est visible")
         except NoSuchElementException:
             pass  # La ligne a bien été supprimée
+
+        profile_table_container = self.browser.find_element(By.ID, "profile-table-container")
+        self.assertIn("Aucun profil trouvé", profile_table_container.text)
 
         # Vérifier que les tables sont vides
         WebDriverWait(self.browser, 5).until(

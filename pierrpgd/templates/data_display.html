@@ -270,7 +270,7 @@
                     selectedProfile = profileIdentifiant;
                     
                     // Charger les données du profil sélectionné
-                    fetch(`/load_profile_data/?identifiant=${profileIdentifiant}`)
+                    fetch(`/load_data/?identifiant=${profileIdentifiant}`)
                         .then(response => response.json())
                         .then(data => {
                             if (data.error) {
@@ -442,6 +442,24 @@
         });
 
         // Fonction pour ajouter une nouvelle section À propos
+        function addProfileSection() {
+            // Créer un élément row factice avec des attributs vides
+            const dummyRow = document.createElement('div');
+            dummyRow.setAttribute('data-identifiant', '');
+            dummyRow.setAttribute('data-name', '');
+            
+            // Ouvrir la popup avec le contenu vide
+            showPopup(dummyRow, 'profileModal', 'profileModalContent');
+            
+            // Rendre tous les champs éditables
+            const modal = document.getElementById('profileModal');
+            modal.querySelectorAll('.editable-content').forEach(el => {
+                el.contentEditable = true;
+                el.focus();
+            });
+        }
+
+        // Fonction pour ajouter une nouvelle section À propos
         function addAboutSection() {
             // Créer un élément row factice avec des attributs vides
             const dummyRow = document.createElement('div');
@@ -506,11 +524,14 @@
                 content = row.getAttribute('data-content');
             }
 
+            const identifiant = row.getAttribute('data-identifiant');
+            const name = row.getAttribute('data-name');
             const dates = row.getAttribute('data-dates');
             const company = row.getAttribute('data-company');
             const location = row.getAttribute('data-location');
             const projectTitle = row.getAttribute('data-title');
-            const title = modalId === 'aboutModal' ? 'À propos' : 
+            const title = modalId === 'profileModal' ? 'Profil' : 
+                         modalId === 'aboutModal' ? 'À propos' : 
                          modalId === 'experienceModal' ? 'Expérience' : 
                          'Projet';
             
@@ -528,7 +549,16 @@
                     </div>
                     <div class="modal-content">
                         <div class="modal-content-title">${title}</div>
-                        ${modalId === 'experienceModal' ? `
+                        ${modalId === 'profileModal' ? `
+                            <div class="modal-content-info">
+                                <div class="editable-field">
+                                    <span class="modal-content-info-title">Identifiant :</span> <span contenteditable="true" class="editable-content" data-field="identifiant">${identifiant}</span>
+                                </div>
+                                <div class="editable-field">
+                                    <span class="modal-content-info-title">Nom :</span> <span contenteditable="true" class="editable-content" data-field="name">${name}</span>
+                                </div>
+                            </div>
+                        ` : modalId === 'experienceModal' ? `
                             <div class="modal-content-info">
                                 <div class="editable-field">
                                     <span class="modal-content-info-title">Période :</span> <span contenteditable="true" class="editable-content" data-field="dates">${dates}</span>
@@ -671,7 +701,7 @@
 
             const csrfToken = getCsrfToken();       
             try {
-                const response = await fetch('/save_modal_content/', {
+                const response = await fetch('/save_data/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -707,6 +737,9 @@
                 }
                 
                 if (result.success) {
+                    if (result.type === 'profile') {
+                        selectedProfile = result.data.identifiant;
+                    }
                     // Cacher la modale d'abord pour un meilleur feedback visuel
                     modal.style.display = 'none';
                     // Supprimer la modale et son backdrop
@@ -726,7 +759,7 @@
 
         async function refreshData() {
             try {
-                const response = await fetch(`/load_profile_data/?identifiant=${selectedProfile}`);
+                const response = await fetch(`/load_data/?identifiant=${selectedProfile}`);
                 const data = await response.json();
                 
                 if (data.error) {
@@ -741,6 +774,66 @@
         }
         
         function updateProfileData(data) {
+            // Mise a jour des données du profil
+            if (data.profile) {
+                let profileTable = document.querySelector('#profile-table tbody');
+                const options = {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                };
+
+                console.log(profileTable);
+
+                if (!profileTable) {
+                    profileTable = document.querySelector('#profile-table-container');
+
+                    profileTable.innerHTML = `
+                        <table id="profile-table" class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Identifiant</th>
+                                    <th>Nom</th>
+                                    <th>Créé le</th>
+                                    <th>Mis à jour le</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    `;
+                }
+
+                profileTable = document.querySelector('#profile-table tbody');
+
+                if (profileTable) {
+                    profileTable.innerHTML += `
+                        <tr class="profile-row" data-id="${data.profile.id}" data-identifiant="${data.profile.identifiant}" data-name="${data.profile.name}" data-created="${data.profile.created_at}" data-updated="${data.profile.updated_at}">
+                            <td>${data.profile.identifiant}</td>
+                            <td>${data.profile.name}</td>
+                            <td>${new Date(data.profile.created_at).toLocaleString('en-US', options)}</td>
+                            <td>${new Date(data.profile.updated_at).toLocaleString('en-US', options)}</td>
+                            <td class="text-end">
+                                <button class="btn btn-danger btn-sm delete-profile" data-id="${data.profile.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+
+                    // Réattacher les événements
+                    document.querySelectorAll('.profile-row').forEach(row => {
+                        row.addEventListener('dblclick', function() {
+                            showPopup(row, 'profileModal', 'profileModalContent');
+                        });
+                    });
+                }
+            }
+            
             // Mise à jour de la section About
             if (data.about && data.about.length > 0) {
                 let aboutTable = document.querySelector('#about-table tbody');
@@ -925,6 +1018,11 @@
                                 Sélectionnez un profil pour voir ses données
                             </div>`;
                         selectedProfile = null;
+                        // Suppression du tableau des profils s'il est vide
+                        if (document.querySelectorAll('.profile-row').length === 0) {
+                            document.querySelector('#profile-table-container').innerHTML = `
+                                <p class="text-muted">Aucun profil trouvé</p>`;
+                        }
                     }
                   } else {
                     alert('Erreur lors de la suppression: ' + (data.error || 'Erreur inconnue'));
@@ -967,15 +1065,13 @@
         <h1>Données de la Base de Données</h1>
 
         <div class="card mb-4">
-            <div class="card-header d-flex align-items-center">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h2>Profils</h2>
-                <div class="ms-auto">
-                    <a href="{% url 'add_profile' %}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Ajouter un profil
-                    </a>
-                </div>
+                <button id="addProfileButton" class="btn btn-primary btn-sm" onclick="addProfileSection()">
+                    <i class="fas fa-plus"></i> Ajouter un profil
+                </button>
             </div>
-            <div class="card-body">
+            <div id="profile-table-container" class="card-body">
                 {% if profiles %}
                     <table id="profile-table" class="table table-hover">
                         <thead>
@@ -992,8 +1088,8 @@
                                 <tr class="profile-row" data-id="{{ profile.id }}" data-identifiant="{{ profile.identifiant }}" data-name="{{ profile.name }}" data-created="{{ profile.created_at }}" data-updated="{{ profile.updated_at }}">
                                     <td>{{ profile.identifiant }}</td>
                                     <td>{{ profile.name }}</td>
-                                    <td>{{ profile.created_at|date:"F j, Y, g:i a" }}</td>
-                                    <td>{{ profile.updated_at|date:"F j, Y, g:i a" }}</td>
+                                    <td>{{ profile.created_at|date:"F j, Y, à g:i a" }}</td>
+                                    <td>{{ profile.updated_at|date:"F j, Y, à g:i a" }}</td>
                                     <td class="text-end">
                                         <button class="btn btn-danger btn-sm delete-profile" data-id="{{ profile.id }}">
                                             <i class="fas fa-trash"></i>

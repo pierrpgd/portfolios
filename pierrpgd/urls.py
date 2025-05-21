@@ -3,9 +3,8 @@ from . import views
 
 urlpatterns = [
     path('data/', views.data_display, name='data_display'),
-    path('add_profile/', views.add_profile, name='add_profile'),
-    path('load_profile_data/', views.load_profile_data, name='load_profile_data'),
-    path('save_modal_content/', views.save_modal_content, name='save_modal_content'),
+    path('load_data/', views.load_data, name='load_data'),
+    path('save_data/', views.save_data, name='save_data'),
     path('delete_profile/<int:profile_id>/', views.delete_profile, name='delete_profile'),
     path('delete_about/<int:about_id>/', views.delete_about, name='delete_about'),
     path('delete_experience/<int:experience_id>/', views.delete_experience, name='delete_experience'),

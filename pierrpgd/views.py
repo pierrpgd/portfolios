@@ -37,7 +37,7 @@ def data_display(request):
     }
     return render(request, 'data_display.html', context)
 
-def load_profile_data(request):
+def load_data(request):
     """Vue pour charger les données liées à un profil spécifique"""
     if request.method == 'GET':
         identifiant = request.GET.get('identifiant')
@@ -51,7 +51,10 @@ def load_profile_data(request):
                 data = {
                     'profile': {
                         'name': profile.name,
-                        'identifiant': profile.identifiant
+                        'identifiant': profile.identifiant,
+                        'id': profile.id,
+                        'created_at': profile.created_at,
+                        'updated_at': profile.updated_at
                     },
                     'about': [
                         {
@@ -86,47 +89,23 @@ def load_profile_data(request):
                 return JsonResponse({'error': 'Profil non trouvé'}, status=404)
     return JsonResponse({'error': 'Aucun profil sélectionné'}, status=400)
 
-def add_profile(request):
-    if request.method == 'POST':
-        name = request.POST.get('name')
-        identifiant = request.POST.get('identifiant')
-        
-        # Vérifier que l'identifiant ne contient pas d'espace
-        if ' ' in identifiant:
-            return render(request, 'add_profile.html', {
-                'error_message': 'L\'identifiant ne doit pas contenir d\'espace'
-            })
-        
-        try:
-            # Vérifier si l'identifiant existe déjà
-            Profile.objects.get(identifiant=identifiant)
-            return render(request, 'add_profile.html', {
-                'error_message': 'Cet identifiant est déjà utilisé'
-            })
-        except Profile.DoesNotExist:
-            # Créer le profil
-            Profile.objects.create(name=name, identifiant=identifiant)
-            return redirect('data_display')
-    
-    return render(request, 'add_profile.html')
-
 @csrf_exempt
-def save_modal_content(request):
+def save_data(request):
     if request.method == 'POST':
         try:
             # Parsing et validation
             data = json.loads(request.body)
-            
+
             modalId = data.get('modalId')
             if not modalId:
                 return JsonResponse({'success': False, 'error': 'modalId manquant'}, status=400)
-                
+            
             isNew = data.get('isNew', False)
             content = data.get('data', {})
             
             # Gestion du profil
             profile_id = content.get('profile')
-            if isNew:
+            if isNew and modalId != 'profileModal':
                 if not profile_id:
                     return JsonResponse({'success': False, 'error': 'Profile ID manquant'}, status=400)
                 else:
@@ -139,7 +118,24 @@ def save_modal_content(request):
             
             # Création/mise à jour
             obj = None
-            if modalId == 'aboutModal':
+            type = ''
+            if modalId == 'profileModal':
+                type = 'profile'
+                identifiant = content.get('identifiant')
+                
+                # Vérifier que l'identifiant ne contient pas d'espace
+                if ' ' in identifiant:
+                    return JsonResponse({'success': False, 'error': 'L\'identifiant ne doit pas contenir d\'espace'}, status=400)
+
+                if isNew:
+                    obj = Profile.objects.create(identifiant=content.get('identifiant', ''), name=content.get('name', ''))
+                else:
+                    obj = Profile.objects.get(id=content.get('id'))
+                    obj.identifiant = content.get('identifiant', obj.identifiant)
+                    obj.name = content.get('name', obj.name)
+
+            elif modalId == 'aboutModal':
+                type = 'about'
                 if isNew:
                     obj = About.objects.create(content=content.get('content', ''), profile=profile)
                 else:
@@ -147,6 +143,7 @@ def save_modal_content(request):
                     obj.content = content.get('content', obj.content)
                     obj.order = content.get('order', obj.order)
             elif modalId == 'experienceModal':
+                type = 'experience'
                 if isNew:
                     obj = Experience.objects.create(
                         dates=content.get('dates', ''),
@@ -165,6 +162,7 @@ def save_modal_content(request):
                     obj.description = content.get('description', obj.description)
                     obj.order = content.get('order', obj.order)
             elif modalId == 'projectModal':
+                type = 'project'
                 if isNew:
                     obj = Project.objects.create(
                         title=content.get('title', ''),
@@ -178,10 +176,14 @@ def save_modal_content(request):
                     obj.order = content.get('order', obj.order)
             else:
                 return JsonResponse({'success': False, 'error': 'Type de modal inconnu'}, status=400)
-            
+
             if obj:
                 obj.save()
-                return JsonResponse({'success': True, 'id': obj.id})
+                data = {
+                    field.name: getattr(obj, field.name).id if field.name == 'profile' else getattr(obj, field.name)
+                    for field in obj._meta.fields
+                }
+                return JsonResponse({'success': True, 'type': type, 'data': data})
                 
         except json.JSONDecodeError:
             return JsonResponse({'success': False, 'error': 'Données JSON invalides'}, status=400)
