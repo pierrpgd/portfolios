@@ -426,7 +426,7 @@ class AddProfileViewTest(BaseTest):
         self.assertTemplateUsed(self.response, 'add_profile.html')
         self.assertContains(self.response, 'Cet identifiant est déjà utilisé')
 
-class SaveModalContentViewTest(BaseTest):
+class ApiTest(BaseTest):
 
     def test_update_about_api(self):
         """Teste la mise à jour d'un élément About via l'API"""
@@ -541,3 +541,78 @@ class SaveModalContentViewTest(BaseTest):
         self.assertEqual(updated_project.title, updated_data['title'])
         self.assertEqual(updated_project.description, updated_data['description'])
         self.assertEqual(updated_project.order, updated_data['order'])
+
+    def test_delete_profile_api(self):
+        """Teste la suppression d'un profil via l'API"""
+
+        # Effectuer la suppression via l'API
+        response = self.client.delete(
+            reverse('delete_profile', args=[self.profile.id])
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        
+        # Vérifier que le profil a été supprimé
+        self.assertEqual(result['success'], True)
+        self.assertFalse(Profile.objects.filter(id=self.profile.id).exists())
+
+        # Vérifier que les éléments liés ont été supprimés
+        self.assertFalse(About.objects.filter(profile=self.profile).exists())
+        self.assertFalse(Experience.objects.filter(profile=self.profile).exists())
+        self.assertFalse(Project.objects.filter(profile=self.profile).exists())
+
+    def test_delete_about_api(self):
+        """Teste la suppression d'un About via l'API"""
+
+        about_id = self.abouts[0].id
+
+        # Effectuer la suppression via l'API
+        response = self.client.delete(
+            reverse('delete_about', args=[about_id])
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        
+        # Vérifier que le profil a été supprimé
+        self.assertEqual(result['success'], True)
+        self.assertFalse(About.objects.filter(id=about_id).exists())
+
+    def test_delete_experience_api(self):
+        """Teste la suppression d'une expérience via l'API"""
+
+        experience_id = self.experiences[0].id
+
+        # Effectuer la suppression via l'API
+        response = self.client.delete(
+            reverse('delete_experience', args=[experience_id])
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        
+        # Vérifier que le profil a été supprimé
+        self.assertEqual(result['success'], True)
+        self.assertFalse(Experience.objects.filter(id=experience_id).exists())
+
+    def test_delete_project_api(self):
+        """Teste la suppression d'un projet via l'API"""
+
+        project_id = self.projects[0].id
+
+        # Effectuer la suppression via l'API
+        response = self.client.delete(
+            reverse('delete_project', args=[project_id])
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        
+        # Vérifier que le profil a été supprimé
+        self.assertEqual(result['success'], True)
+        self.assertFalse(Project.objects.filter(id=project_id).exists())

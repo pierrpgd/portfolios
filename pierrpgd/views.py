@@ -195,6 +195,15 @@ def save_modal_content(request):
     return JsonResponse({'success': False, 'error': 'Méthode non autorisée'}, status=405)
 
 @require_http_methods(["DELETE"])
+def delete_profile(request, profile_id):
+    try:
+        profile = Profile.objects.get(id=profile_id)
+        profile.delete()
+        return JsonResponse({'success': True})
+    except Profile.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Profile not found'}, status=404)
+
+@require_http_methods(["DELETE"])
 def delete_about(request, about_id):
     try:
         about = About.objects.get(id=about_id)

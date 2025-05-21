@@ -221,8 +221,14 @@
                 .find(row => row.startsWith('csrftoken='))
                 ?.split('=')[1];
                 
-            // Si non trouvé dans les cookies, essayer depuis le DOM
-            return cookieValue || document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+            if (cookieValue) return cookieValue;
+            
+            // Sinon, chercher dans le DOM
+            const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (csrfInput) return csrfInput.value;
+            
+            console.error('CSRF token not found in cookies or DOM');
+            return '';
         }
 
         // Variable pour suivre le profil actuellement sélectionné
@@ -231,7 +237,12 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Sélection/désélection d'une ligne au clic
             document.querySelectorAll('.table tbody tr').forEach(row => {
-                row.addEventListener('click', function() {
+                row.addEventListener('click', function(e) {
+                    // Ne pas traiter si le clic provient d'un bouton de suppression
+                    if (e.target.closest('.btn-danger, .delete-profile, .delete-about, .delete-experience, .delete-project')) {
+                        return;
+                    }
+                    
                     const profileIdentifiant = this.querySelector('td:first-child').textContent;
                     
                     // Si c'est le même profil qui est cliqué, on désélectionne
@@ -239,7 +250,11 @@
                         // Désélectionner la ligne
                         this.classList.remove('table-active');
                         // Effacer les données affichées
-                        document.querySelector('#profile-data').innerHTML = '';
+                        document.querySelector('#profile-data').innerHTML = `
+                            <div class="text-muted text-center py-5">
+                                Sélectionnez un profil pour voir ses données
+                            </div>
+                        `;
                         selectedProfile = null;
                         return;
                     }
@@ -663,7 +678,7 @@
                         'X-CSRFToken': csrfToken,
                         'X-Debug-Request': 'true'  
                     },
-                    credentials: 'same-origin',  
+                    credentials: 'include',  
                     body: JSON.stringify(requestData)
                 });
                 
@@ -884,48 +899,70 @@
         let currentDeleteId = null;
 
         $(document).ready(function() {
-          $('#confirmDeleteButton').click(function() {
-            const url = `/${currentDeleteType}/${currentDeleteId}/`;
-            
-            fetch(url, {
-              method: 'DELETE',
-              headers: {
-                'X-CSRFToken': getCsrfToken(),
-                'Content-Type': 'application/json'
-              }
-            })
-            .then(response => response.json())
-            .then(data => {
-              if (data.success) {
-                $(`[data-id="${currentDeleteId}"]`).closest('tr').remove();
-              } else {
-                alert('Erreur lors de la suppression');
-              }
-              $('#confirmDeleteModal').modal('hide');
+            $('#confirmDeleteButton').click(function() {
+                const csrfToken = getCsrfToken();
+                const url = `/delete_${currentDeleteType}/${currentDeleteId}/`;
+                
+                fetch(url, {
+                  method: 'DELETE',
+                  headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json',
+                  },
+                  credentials: 'same-origin'
+                })
+                .then(response => {
+                  if (!response.ok) throw new Error('Network response was not ok');
+                  return response.json();
+                })
+                .then(data => {
+                  if (data.success) {
+                    $(`[data-id="${currentDeleteId}"]`).closest(`tr.${currentDeleteType}-row`).remove();
+                    if (currentDeleteType === 'profile') {
+                        // Effacer les données affichées
+                        document.querySelector('#profile-data').innerHTML = `
+                            <div class="text-muted text-center py-5">
+                                Sélectionnez un profil pour voir ses données
+                            </div>`;
+                        selectedProfile = null;
+                    }
+                  } else {
+                    alert('Erreur lors de la suppression: ' + (data.error || 'Erreur inconnue'));
+                  }
+                  $('#confirmDeleteModal').modal('hide');
+                })
+                .catch(error => {
+                  console.error('Error:', error);
+                  $('#confirmDeleteModal').modal('hide');
+                });
             });
-          });
 
-          $(document).on('click', '.delete-profile, .delete-about, .delete-experience, .delete-project', function() {
-            const btn = $(this);
-            currentDeleteId = btn.data('id');
-            
-            if (btn.hasClass('delete-profile')) {
-              currentDeleteType = 'delete_profile';
-            } else if (btn.hasClass('delete-about')) {
-              currentDeleteType = 'delete_about';
-            } else if (btn.hasClass('delete-experience')) {
-              currentDeleteType = 'delete_experience';
-            } else {
-              currentDeleteType = 'delete_project';
-            }
-            
-            $('#confirmDeleteModal').modal('show');
-          });
+            $(document).on('click', '.delete-profile, .delete-about, .delete-experience, .delete-project', function() {
+                const btn = $(this);
+                currentDeleteId = btn.data('id');
+                
+                if (btn.hasClass('delete-profile')) {
+                  currentDeleteType = 'profile';
+                } else if (btn.hasClass('delete-about')) {
+                  currentDeleteType = 'about';
+                } else if (btn.hasClass('delete-experience')) {
+                  currentDeleteType = 'experience';
+                } else {
+                  currentDeleteType = 'project';
+                }
+                
+                $('#confirmDeleteModal').modal('show');
+            });
+
+            $('#cancelDeleteButton').click(function() {
+                $('#confirmDeleteModal').modal('hide');
+            });
         });
     </script>
 {% endblock %}
 
 {% block content %}
+    {% csrf_token %}
     <div class="container" style="background-color: white;">
         <h1>Données de la Base de Données</h1>
 
@@ -952,13 +989,13 @@
                         </thead>
                         <tbody>
                             {% for profile in profiles %}
-                                <tr>
+                                <tr class="profile-row" data-id="{{ profile.id }}" data-identifiant="{{ profile.identifiant }}" data-name="{{ profile.name }}" data-created="{{ profile.created_at }}" data-updated="{{ profile.updated_at }}">
                                     <td>{{ profile.identifiant }}</td>
                                     <td>{{ profile.name }}</td>
                                     <td>{{ profile.created_at|date:"F j, Y, g:i a" }}</td>
                                     <td>{{ profile.updated_at|date:"F j, Y, g:i a" }}</td>
                                     <td class="text-end">
-                                        <button class="btn btn-danger btn-sm delete-profile" data-id="${profile.id}">
+                                        <button class="btn btn-danger btn-sm delete-profile" data-id="{{ profile.id }}">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </td>
@@ -995,7 +1032,7 @@
             <p class="mb-0 text-center">Êtes-vous sûr de vouloir supprimer cet élément ?<br>Cette action est irréversible.</p>
           </div>
           <div class="modal-footer justify-content-center py-3">
-            <button type="button" class="btn btn-outline-secondary mx-2" data-dismiss="modal">Annuler</button>
+            <button type="button" class="btn btn-outline-secondary mx-2" id="cancelDeleteButton" data-dismiss="modal">Annuler</button>
             <button type="button" class="btn btn-danger mx-2" id="confirmDeleteButton">Supprimer définitivement</button>
           </div>
         </div>

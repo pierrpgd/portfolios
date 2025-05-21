@@ -5,10 +5,11 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.common.exceptions import NoSuchElementException
 from pierrpgd.models import Profile, About, Experience, Project
 from selenium.webdriver.common.keys import Keys
-import time
+from django.test import Client
+from django.conf import settings
 
 class BaseTest(LiveServerTestCase):
     fixtures = ['test_fixtures.json']
@@ -37,6 +38,16 @@ class BaseTest(LiveServerTestCase):
         self.getData()
         self.url = f"{self.live_server_url}/data"
         self.browser.get(self.url)
+
+        self.client = Client()
+        self.client.login(username='testuser', password='testpassword')
+
+        session = self.client.session
+        self.browser.add_cookie({
+            'name': settings.SESSION_COOKIE_NAME,
+            'value': session.session_key,
+            'path': '/',
+        })
 
     def getData(self):
         self.profile = Profile.objects.get(identifiant='test-profile')
@@ -782,11 +793,12 @@ class DeleteSectionTest(BaseTest):
         super().setUp()
         self.setUpData()
 
-    def test_delete_profile(self):
-        """Vérifie que le clic sur supprimer affiche la modal de confirmation"""
-        # Sélectionner le profil
+    def test_delete_profile_and_cancel(self):
+        """Vérifie que le clic sur supprimer affiche la modal de confirmation et le bouton d'annulation fonctionne"""
+
+        # Cliquer sur le bouton de suppression du profil de test
         delete_button = WebDriverWait(self.browser, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, ".delete-profile"))
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..//button[contains(@class, 'delete-profile')]"))
         )
         self.browser.execute_script("arguments[0].click();", delete_button)
 
@@ -796,11 +808,62 @@ class DeleteSectionTest(BaseTest):
             message="La modal de confirmation n'est pas apparue après le clic"
         )
         
-        # Vérifier que le bouton de confirmation est présent
-        confirm_button = self.browser.find_element(By.ID, "confirmDeleteButton")
-        self.assertTrue(confirm_button.is_displayed(), "Le bouton de confirmation n'est pas visible")
+        # Vérifier que le bouton d'annulation est présent
+        cancel_button = self.browser.find_element(By.ID, "cancelDeleteButton")
+        self.assertTrue(cancel_button.is_displayed(), "Le bouton d'annulation n'est pas visible")
 
-    def test_delete_about(self):
+        # Cliquer sur le bouton d'annulation
+        self.browser.execute_script("arguments[0].click();", cancel_button)
+
+        # Vérifier que la modal est fermée
+        WebDriverWait(self.browser, 5).until(
+            EC.invisibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas fermée après le clic"
+        )
+
+        #Vérifier que la ligne n'est pas supprimée
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.assertTrue(profile_row.is_displayed(), "La ligne du profil est visible")
+
+    def test_delete_about_and_cancel(self):
+        """Vérifie que le clic sur supprimer affiche la modal de confirmation et le bouton d'annulation fonctionne"""
+
+        # Sélectionner le profil
+        profile_row = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/.."))
+        )
+        self.browser.execute_script("arguments[0].click();", profile_row)
+
+        # Attendre et cliquer sur le bouton de suppression
+        delete_button = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'about-table')]//td[contains(text(), '{self.abouts[0].content}')]/..//button[contains(@class, 'delete-about')]"))
+        )
+        self.browser.execute_script("arguments[0].click();", delete_button)
+
+        # Vérifier l'affichage de la modal
+        WebDriverWait(self.browser, 5).until(
+            EC.visibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas apparue après le clic"
+        )
+        
+        # Vérifier que le bouton d'annulation est présent
+        cancel_button = self.browser.find_element(By.ID, "cancelDeleteButton")
+        self.assertTrue(cancel_button.is_displayed(), "Le bouton d'annulation n'est pas visible")
+
+        # Cliquer sur le bouton d'annulation
+        self.browser.execute_script("arguments[0].click();", cancel_button)
+
+        # Vérifier que la modal est fermée
+        WebDriverWait(self.browser, 5).until(
+            EC.invisibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas fermée après le clic"
+        )
+
+        #Vérifier que la ligne n'est pas supprimée
+        about_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'about-table')]//td[contains(text(), '{self.abouts[0].content}')]/..")
+        self.assertTrue(about_row.is_displayed(), "La ligne de l'about est visible")
+
+    def test_delete_experience_and_cancel(self):
         """Vérifie que le clic sur supprimer affiche la modal de confirmation"""
         # Sélectionner le profil
         profile_row = WebDriverWait(self.browser, 10).until(
@@ -810,7 +873,7 @@ class DeleteSectionTest(BaseTest):
 
         # Attendre et cliquer sur le bouton de suppression
         delete_button = WebDriverWait(self.browser, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, ".delete-about"))
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'experience-table')]//td[contains(text(), '{self.experiences[0].description}')]/..//button[contains(@class, 'delete-experience')]"))
         )
         self.browser.execute_script("arguments[0].click();", delete_button)
 
@@ -820,12 +883,26 @@ class DeleteSectionTest(BaseTest):
             message="La modal de confirmation n'est pas apparue après le clic"
         )
         
-        # Vérifier que le bouton de confirmation est présent
-        confirm_button = self.browser.find_element(By.ID, "confirmDeleteButton")
-        self.assertTrue(confirm_button.is_displayed(), "Le bouton de confirmation n'est pas visible")
+        # Vérifier que le bouton d'annulation est présent
+        cancel_button = self.browser.find_element(By.ID, "cancelDeleteButton")
+        self.assertTrue(cancel_button.is_displayed(), "Le bouton d'annulation n'est pas visible")
 
-    def test_delete_experience_section(self):
-        """Vérifie que le clic sur supprimer affiche la modal de confirmation"""
+        # Cliquer sur le bouton d'annulation
+        self.browser.execute_script("arguments[0].click();", cancel_button)
+
+        # Vérifier que la modal est fermée
+        WebDriverWait(self.browser, 5).until(
+            EC.invisibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas fermée après le clic"
+        )
+
+        #Vérifier que la ligne n'est pas supprimée
+        experience_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'experience-table')]//td[contains(text(), '{self.experiences[0].description}')]/..")
+        self.assertTrue(experience_row.is_displayed(), "La ligne de l'experience est visible")
+
+    def test_delete_project_and_cancel(self):
+        """Vérifie que le clic sur supprimer affiche la modal de confirmation et le bouton d'annulation fonctionne"""
+
         # Sélectionner le profil
         profile_row = WebDriverWait(self.browser, 10).until(
             EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/.."))
@@ -834,7 +911,7 @@ class DeleteSectionTest(BaseTest):
 
         # Attendre et cliquer sur le bouton de suppression
         delete_button = WebDriverWait(self.browser, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, ".delete-experience"))
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.projects[0].title}')]/..//button[contains(@class, 'delete-project')]"))
         )
         self.browser.execute_script("arguments[0].click();", delete_button)
 
@@ -844,30 +921,210 @@ class DeleteSectionTest(BaseTest):
             message="La modal de confirmation n'est pas apparue après le clic"
         )
         
-        # Vérifier que le bouton de confirmation est présent
-        confirm_button = self.browser.find_element(By.ID, "confirmDeleteButton")
-        self.assertTrue(confirm_button.is_displayed(), "Le bouton de confirmation n'est pas visible")
+        # Vérifier que le bouton d'annulation est présent
+        cancel_button = self.browser.find_element(By.ID, "cancelDeleteButton")
+        self.assertTrue(cancel_button.is_displayed(), "Le bouton d'annulation n'est pas visible")
 
-    def test_delete_project_section(self):
-        """Vérifie que le clic sur supprimer affiche la modal de confirmation"""
+        # Cliquer sur le bouton d'annulation
+        self.browser.execute_script("arguments[0].click();", cancel_button)
+
+        # Vérifier que la modal est fermée
+        WebDriverWait(self.browser, 5).until(
+            EC.invisibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas fermée après le clic"
+        )
+
+        #Vérifier que la ligne n'est pas supprimée
+        project_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.projects[0].title}')]/..")
+        self.assertTrue(project_row.is_displayed(), "La ligne du projet est visible")
+
+    def test_delete_profile_and_confirm(self):
+        """Vérifie que le clic sur supprimer affiche la modal de confirmation et le bouton de confirmation fonctionne"""
+
         # Sélectionner le profil
         profile_row = WebDriverWait(self.browser, 10).until(
             EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/.."))
         )
         self.browser.execute_script("arguments[0].click();", profile_row)
 
-        # Attendre et cliquer sur le bouton de suppression
+        # Cliquer sur le bouton de suppression du profil de test
         delete_button = WebDriverWait(self.browser, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, ".delete-project"))
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..//button[contains(@class, 'delete-profile')]"))
         )
         self.browser.execute_script("arguments[0].click();", delete_button)
 
-        # Vérifier l'affichage de la modal
+        # Vérifier que la popup est apparue
         WebDriverWait(self.browser, 5).until(
             EC.visibility_of_element_located((By.ID, "confirmDeleteModal")),
             message="La modal de confirmation n'est pas apparue après le clic"
         )
-        
-        # Vérifier que le bouton de confirmation est présent
+
+        profile_id = self.profile.id
+        profile_identifiant = self.profile.identifiant
+
+        # Cliquer sur le bouton de confirmation
         confirm_button = self.browser.find_element(By.ID, "confirmDeleteButton")
-        self.assertTrue(confirm_button.is_displayed(), "Le bouton de confirmation n'est pas visible")
+        self.browser.execute_script("arguments[0].click();", confirm_button)
+
+        # Vérifier que la modal est fermée
+        WebDriverWait(self.browser, 5).until(
+            EC.invisibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas fermée après le clic"
+        )
+            
+        # Vérifier que le profil est supprimé
+        self.assertFalse(Profile.objects.filter(id=profile_id).exists(), "Le profil n'a pas été supprimé")
+        
+        # Vérifier que la ligne est supprimée
+        try:
+            profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{profile_identifiant}')]/..")
+            self.assertFalse(profile_row.is_displayed(), "La ligne du profil est visible")
+        except NoSuchElementException:
+            pass  # La ligne a bien été supprimée
+
+        # Vérifier que les tables sont vides
+        WebDriverWait(self.browser, 5).until(
+            EC.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, "#profile-data .text-muted"), 
+                "Sélectionnez un profil pour voir ses données"
+            ),
+            message="Le message de sélection n'est pas affiché après suppression"
+        )
+        
+        # Vérifier que les tables ne sont pas visibles
+        self.assertFalse(
+            self.browser.find_element(By.ID, "profile-data").find_elements(By.TAG_NAME, "table"),
+            "Des tables sont encore visibles après suppression"
+        )
+
+    def test_delete_about_and_confirm(self):
+        """Vérifie que le clic sur supprimer affiche la modal de confirmation et le bouton de confirmation fonctionne"""
+        
+        # Sélectionner le profil
+        profile_row = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/.."))
+        )
+        self.browser.execute_script("arguments[0].click();", profile_row)
+
+        # Cliquer sur le bouton de suppression de la section about de test
+        delete_button = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'about-table')]//td[contains(text(), '{self.abouts[0].content}')]/..//button[contains(@class, 'delete-about')]"))
+        )
+        self.browser.execute_script("arguments[0].click();", delete_button)
+
+        # Vérifier que la popup est apparue
+        WebDriverWait(self.browser, 5).until(
+            EC.visibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas apparue après le clic"
+        )
+
+        about_id = self.abouts[0].id
+        about_content = self.abouts[0].content
+
+        # Cliquer sur le bouton de confirmation
+        confirm_button = self.browser.find_element(By.ID, "confirmDeleteButton")
+        self.browser.execute_script("arguments[0].click();", confirm_button)
+
+        # Vérifier que la modal est fermée
+        WebDriverWait(self.browser, 5).until(
+            EC.invisibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas fermée après le clic"
+        )
+        
+        # Vérifier que l'about est supprimé
+        self.assertFalse(About.objects.filter(id=about_id).exists(), "L'about n'a pas été supprimé")
+        
+        # Vérifier que la ligne est supprimée
+        try:
+            about_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'about-table')]//td[contains(text(), '{about_content}')]/..")
+            self.assertFalse(about_row.is_displayed(), "La ligne de l'about est visible")
+        except NoSuchElementException:
+            pass  # La ligne a bien été supprimée
+
+    def test_delete_experience_and_confirm(self):
+        """Vérifie que le clic sur supprimer affiche la modal de confirmation et le bouton de confirmation fonctionne"""
+        
+        # Sélectionner le profil
+        profile_row = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/.."))
+        )
+        self.browser.execute_script("arguments[0].click();", profile_row)
+
+        # Cliquer sur le bouton de suppression de la section experience de test
+        delete_button = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'experience-table')]//td[contains(text(), '{self.experiences[1].description}')]/..//button[contains(@class, 'delete-experience')]"))
+        )
+        self.browser.execute_script("arguments[0].click();", delete_button)
+
+        # Vérifier que la popup est apparue
+        WebDriverWait(self.browser, 5).until(
+            EC.visibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas apparue après le clic"
+        )
+
+        experience_id = self.experiences[1].id
+        experience_description = self.experiences[1].description
+
+        # Cliquer sur le bouton de confirmation
+        confirm_button = self.browser.find_element(By.ID, "confirmDeleteButton")
+        self.browser.execute_script("arguments[0].click();", confirm_button)
+
+        # Vérifier que la modal est fermée
+        WebDriverWait(self.browser, 5).until(
+            EC.invisibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas fermée après le clic"
+        )
+        
+        # Vérifier que l'experience est supprimée
+        self.assertFalse(Experience.objects.filter(id=experience_id).exists(), "L'experience n'a pas été supprimée")
+        
+        # Vérifier que la ligne est supprimée
+        try:
+            experience_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'experience-table')]//td[contains(text(), '{experience_description}')]/..")
+            self.assertFalse(experience_row.is_displayed(), "La ligne de l'experience est visible")
+        except NoSuchElementException:
+            pass  # La ligne a bien été supprimée
+
+    def test_delete_project_and_confirm(self):
+        """Vérifie que le clic sur supprimer affiche la modal de confirmation et le bouton de confirmation fonctionne"""
+        
+        # Sélectionner le profil
+        profile_row = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/.."))
+        )
+        self.browser.execute_script("arguments[0].click();", profile_row)
+
+        # Cliquer sur le bouton de suppression de la section project de test
+        delete_button = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.projects[0].title}')]/..//button[contains(@class, 'delete-project')]"))
+        )
+        self.browser.execute_script("arguments[0].click();", delete_button)
+
+        # Vérifier que la popup est apparue
+        WebDriverWait(self.browser, 5).until(
+            EC.visibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas apparue après le clic"
+        )
+
+        project_id = self.projects[0].id
+        project_title = self.projects[0].title
+
+        # Cliquer sur le bouton de confirmation
+        confirm_button = self.browser.find_element(By.ID, "confirmDeleteButton")
+        self.browser.execute_script("arguments[0].click();", confirm_button)
+
+        # Vérifier que la modal est fermée
+        WebDriverWait(self.browser, 5).until(
+            EC.invisibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas fermée après le clic"
+        )
+        
+        # Vérifier que le project est supprimé
+        self.assertFalse(Project.objects.filter(id=project_id).exists(), "Le project n'a pas été supprimé")
+        
+        # Vérifier que la ligne est supprimée
+        try:
+            project_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'projects-table')]//td[contains(text(), '{project_title}')]/..")
+            self.assertFalse(project_row.is_displayed(), "La ligne du project est visible")
+        except NoSuchElementException:
+            pass  # La ligne a bien été supprimée
