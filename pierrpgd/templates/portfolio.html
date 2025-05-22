@@ -9,14 +9,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body, a {
-            background-color: #0a192f;
             color: #8892b0;
             text-decoration: none;
             font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 0;
             line-height: 1.6;
+        }
+
+        body {
+            position: relative;
+            background-color: #0f172a;
+            margin: 0;
+            width: 100%;
             min-height: 100vh;
+            overflow-x: hidden; /* Seulement bloquer le scroll horizontal */
+            overflow-y: auto; /* Autoriser le scroll vertical */
         }
 
         .layout {
@@ -24,6 +32,7 @@
             width: 100vw;
             max-width: 1200px;
             padding-bottom: 10vh;
+            z-index: 100;
         }
 
         .container-flex {
@@ -138,6 +147,27 @@
             margin-bottom: 40px;
         }
 
+        .glow-overlay {
+            pointer-events: none;
+
+            /* Dégradé lumineux */
+            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgb(6, 36, 80) 0%, rgba(0,0,0,0) 40%);
+            transition: none;
+
+            position: fixed; /* Changé de absolute à fixed */
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100vh; /* Utiliser viewport height */
+            margin: 0;
+        }
+
+        strong {
+            color: #ccd6f6;
+        }
+
         @media (max-width: 1200px) {
             .layout {
                 padding-right: 3rem;
@@ -185,8 +215,24 @@
             }
         }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const main = document.querySelector('body');
+            const overlay = document.querySelector('.glow-overlay');
+
+            if (main && overlay) {
+                main.addEventListener('pointermove', (e) => {
+                    const x = e.clientX;
+                    const y = e.clientY;
+                    overlay.style.setProperty('--x', `${x}px`);
+                    overlay.style.setProperty('--y', `${y}px`);
+                });
+            }
+        });
+    </script>
 </head>
 <body>
+    <div class="glow-overlay"></div>
     <div class="container-flex">
         <div class="layout">
             <nav id="col-1">
@@ -203,7 +249,7 @@
                 <section id="about">
                     <h2>About</h2>
                     {% for paragraphe in about %}
-                        <p>{{ paragraphe.content }}</p>
+                        <p>{{ paragraphe.content|safe }}</p>
                     {% endfor %}
                 </section>
 
