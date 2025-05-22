@@ -104,9 +104,7 @@ class DataDisplayViewTest(BaseTest):
         self.response = self.client.get(reverse('data_display'))
         self.assertEqual(self.response.status_code, 200)
         self.assertContains(self.response, 'Aucun profil trouvé')
-        self.assertContains(self.response, 'Aucune section About trouvée')
-        self.assertContains(self.response, 'Aucune expérience trouvée')
-        self.assertContains(self.response, 'Aucun projet trouvé')
+        self.assertContains(self.response, 'Sélectionnez un profil pour voir ses données')
 
     def test_profile_selection_and_data_display(self):
         """

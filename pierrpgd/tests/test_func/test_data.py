@@ -77,7 +77,7 @@ class ProfileTest(BaseTest):
 
         # Trouver la ligne du profil dans le tableau
         profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.name}')]/..")
-        
+
         # Cliquer sur la ligne du profil
         self.browser.execute_script("arguments[0].click();", profile_row)
         
@@ -435,6 +435,73 @@ class ModifyAndSaveTest(BaseTest):
     def setUp(self):
         super().setUp()
         self.setUpData()
+
+    def test_modify_and_save_profile(self):
+        """Teste la modification et la sauvegarde d'un élément Profil"""
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(profile_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'profileModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'profileModal')
+        self.assertTrue(modal.is_displayed())
+        
+        # Modifier le contenu
+        identifiant_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="identifiant"]')
+        new_content = "Nouveau-test-identifiant"
+        
+        # Effacer le contenu existant
+        identifiant_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content).perform()
+
+        # Modifier le contenu
+        name_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="name"]')
+        old_content = name_field.text
+        new_content = "Nouveau-test-nom"
+        
+        # Effacer le contenu existant
+        name_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content).perform()
+        
+        # Enregistrer et vérifier
+        save_button = modal.find_element(By.CSS_SELECTOR, '.btn-primary')
+        self.browser.execute_script("arguments[0].click();", save_button)
+        
+        # Vérifier que la modal commence à se fermer
+        WebDriverWait(self.browser, 10).until(
+            EC.invisibility_of_element_located((By.ID, 'profileModal'))
+        )
+        
+        # Vérifier côté serveur que la modification est enregistrée
+        profile_obj = Profile.objects.get(id=self.profile.id)
+        self.assertEqual(profile_obj.name, new_content)
+        
+        # Vérifier que le tableau est mis à jour
+        updated_row = WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, 
+                f"//table[@id='profile-table']//td[contains(., '{new_content}')]"))
+        )
+        self.assertTrue(updated_row.is_displayed())
+
+        # Vérifier que le contenu précedent ne s'affiche plus
+        try:
+            old_row = self.browser.find_element(By.XPATH, f"//table[@id='profile-table']//td[contains(., '{old_content}')]")
+            self.assertFalse(old_row.is_displayed())
+        except:
+            pass
 
     def test_modify_and_save_about(self):
         """Teste la modification et la sauvegarde d'un élément À propos"""

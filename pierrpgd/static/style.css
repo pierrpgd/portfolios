@@ -1,0 +1,205 @@
+.hoverable-row:hover {
+    background-color: #0869c9 !important;
+    color: white !important;
+}
+.table {
+    cursor: default;
+}
+.table * {
+    cursor: default;
+}
+.table tr:hover {
+    cursor: default;
+}
+.hoverable-row:hover {
+    cursor: default;
+}
+
+/* Style pour la popup About */
+#aboutModal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    z-index: 1000;
+    width: 80%;
+    max-width: none;
+    font-size: 1.2em;
+    line-height: 1.6;
+}
+#aboutModalContent {
+    margin-bottom: 20px;
+    padding: 20px;
+    border-radius: 5px;
+    background: #f8f9fa;
+}
+#aboutModal button.close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #6c757d;
+    transition: color 0.2s;
+}
+#aboutModal button.close:hover {
+    color: #343a40;
+}
+
+/* Fond gris transparent */
+#aboutModalBackdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+/* Style pour les modals Experience et Projects */
+.modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    z-index: 1000;
+    width: 80%;
+    max-width: none;
+    font-size: 1.2em;
+    line-height: 1.6;
+    margin: 0;
+    height: fit-content;
+}
+.modal-content {
+    padding: 20px;
+    border-radius: 5px;
+    background: #f8f9fa;
+    min-height: 60px;
+    margin: 0;
+    border: 1px solid #e0e0e0;
+}
+.modal-content-title {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #333;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e0e0e0;
+}
+.modal-content-text {
+    font-size: 1.1em;
+    line-height: 1.6;
+    color: #666;
+    padding: 15px;
+    background: white;
+    border-radius: 3px;
+    border: 1px solid #e0e0e0;
+}
+.modal-content-info {
+    color: #666;
+}
+.modal-content-info span {
+    color: #333;
+}
+.modal-content-info-title {
+    font-weight: bold;
+}
+.modal button.close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #6c757d;
+    transition: color 0.2s;
+}
+.modal button.close:hover {
+    color: #343a40;
+}
+.modal-header {
+    min-height: 50px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Style pour les modals Experience et Projects */
+.modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.editable-field {
+    margin-bottom: 20px;
+}
+
+.editable-content {
+    cursor: text;
+    padding: 10px;
+    border: 2px solid #e0e0e0;  /* Bordure grise claire */
+    transition: border-color 0.2s;
+    border-radius: 4px;  /* Coins légèrement arrondis */
+    background-color: #fff;
+}
+
+.editable-content:focus {
+    outline: none;
+    border-color: #80bdff;  /* Bleu plus foncé au focus */
+    background-color: #fff;
+}
+
+#confirmDeleteModal {
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+#confirmDeleteModal .modal-dialog {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+#confirmDeleteModal .modal-content {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    background-color: rgba(255, 255, 255);
+}
+
+#confirmDeleteModal .modal-header {
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    background-color: rgba(220, 53, 69);
+}
+
+#confirmDeleteModal .modal-footer {
+    border-top: none;
+    padding-bottom: 1.5rem;
+    background-color: rgba(248, 249, 250);
+}
+
+@media (max-width: 576px) {
+    #confirmDeleteModal .modal-dialog {
+    width: 95%;
+    margin: 0.5rem auto;
+    }
+}
