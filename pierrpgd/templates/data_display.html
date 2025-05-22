@@ -30,6 +30,7 @@
                             <tr>
                                 <th>Identifiant</th>
                                 <th>Nom</th>
+                                <th>Titre</th>
                                 <th>Créé le</th>
                                 <th>Mis à jour le</th>
                                 <th></th>
@@ -37,9 +38,10 @@
                         </thead>
                         <tbody>
                             {% for profile in profiles %}
-                                <tr class="profile-row" data-id="{{ profile.id }}" data-identifiant="{{ profile.identifiant }}" data-name="{{ profile.name }}" data-created="{{ profile.created_at }}" data-updated="{{ profile.updated_at }}">
+                                <tr class="profile-row" data-id="{{ profile.id }}" data-identifiant="{{ profile.identifiant }}" data-name="{{ profile.name }}" data-title="{{ profile.title }}" data-created="{{ profile.created_at }}" data-updated="{{ profile.updated_at }}">
                                     <td>{{ profile.identifiant }}</td>
                                     <td>{{ profile.name }}</td>
+                                    <td>{{ profile.title }}</td>
                                     <td>{{ profile.created_at|date:"F j, Y, à g:i a" }}</td>
                                     <td>{{ profile.updated_at|date:"F j, Y, à g:i a" }}</td>
                                     <td class="text-end">

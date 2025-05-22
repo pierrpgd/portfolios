@@ -81,3 +81,7 @@ class PortfolioPageTest(BaseTest):
         self.assertEqual(links[1].get_attribute('href'), f'{self.url}/#about', "Navigation bar doesn't have an 'About' item.")
         self.assertEqual(links[2].get_attribute('href'), f'{self.url}/#experience', "Navigation bar doesn't have an 'Experience' item.")
         self.assertEqual(links[3].get_attribute('href'), f'{self.url}/#projects', "Navigation bar doesn't have an 'Projects' item.")
+
+    def test_profile_title_is_visible(self):
+        title = self.browser.find_element(By.ID, "title")
+        self.assertEqual(title.text, self.profile.title, "Profile title doesn't appear on the portfolio.")

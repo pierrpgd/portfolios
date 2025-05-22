@@ -4,6 +4,7 @@ from django.utils import timezone
 class Profile(models.Model):
     identifiant = models.CharField(max_length=100, unique=True, null=False, blank=False, default='default')
     name = models.CharField(max_length=100)
+    title = models.CharField(max_length=100, default='')
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
 

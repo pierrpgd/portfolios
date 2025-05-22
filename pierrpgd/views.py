@@ -52,6 +52,7 @@ def load_data(request):
                     'profile': {
                         'name': profile.name,
                         'identifiant': profile.identifiant,
+                        'title': profile.title,
                         'id': profile.id,
                         'created_at': profile.created_at,
                         'updated_at': profile.updated_at
@@ -128,11 +129,12 @@ def save_data(request):
                     return JsonResponse({'success': False, 'error': 'L\'identifiant ne doit pas contenir d\'espace'}, status=400)
 
                 if isNew:
-                    obj = Profile.objects.create(identifiant=content.get('identifiant', ''), name=content.get('name', ''))
+                    obj = Profile.objects.create(identifiant=content.get('identifiant', ''), name=content.get('name', ''), title=content.get('title', ''))
                 else:
                     obj = Profile.objects.get(id=content.get('id'))
                     obj.identifiant = content.get('identifiant', obj.identifiant)
                     obj.name = content.get('name', obj.name)
+                    obj.title = content.get('title', obj.title)
 
             elif modalId == 'aboutModal':
                 type = 'about'

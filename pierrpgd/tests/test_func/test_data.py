@@ -70,6 +70,26 @@ class ProfileTest(BaseTest):
         super().setUp()
         self.setUpData()
 
+    def test_profile_data_is_visible(self):
+        """
+        Teste l'affichage des données d'un profil avec Selenium
+        """
+        
+        # Trouver la ligne du profil dans le tableau
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.name}')]/..")
+
+        profile_identifiant = profile_row.find_element(By.XPATH, './td[1]').text
+        profile_name = profile_row.find_element(By.XPATH, './td[2]').text
+        profile_title = profile_row.find_element(By.XPATH, './td[3]').text
+        profile_creation_date = profile_row.find_element(By.XPATH, './td[4]').text
+        profile_modification_date = profile_row.find_element(By.XPATH, './td[5]').text
+
+        self.assertEqual(profile_identifiant, self.profile.identifiant, "Profile identifiant doesn't match.")
+        self.assertEqual(profile_name, self.profile.name, "Profile name doesn't match.")
+        self.assertEqual(profile_title, self.profile.title, "Profile title doesn't match.")
+        self.assertEqual(profile_creation_date[:-5], self.profile.created_at.strftime('%B %d, %Y, à %H:%M'), "Profile creation date doesn't match.")
+        self.assertEqual(profile_modification_date[:-5], self.profile.updated_at.strftime('%B %d, %Y, à %H:%M'), "Profile modification date doesn't match.")
+
     def test_profile_selection_toggle_and_data_display_or_hide(self):
         """
         Teste la sélection d'un profil et l'affichage des données liées avec Selenium
@@ -122,6 +142,51 @@ class PopupTest(BaseTest):
         super().setUp()
         self.setUpData()
 
+    def test_double_click_profile(self):
+        """Teste le comportement du double clic sur une ligne du tableau Profil"""
+        
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(profile_row).perform()
+
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'profileModal'))
+        )
+
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'profileModal')
+        self.assertTrue(modal.is_displayed())
+        
+        # Vérifier que le contenu de la popup est correct
+        modal_content = self.browser.find_element(By.CSS_SELECTOR, '#profileModal .modal-content')
+        identifiant = modal_content.find_element(By.CSS_SELECTOR, '.modal-content-info .editable-field .editable-content[data-field="identifiant"]').text
+        name = modal_content.find_element(By.CSS_SELECTOR, '.modal-content-info .editable-field .editable-content[data-field="name"]').text
+        title = modal_content.find_element(By.CSS_SELECTOR, '.modal-content-info .editable-field .editable-content[data-field="title"]').text
+        self.assertEqual(identifiant, self.profile.identifiant)
+        self.assertEqual(name, self.profile.name)
+        self.assertEqual(title, self.profile.title)
+        
+        # Fermer la popup
+        close_button = self.browser.find_element(By.CSS_SELECTOR, '#profileModal .modal-header button.close')
+        self.browser.execute_script("arguments[0].click();", close_button)
+        
+        # Attendre que la popup soit masquée
+        try:
+            WebDriverWait(self.browser, 10).until(
+                EC.invisibility_of_element_located((By.ID, 'profileModal'))
+            )
+        except:
+            # La modal a été supprimée, donc elle n'est plus dans le DOM
+            pass
+        
+        # Vérifier que la modal n'est plus présente dans le DOM
+        with self.assertRaises(NoSuchElementException):
+            self.browser.find_element(By.ID, 'profileModal')
+
     def test_double_click_about(self):
         """Teste le comportement du double clic sur une ligne du tableau À propos"""
         
@@ -153,7 +218,8 @@ class PopupTest(BaseTest):
             
             # Vérifier que le contenu de la popup est correct
             modal_content = self.browser.find_element(By.CSS_SELECTOR, '#aboutModal .modal-content')
-            self.assertIn('Test About Content', modal_content.text)
+            content = modal_content.find_element(By.CSS_SELECTOR, '[data-field="content"]').text
+            self.assertEqual(content, 'Test About Content')
             
             # Fermer la popup
             close_button = self.browser.find_element(By.CSS_SELECTOR, '#aboutModal .modal-header button.close')
@@ -172,7 +238,7 @@ class PopupTest(BaseTest):
             with self.assertRaises(NoSuchElementException):
                 self.browser.find_element(By.ID, 'aboutModal')
             
-            # Trouver la ligne du tableau Expériences pour la deuxième expérience
+            # Trouver la ligne du tableau About pour la deuxième section
             about_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'about-table')]//td[contains(text(), '{self.abouts[1].content}')]/..")
 
             # Effectuer un double clic
@@ -238,14 +304,18 @@ class PopupTest(BaseTest):
         
         # Vérifier le contenu de la popup
         modal_content = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-content')
-        self.assertIn(self.experiences[0].description, modal_content.text)
-        
-        # Vérifier les informations de l'expérience
-        info = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-content-info')
-        self.assertIn(self.experiences[0].dates, info.text)
-        self.assertIn(self.experiences[0].position, info.text)
-        self.assertIn(self.experiences[0].company, info.text)
-        self.assertIn(self.experiences[0].location, info.text)
+
+        dates = modal_content.find_element(By.CSS_SELECTOR, '[data-field="dates"]').text
+        company = modal_content.find_element(By.CSS_SELECTOR, '[data-field="company"]').text
+        position = modal_content.find_element(By.CSS_SELECTOR, '[data-field="position"]').text
+        location = modal_content.find_element(By.CSS_SELECTOR, '[data-field="location"]').text
+        description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
+
+        self.assertEqual(dates, '2023-2024')
+        self.assertEqual(position, 'Test Position')
+        self.assertEqual(company, 'Test Company')
+        self.assertEqual(description, 'Test Description')
+        self.assertEqual(location, 'Test Location')
         
         # Fermer la popup
         close_button = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-header button.close')
@@ -282,7 +352,18 @@ class PopupTest(BaseTest):
 
         # Vérifier le contenu de la popup
         modal_content = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-content')
-        self.assertIn(self.experiences[1].description, modal_content.text)
+
+        dates = modal_content.find_element(By.CSS_SELECTOR, '[data-field="dates"]').text
+        company = modal_content.find_element(By.CSS_SELECTOR, '[data-field="company"]').text
+        position = modal_content.find_element(By.CSS_SELECTOR, '[data-field="position"]').text
+        location = modal_content.find_element(By.CSS_SELECTOR, '[data-field="location"]').text
+        description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
+
+        self.assertEqual(dates, '2022-2023')
+        self.assertEqual(position, 'Test Position 2')
+        self.assertEqual(company, 'Test Company 2')
+        self.assertEqual(description, 'Test Description 2')
+        self.assertEqual(location, 'Test Location 2')
         
         # Vérifier les informations de l'expérience
         info = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-content-info')
@@ -334,7 +415,12 @@ class PopupTest(BaseTest):
         
         # Vérifier le contenu de la popup
         modal_content = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-content')
-        self.assertIn(self.projects[0].description, modal_content.text)
+
+        title = modal_content.find_element(By.CSS_SELECTOR, '[data-field="title"]').text
+        description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
+
+        self.assertEqual(title, 'Test Project')
+        self.assertEqual(description, 'Test Project Description')
         
         # Vérifier le titre du projet
         title = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-content-info')
@@ -375,7 +461,12 @@ class PopupTest(BaseTest):
 
         # Vérifier le contenu de la popup
         modal_content = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-content')
-        self.assertIn(self.projects[1].description, modal_content.text)
+
+        title = modal_content.find_element(By.CSS_SELECTOR, '[data-field="title"]').text
+        description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
+
+        self.assertEqual(title, 'Second Project')
+        self.assertEqual(description, 'Second Project Description')
         
         # Fermer la popup
         close_button = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-header button.close')
@@ -708,7 +799,11 @@ class AddElementTest(BaseTest):
         
         # Remplir le champ nom
         name_field = modal.find_element(By.CSS_SELECTOR, "[data-field='name']")
-        name_field.send_keys("Nouveau_profil")
+        name_field.send_keys("Nouveau_nom")
+
+        # Remplir le champ titre
+        title_field = modal.find_element(By.CSS_SELECTOR, "[data-field='title']")
+        title_field.send_keys("Nouveau_titre")
         
         # Cliquer sur valider
         validate_button = modal.find_element(By.ID, "profileModalValidateButton")
@@ -723,6 +818,8 @@ class AddElementTest(BaseTest):
         # Vérification finale
         rows = self.browser.find_elements(By.CSS_SELECTOR, "#profile-table tbody tr")
         self.assertTrue(any("Nouveau_profil" in row.text for row in rows))
+        self.assertTrue(any("Nouveau_nom" in row.text for row in rows))
+        self.assertTrue(any("Nouveau_titre" in row.text for row in rows))
 
     def test_add_profile_in_empty_table(self):
         """
@@ -753,7 +850,11 @@ class AddElementTest(BaseTest):
         
         # Remplir le champ nom
         name_field = modal.find_element(By.CSS_SELECTOR, "[data-field='name']")
-        name_field.send_keys("Nouveau_profil")
+        name_field.send_keys("Nouveau_nom")
+        
+        # Remplir le champ titre
+        title_field = modal.find_element(By.CSS_SELECTOR, "[data-field='title']")
+        title_field.send_keys("Nouveau_titre")
         
         # Cliquer sur valider
         validate_button = modal.find_element(By.ID, "profileModalValidateButton")
@@ -768,7 +869,8 @@ class AddElementTest(BaseTest):
         # Vérification finale
         rows = self.browser.find_elements(By.CSS_SELECTOR, "#profile-table tbody tr")
         self.assertTrue(any("Nouveau_profil" in row.text for row in rows))
-        
+        self.assertTrue(any("Nouveau_nom" in row.text for row in rows))
+        self.assertTrue(any("Nouveau_titre" in row.text for row in rows))
 
     def test_add_about_section(self):
         """

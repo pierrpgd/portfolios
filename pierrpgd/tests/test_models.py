@@ -4,19 +4,20 @@ from pierrpgd.models import Profile, About, Experience, Project
 
 class ProfileModelTest(TestCase):
     def setUp(self):
-        self.profile = Profile.objects.create(name='Test Profile', identifiant='test-identifiant')
+        self.profile = Profile.objects.create(name='Test Profile', identifiant='test-identifiant', title='Test Title')
 
     def test_profile_creation(self):
         """Test la création d'un profil"""
         self.assertEqual(self.profile.name, 'Test Profile')
         self.assertEqual(self.profile.identifiant, 'test-identifiant')
+        self.assertEqual(self.profile.title, 'Test Title')
         self.assertIsNotNone(self.profile.created_at)
         self.assertIsNotNone(self.profile.updated_at)
 
     def test_profile_creation_with_same_identifiant(self):
         """Test que la création d'un profil avec un identifiant déjà existant échoue"""
         with self.assertRaises(IntegrityError):
-            Profile.objects.create(name='Another Profile', identifiant='test-identifiant')
+            Profile.objects.create(name='Another Profile', identifiant='test-identifiant', title='Another Title')
 
     def test_profile_string_representation(self):
         """Test la représentation en chaîne de caractères"""
@@ -26,10 +27,12 @@ class ProfileModelTest(TestCase):
         """Test la mise à jour d'un profil"""
         self.profile.name = 'Updated Profile'
         self.profile.identifiant = 'updated-identifiant'
+        self.profile.title = 'Updated Title'
         self.profile.save()
         updated_profile = Profile.objects.get(id=self.profile.id)
         self.assertEqual(updated_profile.name, 'Updated Profile')
         self.assertEqual(updated_profile.identifiant, 'updated-identifiant')
+        self.assertEqual(updated_profile.title, 'Updated Title')
 
     def test_profile_deletion(self):
         """Test la suppression d'un profil"""
@@ -37,7 +40,6 @@ class ProfileModelTest(TestCase):
         self.profile.delete()
         with self.assertRaises(Profile.DoesNotExist):
             Profile.objects.get(id=profile_id)
-
 
 class AboutModelTest(TestCase):
     def setUp(self):

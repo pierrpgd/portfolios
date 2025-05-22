@@ -106,6 +106,7 @@ function showPopup(row, modalId, contentId) {
 
     const identifiant = row.getAttribute('data-identifiant');
     const name = row.getAttribute('data-name');
+    const profileTitle = row.getAttribute('data-title');
     const dates = row.getAttribute('data-dates');
     const company = row.getAttribute('data-company');
     const position = row.getAttribute('data-position');
@@ -114,7 +115,7 @@ function showPopup(row, modalId, contentId) {
     const title = modalId === 'profileModal' ? 'Profil' : 
                     modalId === 'aboutModal' ? 'À propos' : 
                     modalId === 'experienceModal' ? 'Expérience' : 
-                    'Projet';
+                    modalId === 'projectModal' ? 'Projet' : '';
     
     // Créer la popup si elle n'existe pas déjà
     let modal = document.getElementById(modalId);
@@ -137,6 +138,9 @@ function showPopup(row, modalId, contentId) {
                         </div>
                         <div class="editable-field">
                             <span class="modal-content-info-title">Nom :</span> <span contenteditable="true" class="editable-content" data-field="name">${name}</span>
+                        </div>
+                        <div class="editable-field">
+                            <span class="modal-content-info-title">Titre :</span> <span contenteditable="true" class="editable-content" data-field="title">${profileTitle}</span>
                         </div>
                     </div>
                 ` : modalId === 'experienceModal' ? `
@@ -349,6 +353,7 @@ function updateProfileData(data) {
                         <tr>
                             <th>Identifiant</th>
                             <th>Nom</th>
+                            <th>Titre</th>
                             <th>Créé le</th>
                             <th>Mis à jour le</th>
                             <th></th>
@@ -373,9 +378,10 @@ function updateProfileData(data) {
 
             // ...on ajoute une nouvelle ligne
             profileTable.innerHTML += `
-                <tr class="profile-row" data-id="${data.profile.id}" data-identifiant="${data.profile.identifiant}" data-name="${data.profile.name}" data-created="${data.profile.created_at}" data-updated="${data.profile.updated_at}">
+                <tr class="profile-row" data-id="${data.profile.id}" data-identifiant="${data.profile.identifiant}" data-name="${data.profile.name}" data-title="${data.profile.title}" data-created="${data.profile.created_at}" data-updated="${data.profile.updated_at}">
                     <td>${data.profile.identifiant}</td>
                     <td>${data.profile.name}</td>
+                    <td>${data.profile.title}</td>
                     <td>${new Date(data.profile.created_at).toLocaleString('en-US', options)}</td>
                     <td>${new Date(data.profile.updated_at).toLocaleString('en-US', options)}</td>
                     <td class="text-end">

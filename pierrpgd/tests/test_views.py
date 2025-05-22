@@ -2,9 +2,10 @@ from django.test import TestCase
 from django.urls import resolve, reverse
 from django.http import HttpRequest
 from django.utils.html import escape
-from pierrpgd.views import portfolio
+from pierrpgd.views import portfolio, data_display
 from pierrpgd.models import Profile, About, Experience, Project
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 class BaseTest(TestCase):
     fixtures = ['test_fixtures.json']
@@ -43,8 +44,11 @@ class PortfolioViewTest(BaseTest):
     def test_profile_display(self):
         """Teste l'affichage du profil"""
         name_element = self.soup.find(id="name")
+        title_element = self.soup.find(id="title")
         self.assertIsNotNone(name_element)
         self.assertEqual(name_element.text.strip(), self.profile.name)
+        self.assertIsNotNone(title_element)
+        self.assertEqual(title_element.text.strip(), self.profile.title)
 
     def test_about_display(self):
         """Teste l'affichage des sections About"""
@@ -84,55 +88,58 @@ class PortfolioViewTest(BaseTest):
 
 class DataDisplayViewTest(BaseTest):
     def setUp(self):
-        self.response = self.client.get(reverse('data_display'))
+        self.request = HttpRequest()
+        self.response = data_display(self.request)
+        self.soup = BeautifulSoup(self.response.content, 'html.parser')
+
+    def test_url_resolves_to_data_display(self):
+        """Teste que l'URL racine résout vers la vue portfolio"""
+        found = resolve('/data/')
+        self.assertEqual(found.func, data_display)
 
     def test_data_display_view(self):
         """Teste la vue data_display"""
-        self.assertEqual(self.response.status_code, 200)
-        self.assertTemplateUsed(self.response, 'data_display.html')
+        self.response_data = self.client.get('/data/')
+        self.assertEqual(self.response_data.status_code, 200)
+        self.assertTemplateUsed(self.response_data, 'data_display.html')
 
     def test_profile_display(self):
-        """Teste l'affichage des profils"""
-        self.response = self.client.get(reverse('data_display'))
+        """
+        Teste l'affichage des profils
+        1. Récupère la page data_display
+        2. Vérifie que le code HTTP est 200
+        3. Vérifie que le nom du profil est affiché
+        """
         self.assertEqual(self.response.status_code, 200)
-        self.assertContains(self.response, self.profile.name)
+        profile_table_container = self.soup.find(id="profile-table-container")
+        profile_elements = [
+            [td.text.strip() for td in row.find_all('td')] 
+            for row in profile_table_container.find('tbody').find_all('tr')
+        ]
+        profile_identifiant = profile_elements[0][0]
+        profile_name = profile_elements[0][1]
+        profile_title = profile_elements[0][2]
+        profile_creation_date = profile_elements[0][3]
+        profile_last_update_date = profile_elements[0][4]
+        
+        self.assertEqual(profile_identifiant, self.profile.identifiant)
+        self.assertEqual(profile_name, self.profile.name)
+        self.assertEqual(profile_title, self.profile.title)
+        self.assertEqual(profile_creation_date[:-5], self.profile.created_at.strftime('%B %d, %Y, à %I:%M'))
+        self.assertEqual(profile_last_update_date[:-5], self.profile.updated_at.strftime('%B %d, %Y, à %I:%M'))
 
     def test_profile_deletion(self):
         # Supprimer le profil et vérifier que les données associées sont supprimées
         Profile.objects.all().delete()
 
-        self.response = self.client.get(reverse('data_display'))
-        self.assertEqual(self.response.status_code, 200)
-        self.assertContains(self.response, 'Aucun profil trouvé')
-        self.assertContains(self.response, 'Sélectionnez un profil pour voir ses données')
+        self.response = data_display(self.request)
+        self.soup = BeautifulSoup(self.response.content, 'html.parser')
 
-    def test_profile_selection_and_data_display(self):
-        """
-        Teste la sélection d'un profil et l'affichage des données liées
-        """
-        # Accéder à la page data_display
-        self.response = self.client.get(reverse('data_display'))
-        self.assertEqual(self.response.status_code, 200)
-        
-        # Simuler le clic sur la ligne du profil
-        self.response = self.client.get(reverse('load_data') + f'?identifiant={self.profile.identifiant}')
-        self.assertEqual(self.response.status_code, 200)
-        
-        # Vérifier que les données sont correctement chargées
-        data = self.response.json()
-        self.assertIn('about', data)
-        self.assertIn('experience', data)
-        self.assertIn('projects', data)
-        
-        # Vérifier que les données correspondent
-        self.assertEqual(len(data['about']), self.abouts.count())
-        self.assertEqual(data['about'][0]['content'], self.abouts[0].content)
-        
-        self.assertEqual(len(data['experience']), self.experiences.count())
-        self.assertEqual(data['experience'][0]['company'], self.experiences[0].company)
-        
-        self.assertEqual(len(data['projects']), self.projects.count())
-        self.assertEqual(data['projects'][0]['title'], self.projects[0].title)
+        profile_table_container = self.soup.find(id="profile-table-container")
+        profile_data = self.soup.find(id="profile-data")
+
+        self.assertIn('Aucun profil trouvé', profile_table_container.text)
+        self.assertIn('Sélectionnez un profil pour voir ses données', profile_data.text)
 
 class LoadDataViewTest(BaseTest):
 
@@ -150,6 +157,9 @@ class LoadDataViewTest(BaseTest):
         self.assertIn('profile', data)
         self.assertEqual(data['profile']['name'], self.profile.name)
         self.assertEqual(data['profile']['identifiant'], self.profile.identifiant)
+        self.assertEqual(data['profile']['title'], self.profile.title)
+        self.assertEqual(datetime.strptime(data['profile']['created_at'], '%Y-%m-%dT%H:%M:%S.%fZ').strftime('%B %d, %Y, à %I:%M'), self.profile.created_at.strftime('%B %d, %Y, à %I:%M'))
+        self.assertEqual(datetime.strptime(data['profile']['updated_at'], '%Y-%m-%dT%H:%M:%S.%fZ').strftime('%B %d, %Y, à %I:%M'), self.profile.updated_at.strftime('%B %d, %Y, à %I:%M'))
 
     def test_update_profile(self):
         """Teste la mise à jour d'un profil"""
@@ -157,7 +167,8 @@ class LoadDataViewTest(BaseTest):
         # Données pour la mise à jour
         updated_data = {
             'name': 'Nom mis à jour',
-            'identifiant': 'identifiant mis à jour'
+            'identifiant': 'identifiant mis à jour',
+            'title': 'Titre mis à jour'
         }
         
         # Mettre à jour la section About
@@ -167,6 +178,7 @@ class LoadDataViewTest(BaseTest):
         # Vérifier que les modifications ont été sauvegardées
         self.assertEqual(self.profile.name, 'Nom mis à jour')
         self.assertEqual(self.profile.identifiant, 'identifiant mis à jour')
+        self.assertEqual(self.profile.title, 'Titre mis à jour')
         
         # Vérifier que les changements apparaissent dans l'interface via load_data
         self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
@@ -176,6 +188,9 @@ class LoadDataViewTest(BaseTest):
         self.assertIn('profile', data)
         self.assertEqual(data['profile']['name'], 'Nom mis à jour')
         self.assertEqual(data['profile']['identifiant'], 'identifiant mis à jour')
+        self.assertEqual(data['profile']['title'], 'Titre mis à jour')
+        self.assertEqual(datetime.strptime(data['profile']['created_at'], '%Y-%m-%dT%H:%M:%S.%fZ').strftime('%B %d, %Y, à %I:%M'), self.profile.created_at.strftime('%B %d, %Y, à %I:%M'))
+        self.assertEqual(datetime.strptime(data['profile']['updated_at'], '%Y-%m-%dT%H:%M:%S.%fZ').strftime('%B %d, %Y, à %I:%M'), self.profile.updated_at.strftime('%B %d, %Y, à %I:%M'))
 
     def test_delete_profile(self):
         """Teste la suppression d'un profil"""
@@ -435,7 +450,8 @@ class SaveDataTest(BaseTest):
         # Données pour la création
         data = {
             'name': 'Test Profile',
-            'identifiant': 'test_identifiant'
+            'identifiant': 'test_identifiant',
+            'title': 'Test Title'
         }
         
         # Effectuer la création via l'API
@@ -457,12 +473,19 @@ class SaveDataTest(BaseTest):
         self.assertEqual(result['success'], True)
         self.assertTrue(Profile.objects.filter(identifiant=data['identifiant']).exists())
 
+        # Vérifier que le profil a été créé avec les bonnes données
+        profile = Profile.objects.get(identifiant=data['identifiant'])
+        self.assertEqual(profile.name, data['name'])
+        self.assertEqual(profile.identifiant, data['identifiant'])
+        self.assertEqual(profile.title, data['title'])
+
     def test_update_profile(self):
         """Teste la mise à jour d'un profil"""
         # Données pour la mise à jour
         updated_data = {
             'name': 'Nouveau nom de test',
             'identifiant': 'new_identifiant',
+            'title': 'Nouveau titre de test',
             'id': self.profile.id
         }
         
@@ -485,6 +508,7 @@ class SaveDataTest(BaseTest):
         updated_profile = Profile.objects.get(id=self.profile.id)
         self.assertEqual(updated_profile.name, updated_data['name'])
         self.assertEqual(updated_profile.identifiant, updated_data['identifiant'])
+        self.assertEqual(updated_profile.title, updated_data['title'])
 
     def test_create_about(self):
         """Teste la création d'un élément About via l'API"""
