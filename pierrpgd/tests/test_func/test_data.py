@@ -243,6 +243,7 @@ class PopupTest(BaseTest):
         # Vérifier les informations de l'expérience
         info = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-content-info')
         self.assertIn(self.experiences[0].dates, info.text)
+        self.assertIn(self.experiences[0].position, info.text)
         self.assertIn(self.experiences[0].company, info.text)
         self.assertIn(self.experiences[0].location, info.text)
         
@@ -286,6 +287,7 @@ class PopupTest(BaseTest):
         # Vérifier les informations de l'expérience
         info = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-content-info')
         self.assertIn(self.experiences[1].dates, info.text)
+        self.assertIn(self.experiences[1].position, info.text)
         self.assertIn(self.experiences[1].company, info.text)
         self.assertIn(self.experiences[1].location, info.text)
         

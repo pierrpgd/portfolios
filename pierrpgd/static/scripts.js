@@ -108,6 +108,7 @@ function showPopup(row, modalId, contentId) {
     const name = row.getAttribute('data-name');
     const dates = row.getAttribute('data-dates');
     const company = row.getAttribute('data-company');
+    const position = row.getAttribute('data-position');
     const location = row.getAttribute('data-location');
     const projectTitle = row.getAttribute('data-title');
     const title = modalId === 'profileModal' ? 'Profil' : 
@@ -142,6 +143,9 @@ function showPopup(row, modalId, contentId) {
                     <div class="modal-content-info">
                         <div class="editable-field">
                             <span class="modal-content-info-title">Période :</span> <span contenteditable="true" class="editable-content" data-field="dates">${dates}</span>
+                        </div>
+                        <div class="editable-field">
+                            <span class="modal-content-info-title">Position :</span> <span contenteditable="true" class="editable-content" data-field="position">${position}</span>
                         </div>
                         <div class="editable-field">
                             <span class="modal-content-info-title">Entreprise :</span> <span contenteditable="true" class="editable-content" data-field="company">${company}</span>
@@ -487,7 +491,7 @@ function updateProfileData(data) {
 
         if (expTable) {
             expTable.innerHTML = data.experience.map(exp => `
-                <tr class="experience-row" data-id="${exp.id}" data-description="${exp.description}" data-dates="${exp.dates}" data-company="${exp.company}" data-location="${exp.location}">
+                <tr class="experience-row" data-id="${exp.id}" data-description="${exp.description}" data-dates="${exp.dates}" data-position="${exp.position}" data-company="${exp.company}" data-location="${exp.location}">
                     <td>${exp.order}</td>
                     <td>${exp.dates}</td>
                     <td>${exp.position}</td>
@@ -638,7 +642,7 @@ function loadProfileData(profileIdentifiant) {
                                 </thead>
                                 <tbody>
                                     ${data.experience.map(exp => `
-                                        <tr class="experience-row" data-id="${exp.id}" data-description="${exp.description}" data-dates="${exp.dates}" data-company="${exp.company}" data-location="${exp.location}">
+                                        <tr class="experience-row" data-id="${exp.id}" data-description="${exp.description}" data-dates="${exp.dates}" data-position="${exp.position}" data-company="${exp.company}" data-location="${exp.location}">
                                             <td>${exp.order}</td>
                                             <td>${exp.dates}</td>
                                             <td>${exp.position}</td>
