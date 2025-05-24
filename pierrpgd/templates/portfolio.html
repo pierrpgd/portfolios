@@ -168,10 +168,32 @@
             color: #ccd6f6;
         }
 
+        .project-title {
+            color: #ccd6f6;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 0;
+        }
+
         #about p {
             text-align: justify;
             text-justify: inter-word;
             hyphens: auto;
+        }
+
+        .project-container {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            align-items: flex-start;
+        }
+
+        .project-image {
+            flex: 0 0;
+        }
+
+        .project-content {
+            flex: 1;
         }
 
         @media (max-width: 1200px) {
@@ -279,8 +301,15 @@
                 <section id="projects">
                     <h2>Projects</h2>
                     {% for project in projects %}
-                        <p>{{ project.title }}</p>
-                        <p>{{ project.description }}</p>
+                        <div class="project-container">
+                            <div class="project-image">
+                                <img src="/static/portfolio-example.png" alt="{{ project.title }}" style="max-width: 185px; max-height: 185px;">
+                            </div>
+                            <div class="project-content">
+                                <p class="project-title">{{ project.title }}</p>
+                                <p>{{ project.description }}</p>
+                            </div>
+                        </div>
                     {% endfor %}
                 </section>
             </div>
