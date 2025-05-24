@@ -228,7 +228,6 @@ class LoadDataViewTest(BaseTest):
         # Données pour la mise à jour
         updated_data = {
             'content': 'Contenu mis à jour',
-            'order': 1
         }
         
         # Mettre à jour la section About
@@ -237,7 +236,6 @@ class LoadDataViewTest(BaseTest):
         
         # Vérifier que les modifications ont été sauvegardées
         self.assertEqual(self.abouts[0].content, 'Contenu mis à jour')
-        self.assertEqual(self.abouts[0].order, 1)
         
         # Vérifier que les changements apparaissent dans l'interface via load_data
         self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
@@ -247,7 +245,6 @@ class LoadDataViewTest(BaseTest):
         self.assertIn('about', data)
         self.assertEqual(len(data['about']), self.abouts.count())
         self.assertEqual(data['about'][0]['content'], 'Contenu mis à jour')
-        self.assertEqual(data['about'][0]['order'], 1)
 
     def test_delete_about(self):
         """Teste la suppression d'une section About"""
@@ -282,6 +279,10 @@ class LoadDataViewTest(BaseTest):
         self.assertIn('experience', data)
         self.assertEqual(len(data['experience']), self.experiences.count())
         self.assertEqual(data['experience'][0]['company'], self.experiences[0].company)
+        self.assertEqual(data['experience'][0]['dates'], self.experiences[0].dates)
+        self.assertEqual(data['experience'][0]['position'], self.experiences[0].position)
+        self.assertEqual(data['experience'][0]['description'], self.experiences[0].description)
+        self.assertEqual(data['experience'][0]['location'], self.experiences[0].location)
 
     def test_update_experience(self):
         """Teste la mise à jour d'une expérience"""
@@ -293,7 +294,6 @@ class LoadDataViewTest(BaseTest):
             'location': 'Endroit mis à jour',
             'position': 'Poste mis à jour',
             'description': 'Description mise à jour',
-            'order': 1
         }
         
         # Mettre à jour l'expérience
@@ -302,7 +302,6 @@ class LoadDataViewTest(BaseTest):
         
         # Vérifier que les modifications ont été sauvegardées
         self.assertEqual(self.experiences[0].company, 'Entreprise mise à jour')
-        self.assertEqual(self.experiences[0].order, 1)
         
         # Vérifier que les changements apparaissent dans l'interface via load_data
         self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
@@ -312,7 +311,10 @@ class LoadDataViewTest(BaseTest):
         self.assertIn('experience', data)
         self.assertEqual(len(data['experience']), self.experiences.count())
         self.assertEqual(data['experience'][0]['company'], 'Entreprise mise à jour')
-        self.assertEqual(data['experience'][0]['order'], 1)
+        self.assertEqual(data['experience'][0]['location'], 'Endroit mis à jour')
+        self.assertEqual(data['experience'][0]['position'], 'Poste mis à jour')
+        self.assertEqual(data['experience'][0]['description'], 'Description mise à jour')
+        self.assertEqual(data['experience'][0]['dates'], '2024-2025')
 
     def test_delete_experience(self):
         """Teste la suppression d'une expérience"""
@@ -347,6 +349,8 @@ class LoadDataViewTest(BaseTest):
         self.assertIn('projects', data)
         self.assertEqual(len(data['projects']), self.projects.count())
         self.assertEqual(data['projects'][0]['title'], self.projects[0].title)
+        self.assertEqual(data['projects'][0]['description'], self.projects[0].description)
+        self.assertEqual(data['projects'][0]['image_url'], self.projects[0].image_url)
 
     def test_update_project(self):
         """Teste la mise à jour d'un projet"""
@@ -355,7 +359,7 @@ class LoadDataViewTest(BaseTest):
         updated_data = {
             'title': 'Titre mis à jour',
             'description': 'Description mise à jour',
-            'order': 1
+            'image_url': 'image_url',
         }
         
         # Mettre à jour le projet
@@ -364,7 +368,6 @@ class LoadDataViewTest(BaseTest):
         
         # Vérifier que les modifications ont été sauvegardées
         self.assertEqual(self.projects[0].title, 'Titre mis à jour')
-        self.assertEqual(self.projects[0].order, 1)
         
         # Vérifier que les changements apparaissent dans l'interface via load_data
         self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
@@ -374,7 +377,8 @@ class LoadDataViewTest(BaseTest):
         self.assertIn('projects', data)
         self.assertEqual(len(data['projects']), self.projects.count())
         self.assertEqual(data['projects'][0]['title'], 'Titre mis à jour')
-        self.assertEqual(data['projects'][0]['order'], 1)
+        self.assertEqual(data['projects'][0]['description'], 'Description mise à jour')
+        self.assertEqual(data['projects'][0]['image_url'], 'image_url')
 
     def test_delete_project(self):
         """Teste la suppression d'un projet"""
@@ -515,7 +519,6 @@ class SaveDataTest(BaseTest):
         # Données pour la création
         data = {
             'content': 'Contenu de test',
-            'order': 1,
             'profile': self.profile.identifiant
         }
         
@@ -536,14 +539,13 @@ class SaveDataTest(BaseTest):
         
         # Vérifier que le profil a été créé
         self.assertEqual(result['success'], True)
-        self.assertTrue(About.objects.filter(order=data['order']).exists())
+        self.assertTrue(About.objects.filter(content=data['content']).exists())
 
     def test_update_about(self):
         """Teste la mise à jour d'un élément About via l'API"""
         # Données pour la mise à jour
         updated_data = {
             'content': 'Nouveau contenu de test',
-            'order': 2,
             'id': self.abouts[0].id,
             'profile': self.profile.id
         }
@@ -566,7 +568,6 @@ class SaveDataTest(BaseTest):
         # Vérifier que les modifications ont été sauvegardées
         updated_about = About.objects.get(id=self.abouts[0].id)
         self.assertEqual(updated_about.content, updated_data['content'])
-        self.assertEqual(updated_about.order, updated_data['order'])
 
     def test_create_experience(self):
         """Teste la création d'un élément Experience via l'API"""
@@ -577,7 +578,6 @@ class SaveDataTest(BaseTest):
             'location': 'Endroit de test',
             'position': 'Poste de test',
             'description': 'Description de test',
-            'order': 2,
             'profile': self.profile.identifiant
         }
         
@@ -598,7 +598,7 @@ class SaveDataTest(BaseTest):
         
         # Vérifier que le profil a été créé
         self.assertEqual(result['success'], True)
-        self.assertTrue(Experience.objects.filter(order=data['order']).exists())
+        self.assertTrue(Experience.objects.filter(dates=data['dates'], company=data['company'], location=data['location'], position=data['position'], description=data['description']).exists())
 
     def test_update_experience(self):
         """Teste la mise à jour d'un élément Experience via l'API"""
@@ -609,7 +609,6 @@ class SaveDataTest(BaseTest):
             'location': 'Endroit mis à jour',
             'position': 'Poste mis à jour',
             'description': 'Description mise à jour',
-            'order': 2,
             'id': self.experiences[0].id
         }
         
@@ -635,15 +634,14 @@ class SaveDataTest(BaseTest):
         self.assertEqual(updated_experience.location, updated_data['location'])
         self.assertEqual(updated_experience.position, updated_data['position'])
         self.assertEqual(updated_experience.description, updated_data['description'])
-        self.assertEqual(updated_experience.order, updated_data['order'])
 
     def test_create_project(self):
         """Teste la création d'un élément Project via l'API"""
         # Données pour la création
         data = {
-            'title': 'Titre de test',
-            'description': 'Description de test',
-            'order': 2,
+            'title': 'Titre de test save_data',
+            'description': 'Description de test save_data',
+            'image_url': 'image_url',
             'profile': self.profile.identifiant
         }
         
@@ -664,7 +662,7 @@ class SaveDataTest(BaseTest):
         
         # Vérifier que le profil a été créé
         self.assertEqual(result['success'], True)
-        self.assertTrue(Project.objects.filter(order=data['order']).exists())
+        self.assertTrue(Project.objects.filter(title=data['title'], description=data['description'], image_url=data['image_url']).exists())
 
     def test_update_project(self):
         """Teste la mise à jour d'un élément Project"""
@@ -672,7 +670,7 @@ class SaveDataTest(BaseTest):
         updated_data = {
             'title': 'Titre mis à jour',
             'description': 'Description mise à jour',
-            'order': 2,
+            'image_url': 'image_url',
             'id': self.projects[0].id
         }
         
@@ -695,7 +693,7 @@ class SaveDataTest(BaseTest):
         updated_project = Project.objects.get(id=self.projects[0].id)
         self.assertEqual(updated_project.title, updated_data['title'])
         self.assertEqual(updated_project.description, updated_data['description'])
-        self.assertEqual(updated_project.order, updated_data['order'])
+        self.assertEqual(updated_project.image_url, updated_data['image_url'])
         
         # Effectuer la mise à jour via l'API
         response = self.client.post(
@@ -716,7 +714,7 @@ class SaveDataTest(BaseTest):
         updated_project = Project.objects.get(id=self.projects[0].id)
         self.assertEqual(updated_project.title, updated_data['title'])
         self.assertEqual(updated_project.description, updated_data['description'])
-        self.assertEqual(updated_project.order, updated_data['order'])
+        self.assertEqual(updated_project.image_url, updated_data['image_url'])
 
 class DeleteDataTest(BaseTest):
 

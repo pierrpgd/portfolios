@@ -111,12 +111,24 @@ class ProfileTest(BaseTest):
         self.assertTrue(about_content.is_displayed())
 
         # Vérifier l'affichage des données Experience
+        experience_dates = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), '2023-2024')]")
         experience_company = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), 'Test Company')]")
+        experience_location = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), 'Test Location')]")
+        experience_position = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), 'Test Position')]")
+        experience_description = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), 'Test Description')]")
+        self.assertTrue(experience_dates.is_displayed())
         self.assertTrue(experience_company.is_displayed())
+        self.assertTrue(experience_location.is_displayed())
+        self.assertTrue(experience_position.is_displayed())
+        self.assertTrue(experience_description.is_displayed())
 
         # Vérifier l'affichage des données Project
         project_title = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), 'Test Project')]")
+        project_description = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), 'Test Project Description')]")
+        project_image_url = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), '/static/portfolio-example.png')]")
         self.assertTrue(project_title.is_displayed())
+        self.assertTrue(project_description.is_displayed())
+        self.assertTrue(project_image_url.is_displayed())
 
         # Cliquer à nouveau sur la ligne du profil pour le désélectionner
         self.browser.execute_script("arguments[0].click();", profile_row)
@@ -418,10 +430,12 @@ class PopupTest(BaseTest):
 
         title = modal_content.find_element(By.CSS_SELECTOR, '[data-field="title"]').text
         description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
+        image_url = modal_content.find_element(By.CSS_SELECTOR, '[data-field="image_url"]').text
 
         self.assertEqual(title, 'Test Project')
         self.assertEqual(description, 'Test Project Description')
-        
+        self.assertEqual(image_url, '/static/portfolio-example.png')
+
         # Vérifier le titre du projet
         title = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-content-info')
         self.assertIn(self.projects[0].title, title.text)
@@ -464,9 +478,11 @@ class PopupTest(BaseTest):
 
         title = modal_content.find_element(By.CSS_SELECTOR, '[data-field="title"]').text
         description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
+        image_url = modal_content.find_element(By.CSS_SELECTOR, '[data-field="image_url"]').text
 
         self.assertEqual(title, 'Second Project')
         self.assertEqual(description, 'Second Project Description')
+        self.assertEqual(image_url, 'null')
         
         # Fermer la popup
         close_button = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-header button.close')
@@ -739,13 +755,33 @@ class ModifyAndSaveTest(BaseTest):
         
         # Modifier le titre
         title_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="title"]')
-        new_content = "Nouveau contenu de test"
+        new_title = "Nouveau titre de test"
         
         # Effacer le contenu existant
         title_field.click()
         action = ActionChains(self.browser)
         action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
-        action.send_keys(new_content).perform()
+        action.send_keys(new_title).perform()
+
+        # Modifier la description
+        description_field = modal.find_element(By.CSS_SELECTOR, 'div.editable-content[data-field="description"]')
+        new_description = "Nouvelle description de test"
+        
+        # Effacer le contenu existant
+        description_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_description).perform()
+
+        # Modifier l'image
+        image_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="image_url"]')
+        new_image = "Nouvelle image de test"
+        
+        # Effacer le contenu existant
+        image_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_image).perform()
         
         # Enregistrer et vérifier
         save_button = modal.find_element(By.CSS_SELECTOR, '.btn-primary')
@@ -758,12 +794,14 @@ class ModifyAndSaveTest(BaseTest):
         
         # Vérifier côté serveur que la modification est enregistrée
         project_obj = Project.objects.get(id=self.projects[0].id)
-        self.assertEqual(project_obj.title, new_content)
+        self.assertEqual(project_obj.title, new_title)
+        self.assertEqual(project_obj.description, new_description)
+        self.assertEqual(project_obj.image_url, new_image)
         
         # Vérifier que le tableau est mis à jour
         updated_row = WebDriverWait(self.browser, 10).until(
             EC.presence_of_element_located((By.XPATH, 
-                f"//div[@id='profile-data']//table[@id='projects-table']//td[contains(., '{new_content}')]"))
+                f"//div[@id='profile-data']//table[@id='projects-table']//td[contains(., '{new_title}')]"))
         )
         self.assertTrue(updated_row.is_displayed())
 
@@ -1012,10 +1050,18 @@ class AddElementTest(BaseTest):
         modal = WebDriverWait(self.browser, 10).until(
             EC.visibility_of_element_located((By.ID, "projectModal"))
         )
+
+        # Remplir le champ titre
+        title_field = modal.find_element(By.CSS_SELECTOR, "[data-field='title']")
+        title_field.send_keys("Nouveau titre de test")
         
-        # Remplir le champ contenu
-        content_field = modal.find_element(By.CSS_SELECTOR, "[data-field='description']")
-        content_field.send_keys("Nouveau contenu de test")
+        # Remplir le champ description
+        description_field = modal.find_element(By.CSS_SELECTOR, "[data-field='description']")
+        description_field.send_keys("Nouvelle description de test")
+        
+        # Remplir le champ image_url
+        image_url_field = modal.find_element(By.CSS_SELECTOR, "[data-field='image_url']")
+        image_url_field.send_keys("Nouvelle image de test")
         
         # Cliquer sur valider
         validate_button = modal.find_element(By.ID, "projectModalValidateButton")
@@ -1025,13 +1071,15 @@ class AddElementTest(BaseTest):
         WebDriverWait(self.browser, 20).until(
             EC.text_to_be_present_in_element(
                 (By.CSS_SELECTOR, "#projects-table tbody tr"), 
-                "Nouveau contenu de test"
+                "Nouveau titre de test"
             )
         )
         
         # Vérification finale
         rows = self.browser.find_elements(By.CSS_SELECTOR, "#projects-table tbody tr")
-        self.assertTrue(any("Nouveau contenu de test" in row.text for row in rows))
+        self.assertTrue(any("Nouveau titre de test" in row.text for row in rows))
+        self.assertTrue(any("Nouvelle description de test" in row.text for row in rows))
+        self.assertTrue(any("Nouvelle image de test" in row.text for row in rows))
 
 class DeleteElementTest(BaseTest):
 

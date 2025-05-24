@@ -82,6 +82,7 @@ function addProjectSection() {
     const dummyRow = document.createElement('div');
     dummyRow.setAttribute('data-title', '');
     dummyRow.setAttribute('data-description', '');
+    dummyRow.setAttribute('data-image-url', '');
     
     // Ouvrir la popup avec le contenu vide
     showPopup(dummyRow, 'projectModal', 'projectModalContent');
@@ -112,6 +113,8 @@ function showPopup(row, modalId, contentId) {
     const position = row.getAttribute('data-position');
     const location = row.getAttribute('data-location');
     const projectTitle = row.getAttribute('data-title');
+    const projectDescription = row.getAttribute('data-description');
+    const projectImageUrl = row.getAttribute('data-image-url');
     const title = modalId === 'profileModal' ? 'Profil' : 
                     modalId === 'aboutModal' ? 'À propos' : 
                     modalId === 'experienceModal' ? 'Expérience' : 
@@ -165,9 +168,12 @@ function showPopup(row, modalId, contentId) {
                         <div class="editable-field">
                             <span class="modal-content-info-title">Titre :</span> <span contenteditable="true" class="editable-content" data-field="title">${projectTitle}</span>
                         </div>
+                        <div class="editable-field">
+                            <span class="modal-content-info-title">Image URL :</span> <span contenteditable="true" class="editable-content" data-field="image_url">${projectImageUrl}</span>
+                        </div>
+                        <span class="modal-content-info-title">Description :</span>
+                        <div contenteditable="true" class="editable-content" data-field="description">${projectDescription}</div>
                     </div>
-                    <span class="modal-content-info-title">Description :</span>
-                    <div contenteditable="true" class="editable-content" data-field="description">${content}</div>
                 ` : `<span class="modal-content-info-title">Contenu :</span>
                     <div contenteditable="true" class="editable-content" data-field="content">${content}</div>`}
             </div>
@@ -536,6 +542,7 @@ function updateProfileData(data) {
                             <th>Ordre</th>
                             <th>Titre</th>
                             <th>Description</th>
+                            <th>Image URL</th>
                             <th class="text-end"></th>
                         </tr>
                     </thead>
@@ -554,6 +561,7 @@ function updateProfileData(data) {
                     <td>${project.order}</td>
                     <td>${project.title}</td>
                     <td>${project.description}</td>
+                    <td>${project.image_url}</td>
                     <td class="text-end">
                         <button class="btn btn-danger btn-sm delete-project" data-id="${project.id}">
                             <i class="fas fa-trash"></i>
@@ -686,15 +694,17 @@ function loadProfileData(profileIdentifiant) {
                                         <th>Ordre</th>
                                         <th>Titre</th>
                                         <th>Description</th>
+                                        <th>Image URL</th>
                                         <th class="text-end"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     ${data.projects.map(project => `
-                                        <tr class="project-row" data-id="${project.id}" data-title="${project.title}" data-description="${project.description}">
+                                        <tr class="project-row" data-id="${project.id}" data-title="${project.title}" data-description="${project.description}" data-image-url="${project.image_url}">
                                             <td>${project.order}</td>
                                             <td>${project.title}</td>
                                             <td>${project.description}</td>
+                                            <td>${project.image_url}</td>
                                             <td class="text-end">
                                                 <button class="btn btn-danger btn-sm delete-project" data-id="${project.id}">
                                                     <i class="fas fa-trash"></i>

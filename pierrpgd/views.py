@@ -80,6 +80,7 @@ def load_data(request):
                             'id': project.id,
                             'order': project.order,
                             'title': project.title,
+                            'image_url': project.image_url,
                             'description': project.description
                         } for project in projects
                     ]
@@ -143,7 +144,6 @@ def save_data(request):
                 else:
                     obj = About.objects.get(id=content.get('id'))
                     obj.content = content.get('content', obj.content)
-                    obj.order = content.get('order', obj.order)
             elif modalId == 'experienceModal':
                 type = 'experience'
                 if isNew:
@@ -162,20 +162,20 @@ def save_data(request):
                     obj.company = content.get('company', obj.company)
                     obj.location = content.get('location', obj.location)
                     obj.description = content.get('description', obj.description)
-                    obj.order = content.get('order', obj.order)
             elif modalId == 'projectModal':
                 type = 'project'
                 if isNew:
                     obj = Project.objects.create(
                         title=content.get('title', ''),
                         description=content.get('description', ''),
+                        image_url=content.get('image_url', ''),
                         profile=profile
                     )
                 else:
                     obj = Project.objects.get(id=content.get('id'))
                     obj.title = content.get('title', obj.title)
                     obj.description = content.get('description', obj.description)
-                    obj.order = content.get('order', obj.order)
+                    obj.image_url = content.get('image_url', obj.image_url)
             else:
                 return JsonResponse({'success': False, 'error': 'Type de modal inconnu'}, status=400)
 
