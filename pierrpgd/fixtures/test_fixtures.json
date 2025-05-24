@@ -16,7 +16,8 @@
         "pk": 1,
         "fields": {
             "name": "Test Profile",
-            "identifiant": "test-profile"
+            "identifiant": "test-profile",
+            "title": "Test Title"
         }
     },
     {
@@ -70,6 +71,7 @@
             "profile": 1,
             "title": "Test Project",
             "description": "Test Project Description",
+            "image_url": "/static/portfolio-example.png",
             "order": 1
         }
     },
@@ -88,7 +90,8 @@
         "pk": 2,
         "fields": {
             "name": "Second Profile",
-            "identifiant": "second-profile"
+            "identifiant": "second-profile",
+            "title": "Second Title"
         }
     },
     {

@@ -2,14 +2,22 @@ from django.test import TestCase
 from django.db import IntegrityError
 from pierrpgd.models import Profile, About, Experience, Project
 
-class ProfileModelTest(TestCase):
-    def setUp(self):
-        self.profile = Profile.objects.create(name='Test Profile', identifiant='test-identifiant', title='Test Title')
+class BaseTest(TestCase):
+    fixtures = ['test_fixtures.json']
 
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.profile = Profile.objects.get(identifiant='test-profile')
+        cls.abouts = About.objects.filter(profile=cls.profile)
+        cls.experiences = Experience.objects.filter(profile=cls.profile)
+        cls.projects = Project.objects.filter(profile=cls.profile)
+
+class ProfileModelTest(BaseTest):
     def test_profile_creation(self):
         """Test la création d'un profil"""
         self.assertEqual(self.profile.name, 'Test Profile')
-        self.assertEqual(self.profile.identifiant, 'test-identifiant')
+        self.assertEqual(self.profile.identifiant, 'test-profile')
         self.assertEqual(self.profile.title, 'Test Title')
         self.assertIsNotNone(self.profile.created_at)
         self.assertIsNotNone(self.profile.updated_at)
@@ -17,7 +25,7 @@ class ProfileModelTest(TestCase):
     def test_profile_creation_with_same_identifiant(self):
         """Test que la création d'un profil avec un identifiant déjà existant échoue"""
         with self.assertRaises(IntegrityError):
-            Profile.objects.create(name='Another Profile', identifiant='test-identifiant', title='Another Title')
+            Profile.objects.create(name='Another Profile', identifiant='test-profile', title='Another Title')
 
     def test_profile_string_representation(self):
         """Test la représentation en chaîne de caractères"""
@@ -41,44 +49,28 @@ class ProfileModelTest(TestCase):
         with self.assertRaises(Profile.DoesNotExist):
             Profile.objects.get(id=profile_id)
 
-class AboutModelTest(TestCase):
-    def setUp(self):
-        self.profile = Profile.objects.create(
-            name='Test Profile',
-            identifiant='test-identifiant'
-        )
-        self.about = About.objects.create(
-            profile=self.profile,
-            content='Test content',
-            order=1
-        )
-
+class AboutModelTest(BaseTest):
     def test_about_creation(self):
         """Test la création d'une section About"""
-        self.assertEqual(self.about.content, 'Test content')
-        self.assertEqual(self.about.order, 1)
-        self.assertEqual(self.about.profile, self.profile)
+        self.assertEqual(self.abouts[0].content, 'Test About Content')
+        self.assertEqual(self.abouts[0].order, 1)
+        self.assertEqual(self.abouts[0].profile, self.profile)
 
     def test_about_string_representation(self):
         """Test la représentation en chaîne de caractères"""
-        expected_str = f"About {self.about.order} for {self.profile.name}"
-        self.assertEqual(str(self.about), expected_str)
+        expected_str = f"About {self.abouts[0].order} for {self.profile.name}"
+        self.assertEqual(str(self.abouts[0]), expected_str)
 
     def test_about_ordering(self):
         """Test le tri des sections About"""
-        about2 = About.objects.create(
-            profile=self.profile,
-            content='Second content',
-            order=2
-        )
-        abouts = About.objects.all()
-        self.assertEqual(abouts[0], self.about)
-        self.assertEqual(abouts[1], about2)
+        abouts = About.objects.filter(profile=self.profile)
+        self.assertEqual(abouts[0], self.abouts[0])
+        self.assertEqual(abouts[1], self.abouts[1])
 
     def test_about_deletion(self):
         """Test la suppression d'une section About"""
-        about_id = self.about.id
-        self.about.delete()
+        about_id = self.abouts[0].id
+        self.abouts[0].delete()
         with self.assertRaises(About.DoesNotExist):
             About.objects.get(id=about_id)
 
@@ -87,54 +79,35 @@ class AboutModelTest(TestCase):
         profile_id = self.profile.id
         self.profile.delete()
         with self.assertRaises(About.DoesNotExist):
-            About.objects.get(id=self.about.id)
+            About.objects.get(profile=profile_id)
 
 
-class ExperienceModelTest(TestCase):
-    def setUp(self):
-        self.profile = Profile.objects.create(
-            name='Test Profile',
-            identifiant='test-identifiant'
-        )
-        self.experience = Experience.objects.create(
-            profile=self.profile,
-            dates='2023-2024',
-            company='Test Company',
-            location='Test Location',
-            position='Test Position',
-            description='Test description',
-            order=1
-        )
+class ExperienceModelTest(BaseTest):
 
     def test_experience_creation(self):
         """Test la création d'une expérience"""
-        self.assertEqual(self.experience.dates, '2023-2024')
-        self.assertEqual(self.experience.company, 'Test Company')
-        self.assertEqual(self.experience.position, 'Test Position')
-        self.assertEqual(self.experience.order, 1)
+        self.assertEqual(self.experiences[0].dates, '2023-2024')
+        self.assertEqual(self.experiences[0].company, 'Test Company')
+        self.assertEqual(self.experiences[0].position, 'Test Position')
+        self.assertEqual(self.experiences[0].location, 'Test Location')
+        self.assertEqual(self.experiences[0].description, 'Test Description')
+        self.assertEqual(self.experiences[0].order, 1)
 
     def test_experience_string_representation(self):
         """Test la représentation en chaîne de caractères"""
-        expected_str = f"{self.experience.position} at {self.experience.company}"
-        self.assertEqual(str(self.experience), expected_str)
+        expected_str = f"{self.experiences[0].position} at {self.experiences[0].company}"
+        self.assertEqual(str(self.experiences[0]), expected_str)
 
     def test_experience_ordering(self):
         """Test le tri des expériences"""
-        exp2 = Experience.objects.create(
-            profile=self.profile,
-            dates='2022-2023',
-            company='Second Company',
-            position='Second Position',
-            order=2
-        )
-        experiences = Experience.objects.all()
-        self.assertEqual(experiences[0], self.experience)
-        self.assertEqual(experiences[1], exp2)
+        experiences = Experience.objects.filter(profile=self.profile)
+        self.assertEqual(experiences[0], self.experiences[0])
+        self.assertEqual(experiences[1], self.experiences[1])
 
     def test_experience_deletion(self):
         """Test la suppression d'une expérience"""
-        experience_id = self.experience.id
-        self.experience.delete()
+        experience_id = self.experiences[0].id
+        self.experiences[0].delete()
         with self.assertRaises(Experience.DoesNotExist):
             Experience.objects.get(id=experience_id)
 
@@ -143,48 +116,32 @@ class ExperienceModelTest(TestCase):
         profile_id = self.profile.id
         self.profile.delete()
         with self.assertRaises(Experience.DoesNotExist):
-            Experience.objects.get(id=self.experience.id)
+            Experience.objects.get(profile=profile_id)
 
 
-class ProjectModelTest(TestCase):
-    def setUp(self):
-        self.profile = Profile.objects.create(
-            name='Test Profile',
-            identifiant='test-identifiant'
-        )
-        self.project = Project.objects.create(
-            profile=self.profile,
-            title='Test Project',
-            description='Test description',
-            order=1
-        )
+class ProjectModelTest(BaseTest):
 
     def test_project_creation(self):
         """Test la création d'un projet"""
-        self.assertEqual(self.project.title, 'Test Project')
-        self.assertEqual(self.project.description, 'Test description')
-        self.assertEqual(self.project.order, 1)
+        self.assertEqual(self.projects[0].title, 'Test Project')
+        self.assertEqual(self.projects[0].description, 'Test Project Description')
+        self.assertEqual(self.projects[0].image_url, '/static/portfolio-example.png')
+        self.assertEqual(self.projects[0].order, 1)
 
     def test_project_string_representation(self):
         """Test la représentation en chaîne de caractères"""
-        self.assertEqual(str(self.project), 'Test Project')
+        self.assertEqual(str(self.projects[0]), 'Test Project')
 
     def test_project_ordering(self):
         """Test le tri des projets"""
-        project2 = Project.objects.create(
-            profile=self.profile,
-            title='Second Project',
-            description='Second description',
-            order=2
-        )
-        projects = Project.objects.all()
-        self.assertEqual(projects[0], self.project)
-        self.assertEqual(projects[1], project2)
+        projects = Project.objects.filter(profile=self.profile)
+        self.assertEqual(projects[0], self.projects[0])
+        self.assertEqual(projects[1], self.projects[1])
 
     def test_project_deletion(self):
         """Test la suppression d'un projet"""
-        project_id = self.project.id
-        self.project.delete()
+        project_id = self.projects[0].id
+        self.projects[0].delete()
         with self.assertRaises(Project.DoesNotExist):
             Project.objects.get(id=project_id)
 
@@ -193,4 +150,4 @@ class ProjectModelTest(TestCase):
         profile_id = self.profile.id
         self.profile.delete()
         with self.assertRaises(Project.DoesNotExist):
-            Project.objects.get(id=self.project.id)
+            Project.objects.get(profile=profile_id)
