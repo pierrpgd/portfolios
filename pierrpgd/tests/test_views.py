@@ -125,8 +125,8 @@ class DataDisplayViewTest(BaseTest):
         self.assertEqual(profile_identifiant, self.profile.identifiant)
         self.assertEqual(profile_name, self.profile.name)
         self.assertEqual(profile_title, self.profile.title)
-        self.assertEqual(profile_creation_date[:-5], self.profile.created_at.strftime('%B %d, %Y, à %-H:%M'))
-        self.assertEqual(profile_last_update_date[:-5], self.profile.updated_at.strftime('%B %d, %Y, à %-H:%M'))
+        self.assertEqual(profile_creation_date[:-5], self.profile.created_at.strftime('%B %d, %Y, à %-I:%M'))
+        self.assertEqual(profile_last_update_date[:-5], self.profile.updated_at.strftime('%B %d, %Y, à %-I:%M'))
 
     def test_profile_deletion(self):
         # Supprimer le profil et vérifier que les données associées sont supprimées
@@ -406,19 +406,19 @@ class LoadDataViewTest(BaseTest):
         Experience.objects.all().delete()
 
         # Créer des About avec différents ordres
-        about1 = About.objects.create(profile=self.profile, content='About 1', order=2)
-        about2 = About.objects.create(profile=self.profile, content='About 2', order=1)
-        about3 = About.objects.create(profile=self.profile, content='About 3', order=0)
+        about1 = About.objects.create(profile=self.profile, content='About 1')
+        about2 = About.objects.create(profile=self.profile, content='About 2')
+        about3 = About.objects.create(profile=self.profile, content='About 3')
         
         # Créer des Projets avec différents ordres
-        project1 = Project.objects.create(profile=self.profile, title='Project 1', order=2)
-        project2 = Project.objects.create(profile=self.profile, title='Project 2', order=1)
-        project3 = Project.objects.create(profile=self.profile, title='Project 3', order=0)
+        project1 = Project.objects.create(profile=self.profile, title='Project 1')
+        project2 = Project.objects.create(profile=self.profile, title='Project 2')
+        project3 = Project.objects.create(profile=self.profile, title='Project 3')
         
         # Créer des Expériences avec différents ordres
-        experience1 = Experience.objects.create(profile=self.profile, company='Experience 1', order=2, dates='2023')
-        experience2 = Experience.objects.create(profile=self.profile, company='Experience 2', order=1, dates='2024')
-        experience3 = Experience.objects.create(profile=self.profile, company='Experience 3', order=0, dates='2025')
+        experience1 = Experience.objects.create(profile=self.profile, company='Experience 1', dates='2023')
+        experience2 = Experience.objects.create(profile=self.profile, company='Experience 2', dates='2024')
+        experience3 = Experience.objects.create(profile=self.profile, company='Experience 3', dates='2025')
         
         # Vérifier l'ordre via load_data
         self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
@@ -429,23 +429,23 @@ class LoadDataViewTest(BaseTest):
         # Vérifier l'ordre des About
         abouts = data['about']
         self.assertEqual(len(abouts), 3)
-        self.assertEqual(abouts[0]['content'], 'About 3')  # Order = 0
+        self.assertEqual(abouts[0]['content'], 'About 1')  # Order = 0
         self.assertEqual(abouts[1]['content'], 'About 2')  # Order = 1
-        self.assertEqual(abouts[2]['content'], 'About 1')  # Order = 2
+        self.assertEqual(abouts[2]['content'], 'About 3')  # Order = 2
         
         # Vérifier l'ordre des Projets
         projects = data['projects']
         self.assertEqual(len(projects), 3)
-        self.assertEqual(projects[0]['title'], 'Project 3')  # Order = 0
+        self.assertEqual(projects[0]['title'], 'Project 1')  # Order = 0
         self.assertEqual(projects[1]['title'], 'Project 2')  # Order = 1
-        self.assertEqual(projects[2]['title'], 'Project 1')  # Order = 2
+        self.assertEqual(projects[2]['title'], 'Project 3')  # Order = 2
         
         # Vérifier l'ordre des Expériences
         experiences = data['experience']
         self.assertEqual(len(experiences), 3)
-        self.assertEqual(experiences[0]['company'], 'Experience 3')  # Order = 0
+        self.assertEqual(experiences[0]['company'], 'Experience 1')  # Order = 0
         self.assertEqual(experiences[1]['company'], 'Experience 2')  # Order = 1
-        self.assertEqual(experiences[2]['company'], 'Experience 1')  # Order = 2
+        self.assertEqual(experiences[2]['company'], 'Experience 3')  # Order = 2
 
 class SaveDataTest(BaseTest):
 

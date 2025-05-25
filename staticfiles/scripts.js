@@ -437,7 +437,6 @@ function updateProfileData(data) {
                 <table id="about-table" class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Ordre</th>
                             <th>Contenu</th>
                             <th class="text-end"></th>
                         </tr>
@@ -453,7 +452,6 @@ function updateProfileData(data) {
         if (aboutTable) {
             aboutTable.innerHTML = data.about.map(about => `
                 <tr class="about-row" data-id="${about.id}" data-content="${about.content}">
-                    <td>${about.order}</td>
                     <td>${about.content}</td>
                     <td class="text-end">
                         <button class="btn btn-danger btn-sm delete-about" data-id="${about.id}">
@@ -484,7 +482,6 @@ function updateProfileData(data) {
                 <table id="experience-table" class="table table-hover">
                     <thead>
                         <tr>
-                            <th>Ordre</th>
                             <th>Période</th>
                             <th>Poste</th>
                             <th>Entreprise</th>
@@ -504,7 +501,6 @@ function updateProfileData(data) {
         if (expTable) {
             expTable.innerHTML = data.experience.map(exp => `
                 <tr class="experience-row" data-id="${exp.id}" data-description="${exp.description}" data-dates="${exp.dates}" data-position="${exp.position}" data-company="${exp.company}" data-location="${exp.location}">
-                    <td>${exp.order}</td>
                     <td>${exp.dates}</td>
                     <td>${exp.position}</td>
                     <td>${exp.company}</td>
@@ -539,7 +535,6 @@ function updateProfileData(data) {
                 <table id="projects-table" class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Ordre</th>
                             <th>Titre</th>
                             <th>Description</th>
                             <th>Image URL</th>
@@ -558,7 +553,6 @@ function updateProfileData(data) {
             projectsTable.innerHTML = data.projects.map(project => `
                 <tr class="project-row" data-id="${project.id}" 
                     data-title="${project.title}" data-content="${project.description}">
-                    <td>${project.order}</td>
                     <td>${project.title}</td>
                     <td>${project.description}</td>
                     <td>${project.image_url}</td>
@@ -607,7 +601,6 @@ function loadProfileData(profileIdentifiant) {
                             <table id="about-table" class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Ordre</th>
                                         <th>Contenu</th>
                                         <th class="text-end"></th>
                                     </tr>
@@ -615,7 +608,6 @@ function loadProfileData(profileIdentifiant) {
                                 <tbody>
                                     ${data.about.map(about => `
                                         <tr class="about-row" data-id="${about.id}" data-content="${about.content}">
-                                            <td>${about.order}</td>
                                             <td>${about.content}</td>
                                             <td class="text-end">
                                                 <button class="btn btn-danger btn-sm delete-about" data-id="${about.id}">
@@ -645,7 +637,6 @@ function loadProfileData(profileIdentifiant) {
                             <table id="experience-table" class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Ordre</th>
                                         <th>Période</th>
                                         <th>Poste</th>
                                         <th>Entreprise</th>
@@ -657,7 +648,6 @@ function loadProfileData(profileIdentifiant) {
                                 <tbody>
                                     ${data.experience.map(exp => `
                                         <tr class="experience-row" data-id="${exp.id}" data-description="${exp.description}" data-dates="${exp.dates}" data-position="${exp.position}" data-company="${exp.company}" data-location="${exp.location}">
-                                            <td>${exp.order}</td>
                                             <td>${exp.dates}</td>
                                             <td>${exp.position}</td>
                                             <td>${exp.company}</td>
@@ -691,7 +681,6 @@ function loadProfileData(profileIdentifiant) {
                             <table id="projects-table" class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Ordre</th>
                                         <th>Titre</th>
                                         <th>Description</th>
                                         <th>Image URL</th>
@@ -701,7 +690,6 @@ function loadProfileData(profileIdentifiant) {
                                 <tbody>
                                     ${data.projects.map(project => `
                                         <tr class="project-row" data-id="${project.id}" data-title="${project.title}" data-description="${project.description}" data-image-url="${project.image_url}">
-                                            <td>${project.order}</td>
                                             <td>${project.title}</td>
                                             <td>${project.description}</td>
                                             <td>${project.image_url}</td>

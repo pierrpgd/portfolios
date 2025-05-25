@@ -53,8 +53,12 @@ class AboutModelTest(BaseTest):
     def test_about_creation(self):
         """Test la création d'une section About"""
         self.assertEqual(self.abouts[0].content, 'Test About Content')
-        self.assertEqual(self.abouts[0].order, 1)
+        self.assertEqual(self.abouts[0].order, 0)
         self.assertEqual(self.abouts[0].profile, self.profile)
+
+        self.assertEqual(self.abouts[1].content, 'Second About Content')
+        self.assertEqual(self.abouts[1].order, 1)
+        self.assertEqual(self.abouts[1].profile, self.profile)
 
     def test_about_string_representation(self):
         """Test la représentation en chaîne de caractères"""
@@ -91,7 +95,14 @@ class ExperienceModelTest(BaseTest):
         self.assertEqual(self.experiences[0].position, 'Test Position')
         self.assertEqual(self.experiences[0].location, 'Test Location')
         self.assertEqual(self.experiences[0].description, 'Test Description')
-        self.assertEqual(self.experiences[0].order, 1)
+        self.assertEqual(self.experiences[0].order, 0)
+
+        self.assertEqual(self.experiences[1].dates, '2022-2023')
+        self.assertEqual(self.experiences[1].company, 'Test Company 2')
+        self.assertEqual(self.experiences[1].position, 'Test Position 2')
+        self.assertEqual(self.experiences[1].location, 'Test Location 2')
+        self.assertEqual(self.experiences[1].description, 'Test Description 2')
+        self.assertEqual(self.experiences[1].order, 1)
 
     def test_experience_string_representation(self):
         """Test la représentation en chaîne de caractères"""
@@ -126,7 +137,11 @@ class ProjectModelTest(BaseTest):
         self.assertEqual(self.projects[0].title, 'Test Project')
         self.assertEqual(self.projects[0].description, 'Test Project Description')
         self.assertEqual(self.projects[0].image_url, '/static/portfolio-example.png')
-        self.assertEqual(self.projects[0].order, 1)
+        self.assertEqual(self.projects[0].order, 0)
+
+        self.assertEqual(self.projects[1].title, 'Second Project')
+        self.assertEqual(self.projects[1].description, 'Second Project Description')
+        self.assertEqual(self.projects[1].order, 1)
 
     def test_project_string_representation(self):
         """Test la représentation en chaîne de caractères"""

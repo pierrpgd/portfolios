@@ -87,8 +87,8 @@ class ProfileTest(BaseTest):
         self.assertEqual(profile_identifiant, self.profile.identifiant, "Profile identifiant doesn't match.")
         self.assertEqual(profile_name, self.profile.name, "Profile name doesn't match.")
         self.assertEqual(profile_title, self.profile.title, "Profile title doesn't match.")
-        self.assertEqual(profile_creation_date[:-5], self.profile.created_at.strftime('%B %d, %Y, à %-H:%M'), "Profile creation date doesn't match.")
-        self.assertEqual(profile_modification_date[:-5], self.profile.updated_at.strftime('%B %d, %Y, à %-H:%M'), "Profile modification date doesn't match.")
+        self.assertEqual(profile_creation_date[:-5], self.profile.created_at.strftime('%B %d, %Y, à %-I:%M'), "Profile creation date doesn't match.")
+        self.assertEqual(profile_modification_date[:-5], self.profile.updated_at.strftime('%B %d, %Y, à %-I:%M'), "Profile modification date doesn't match.")
 
     def test_profile_selection_toggle_and_data_display_or_hide(self):
         """
@@ -950,7 +950,7 @@ class AddElementTest(BaseTest):
         # Vérifier l'affichage dans le tableau
         WebDriverWait(self.browser, 20).until(
             EC.text_to_be_present_in_element(
-                (By.CSS_SELECTOR, "#about-table tbody tr"), 
+                (By.CSS_SELECTOR, "#about-table tbody"), 
                 "Nouveau contenu de test"
             )
         )
@@ -1005,7 +1005,7 @@ class AddElementTest(BaseTest):
         # Vérifier l'affichage dans le tableau
         WebDriverWait(self.browser, 20).until(
             EC.text_to_be_present_in_element(
-                (By.CSS_SELECTOR, "#experience-table tbody tr"), 
+                (By.CSS_SELECTOR, "#experience-table tbody"), 
                 "Nouveau contenu de test"
             )
         )
@@ -1066,11 +1066,11 @@ class AddElementTest(BaseTest):
         # Cliquer sur valider
         validate_button = modal.find_element(By.ID, "projectModalValidateButton")
         self.browser.execute_script("arguments[0].click();", validate_button)
-        
+
         # Vérifier l'affichage dans le tableau
         WebDriverWait(self.browser, 20).until(
             EC.text_to_be_present_in_element(
-                (By.CSS_SELECTOR, "#projects-table tbody tr"), 
+                (By.CSS_SELECTOR, "#projects-table tbody"), 
                 "Nouveau titre de test"
             )
         )

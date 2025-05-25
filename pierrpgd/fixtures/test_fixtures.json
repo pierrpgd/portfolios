@@ -25,8 +25,7 @@
         "pk": 1,
         "fields": {
             "profile": 1,
-            "content": "Test About Content",
-            "order": 1
+            "content": "Test About Content"
         }
     },
     {
@@ -34,8 +33,7 @@
         "pk": 2,
         "fields": {
             "profile": 1,
-            "content": "Second About Content",
-            "order": 2
+            "content": "Second About Content"
         }
     },
     {
@@ -47,8 +45,7 @@
             "company": "Test Company",
             "location": "Test Location",
             "position": "Test Position",
-            "description": "Test Description",
-            "order": 1
+            "description": "Test Description"
         }
     },
     {
@@ -60,8 +57,7 @@
             "company": "Test Company 2",
             "location": "Test Location 2",
             "position": "Test Position 2",
-            "description": "Test Description 2",
-            "order": 2
+            "description": "Test Description 2"
         }
     },
     {
@@ -71,8 +67,7 @@
             "profile": 1,
             "title": "Test Project",
             "description": "Test Project Description",
-            "image_url": "/static/portfolio-example.png",
-            "order": 1
+            "image_url": "/static/portfolio-example.png"
         }
     },
     {
@@ -81,8 +76,7 @@
         "fields": {
             "profile": 1,
             "title": "Second Project",
-            "description": "Second Project Description",
-            "order": 2
+            "description": "Second Project Description"
         }
     },
     {
@@ -99,8 +93,7 @@
         "pk": 3,
         "fields": {
             "profile": 2,
-            "content": "About Content for Second Profile",
-            "order": 1
+            "content": "About Content for Second Profile"
         }
     },
     {
@@ -112,8 +105,7 @@
             "company": "Second Company",
             "location": "Second Location",
             "position": "Second Position",
-            "description": "Second Description",
-            "order": 1
+            "description": "Second Description"
         }
     },
     {
@@ -122,8 +114,7 @@
         "fields": {
             "profile": 2,
             "title": "Second Profile Project",
-            "description": "Project Description for Second Profile",
-            "order": 1
+            "description": "Project Description for Second Profile"
         }
     }
 ]
