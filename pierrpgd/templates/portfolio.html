@@ -303,11 +303,11 @@
                     {% for project in projects %}
                         <div class="project-container">
                             <div class="project-image">
-                                <img src="/static/portfolio-example.png" alt="{{ project.title }}" style="max-width: 185px; max-height: 185px;">
+                                <img src="{{ project.image_url }}" alt="{{ project.title }}" style="max-width: 185px; max-height: 185px;">
                             </div>
                             <div class="project-content">
                                 <p class="project-title">{{ project.title }}</p>
-                                <p>{{ project.description }}</p>
+                                <p class="project-description">{{ project.description }}</p>
                             </div>
                         </div>
                     {% endfor %}

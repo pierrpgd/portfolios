@@ -85,3 +85,17 @@ class PortfolioPageTest(BaseTest):
     def test_profile_title_is_visible(self):
         title = self.browser.find_element(By.ID, "title")
         self.assertEqual(title.text, self.profile.title, "Profile title doesn't appear on the portfolio.")
+
+    def test_project_data_is_visible(self):
+        project_section = self.browser.find_element(By.ID, 'projects')
+
+        project_containers = project_section.find_elements(By.CLASS_NAME, 'project-container')
+
+        # Vérifier que le titre du projet est visible
+        self.assertEqual(project_containers[0].find_element(By.CLASS_NAME, 'project-title').text, self.projects[0].title, "Project title doesn't appear on the portfolio.")
+
+        # Vérifier que la description du projet est visible
+        self.assertEqual(project_containers[0].find_element(By.CLASS_NAME, 'project-description').text, self.projects[0].description, "Project description doesn't appear on the portfolio.")
+
+        # Vérifier que l'image du projet est visible
+        self.assertEqual(project_containers[0].find_element(By.TAG_NAME, 'img').get_attribute('src').replace(self.live_server_url, ''), self.projects[0].image_url, "Project image doesn't appear on the portfolio.")

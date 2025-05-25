@@ -171,9 +171,9 @@ function showPopup(row, modalId, contentId) {
                         <div class="editable-field">
                             <span class="modal-content-info-title">Image URL :</span> <span contenteditable="true" class="editable-content" data-field="image_url">${projectImageUrl}</span>
                         </div>
+                        <span class="modal-content-info-title">Description :</span>
+                        <div contenteditable="true" class="editable-content" data-field="description">${projectDescription}</div>
                     </div>
-                    <span class="modal-content-info-title">Description :</span>
-                    <div contenteditable="true" class="editable-content" data-field="description">${projectDescription}</div>
                 ` : `<span class="modal-content-info-title">Contenu :</span>
                     <div contenteditable="true" class="editable-content" data-field="content">${content}</div>`}
             </div>
