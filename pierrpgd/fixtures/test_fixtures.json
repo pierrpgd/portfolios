@@ -45,7 +45,8 @@
             "company": "Test Company",
             "location": "Test Location",
             "position": "Test Position",
-            "description": "Test Description"
+            "description": "Test Description",
+            "url": "https://testurl.com"
         }
     },
     {
@@ -57,7 +58,8 @@
             "company": "Test Company 2",
             "location": "Test Location 2",
             "position": "Test Position 2",
-            "description": "Test Description 2"
+            "description": "Test Description 2",
+            "url": "https://testurl2.com"
         }
     },
     {
@@ -105,7 +107,8 @@
             "company": "Second Company",
             "location": "Second Location",
             "position": "Second Position",
-            "description": "Second Description"
+            "description": "Second Description",
+            "url": "https://testurl3.com"
         }
     },
     {

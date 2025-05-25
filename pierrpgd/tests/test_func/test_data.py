@@ -116,11 +116,13 @@ class ProfileTest(BaseTest):
         experience_location = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), 'Test Location')]")
         experience_position = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), 'Test Position')]")
         experience_description = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), 'Test Description')]")
+        experience_url = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), 'https://testurl.com')]")
         self.assertTrue(experience_dates.is_displayed())
         self.assertTrue(experience_company.is_displayed())
         self.assertTrue(experience_location.is_displayed())
         self.assertTrue(experience_position.is_displayed())
         self.assertTrue(experience_description.is_displayed())
+        self.assertTrue(experience_url.is_displayed())
 
         # Vérifier l'affichage des données Project
         project_title = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), 'Test Project')]")
@@ -322,12 +324,14 @@ class PopupTest(BaseTest):
         position = modal_content.find_element(By.CSS_SELECTOR, '[data-field="position"]').text
         location = modal_content.find_element(By.CSS_SELECTOR, '[data-field="location"]').text
         description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
+        experience_url = modal_content.find_element(By.CSS_SELECTOR, '[data-field="url"]').text
 
         self.assertEqual(dates, '2023-2024')
         self.assertEqual(position, 'Test Position')
         self.assertEqual(company, 'Test Company')
         self.assertEqual(description, 'Test Description')
         self.assertEqual(location, 'Test Location')
+        self.assertEqual(experience_url, 'https://testurl.com')
         
         # Fermer la popup
         close_button = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-header button.close')
@@ -370,12 +374,14 @@ class PopupTest(BaseTest):
         position = modal_content.find_element(By.CSS_SELECTOR, '[data-field="position"]').text
         location = modal_content.find_element(By.CSS_SELECTOR, '[data-field="location"]').text
         description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
+        experience_url = modal_content.find_element(By.CSS_SELECTOR, '[data-field="url"]').text
 
         self.assertEqual(dates, '2022-2023')
         self.assertEqual(position, 'Test Position 2')
         self.assertEqual(company, 'Test Company 2')
         self.assertEqual(description, 'Test Description 2')
         self.assertEqual(location, 'Test Location 2')
+        self.assertEqual(experience_url, 'https://testurl2.com')
         
         # Vérifier les informations de l'expérience
         info = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-content-info')
@@ -671,6 +677,18 @@ class ModifyAndSaveTest(BaseTest):
 
     def test_modify_and_save_experience(self):
         """Teste la modification et la sauvegarde d'un élément Experience"""
+
+        # Créer un nouveau contenu pour l'expérience
+        new_content = Experience(
+            profile=self.profile,
+            dates="2024-2025",
+            company="Nouvelle entreprise",
+            position="Nouveau poste",
+            location="Nouveau lieu",
+            description="Nouvelle description",
+            url="https://nouvelleurl.com"
+        )
+        
         # Sélectionner le profil
         profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
         self.browser.execute_script("arguments[0].click();", profile_row)
@@ -695,16 +713,48 @@ class ModifyAndSaveTest(BaseTest):
         # Vérifier que la popup est visible
         modal = self.browser.find_element(By.ID, 'experienceModal')
         self.assertTrue(modal.is_displayed())
-        
-        # Modifier le contenu
+
+        # Modifier les dates
         dates_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="dates"]')
-        new_content = "Nouveau contenu de test"
-        
-        # Effacer le contenu existant
         dates_field.click()
         action = ActionChains(self.browser)
         action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
-        action.send_keys(new_content).perform()
+        action.send_keys(new_content.dates).perform()
+
+        # Modifier l'entreprise
+        company_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="company"]')
+        company_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content.company).perform()
+
+        # Modifier le poste
+        position_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="position"]')
+        position_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content.position).perform()
+
+        # Modifier le lieu
+        location_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="location"]')
+        location_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content.location).perform()
+
+        # Modifier la description
+        description_field = modal.find_element(By.CSS_SELECTOR, 'div.editable-content[data-field="description"]')
+        description_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content.description).perform()
+
+        # Modifier l'URL
+        experience_url_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="url"]')
+        experience_url_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content.url).perform()
         
         # Enregistrer et vérifier
         save_button = modal.find_element(By.CSS_SELECTOR, '.btn-primary')
@@ -717,12 +767,17 @@ class ModifyAndSaveTest(BaseTest):
         
         # Vérifier côté serveur que la modification est enregistrée
         experience_obj = Experience.objects.get(id=self.experiences[0].id)
-        self.assertEqual(experience_obj.dates, new_content)
+        self.assertEqual(experience_obj.dates, new_content.dates)
+        self.assertEqual(experience_obj.company, new_content.company)
+        self.assertEqual(experience_obj.position, new_content.position)
+        self.assertEqual(experience_obj.location, new_content.location)
+        self.assertEqual(experience_obj.description, new_content.description)
+        self.assertEqual(experience_obj.url, new_content.url)
         
         # Vérifier que le tableau est mis à jour
         updated_row = WebDriverWait(self.browser, 10).until(
             EC.presence_of_element_located((By.XPATH, 
-                f"//div[@id='profile-data']//table[@id='experience-table']//td[contains(., '{new_content}')]"))
+                f"//div[@id='profile-data']//table[@id='experience-table']//td[contains(., '{new_content.description}')]"))
         )
         self.assertTrue(updated_row.is_displayed())
 
@@ -967,6 +1022,17 @@ class AddElementTest(BaseTest):
         3. Remplit le champ 'Contenu'
         4. Valide et vérifie l'affichage
         """
+
+        # Créer un nouveau contenu pour l'expérience
+        new_content = Experience(
+            profile=self.profile,
+            dates="2024-2025",
+            company="Nouvelle entreprise",
+            position="Nouveau poste",
+            location="Nouveau lieu",
+            description="Nouvelle description",
+            url="https://nouvelleurl.com"
+        )
         
         # Sélectionner le profil
         profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
@@ -994,9 +1060,29 @@ class AddElementTest(BaseTest):
             EC.visibility_of_element_located((By.ID, "experienceModal"))
         )
         
-        # Remplir le champ contenu
-        content_field = modal.find_element(By.CSS_SELECTOR, "[data-field='description']")
-        content_field.send_keys("Nouveau contenu de test")
+        # Remplir le champ description
+        description_field = modal.find_element(By.CSS_SELECTOR, "[data-field='description']")
+        description_field.send_keys(new_content.description)
+
+        # Remplir le champ dates
+        dates_field = modal.find_element(By.CSS_SELECTOR, "[data-field='dates']")
+        dates_field.send_keys(new_content.dates)
+
+        # Remplir le champ company
+        company_field = modal.find_element(By.CSS_SELECTOR, "[data-field='company']")
+        company_field.send_keys(new_content.company)
+
+        # Remplir le champ position
+        position_field = modal.find_element(By.CSS_SELECTOR, "[data-field='position']")
+        position_field.send_keys(new_content.position)
+
+        # Remplir le champ location
+        location_field = modal.find_element(By.CSS_SELECTOR, "[data-field='location']")
+        location_field.send_keys(new_content.location)
+
+        # Remplir le champ url
+        url_field = modal.find_element(By.CSS_SELECTOR, "[data-field='url']")
+        url_field.send_keys(new_content.url)
         
         # Cliquer sur valider
         validate_button = modal.find_element(By.ID, "experienceModalValidateButton")
@@ -1006,13 +1092,18 @@ class AddElementTest(BaseTest):
         WebDriverWait(self.browser, 20).until(
             EC.text_to_be_present_in_element(
                 (By.CSS_SELECTOR, "#experience-table tbody"), 
-                "Nouveau contenu de test"
+                new_content.description
             )
         )
         
         # Vérification finale
         rows = self.browser.find_elements(By.CSS_SELECTOR, "#experience-table tbody tr")
-        self.assertTrue(any("Nouveau contenu de test" in row.text for row in rows))
+        self.assertTrue(any(new_content.description in row.text for row in rows))
+        self.assertTrue(any(new_content.dates in row.text for row in rows))
+        self.assertTrue(any(new_content.company in row.text for row in rows))
+        self.assertTrue(any(new_content.position in row.text for row in rows))
+        self.assertTrue(any(new_content.location in row.text for row in rows))
+        self.assertTrue(any(new_content.url in row.text for row in rows))
 
     def test_add_project_section(self):
         """

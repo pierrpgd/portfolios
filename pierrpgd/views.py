@@ -50,9 +50,9 @@ def load_data(request):
                 
                 data = {
                     'profile': {
-                        'name': profile.name,
+                        'name': profile.name if profile.name else '',
                         'identifiant': profile.identifiant,
-                        'title': profile.title,
+                        'title': profile.title if profile.title else '',
                         'id': profile.id,
                         'created_at': profile.created_at,
                         'updated_at': profile.updated_at
@@ -61,27 +61,28 @@ def load_data(request):
                         {
                             'id': about.id,
                             'order': about.order,
-                            'content': about.content
+                            'content': about.content if about.content else ''
                         } for about in abouts
                     ],
                     'experience': [
                         {
                             'id': exp.id,
                             'order': exp.order,
-                            'dates': exp.dates,
-                            'position': exp.position,
-                            'company': exp.company,
-                            'location': exp.location,
-                            'description': exp.description
+                            'dates': exp.dates if exp.dates else '',
+                            'position': exp.position if exp.position else '',
+                            'company': exp.company if exp.company else '',
+                            'location': exp.location if exp.location else '',
+                            'description': exp.description if exp.description else '',
+                            'url': exp.url if exp.url else ''
                         } for exp in experiences
                     ],
                     'projects': [
                         {
                             'id': project.id,
                             'order': project.order,
-                            'title': project.title,
-                            'image_url': project.image_url,
-                            'description': project.description
+                            'title': project.title if project.title else '',
+                            'image_url': project.image_url if project.image_url else '',
+                            'description': project.description if project.description else ''
                         } for project in projects
                     ]
                 }
@@ -153,6 +154,7 @@ def save_data(request):
                         company=content.get('company', ''),
                         location=content.get('location', ''),
                         description=content.get('description', ''),
+                        url=content.get('url', ''),
                         profile=profile
                     )
                 else:
@@ -162,6 +164,7 @@ def save_data(request):
                     obj.company = content.get('company', obj.company)
                     obj.location = content.get('location', obj.location)
                     obj.description = content.get('description', obj.description)
+                    obj.url = content.get('url', obj.url)
             elif modalId == 'projectModal':
                 type = 'project'
                 if isNew:

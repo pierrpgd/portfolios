@@ -62,8 +62,10 @@ function addExperienceSection() {
     const dummyRow = document.createElement('div');
     dummyRow.setAttribute('data-dates', '');
     dummyRow.setAttribute('data-company', '');
+    dummyRow.setAttribute('data-position', '');
     dummyRow.setAttribute('data-location', '');
     dummyRow.setAttribute('data-description', '');
+    dummyRow.setAttribute('data-url', '');
     
     // Ouvrir la popup avec le contenu vide
     showPopup(dummyRow, 'experienceModal', 'experienceModalContent');
@@ -115,6 +117,7 @@ function showPopup(row, modalId, contentId) {
     const projectTitle = row.getAttribute('data-title');
     const projectDescription = row.getAttribute('data-description');
     const projectImageUrl = row.getAttribute('data-image-url');
+    const url = row.getAttribute('data-url');
     const title = modalId === 'profileModal' ? 'Profil' : 
                     modalId === 'aboutModal' ? 'À propos' : 
                     modalId === 'experienceModal' ? 'Expérience' : 
@@ -159,6 +162,9 @@ function showPopup(row, modalId, contentId) {
                         </div>
                         <div class="editable-field">
                             <span class="modal-content-info-title">Localisation :</span> <span contenteditable="true" class="editable-content" data-field="location">${location}</span>
+                        </div>
+                        <div class="editable-field">
+                            <span class="modal-content-info-title">URL :</span> <span contenteditable="true" class="editable-content" data-field="url">${url}</span>
                         </div>
                     </div>
                     <span class="modal-content-info-title">Description :</span>
@@ -487,6 +493,7 @@ function updateProfileData(data) {
                             <th>Entreprise</th>
                             <th>Localisation</th>
                             <th>Description</th>
+                            <th>URL</th>
                             <th class="text-end"></th>
                         </tr>
                     </thead>
@@ -500,12 +507,13 @@ function updateProfileData(data) {
 
         if (expTable) {
             expTable.innerHTML = data.experience.map(exp => `
-                <tr class="experience-row" data-id="${exp.id}" data-description="${exp.description}" data-dates="${exp.dates}" data-position="${exp.position}" data-company="${exp.company}" data-location="${exp.location}">
+                <tr class="experience-row" data-id="${exp.id}" data-description="${exp.description}" data-dates="${exp.dates}" data-position="${exp.position}" data-company="${exp.company}" data-location="${exp.location}" data-url="${exp.url}">
                     <td>${exp.dates}</td>
                     <td>${exp.position}</td>
                     <td>${exp.company}</td>
                     <td>${exp.location}</td>
                     <td>${exp.description}</td>
+                    <td>${exp.url}</td>
                     <td class="text-end">
                         <button class="btn btn-danger btn-sm delete-experience" data-id="${exp.id}">
                             <i class="fas fa-trash"></i>
@@ -642,17 +650,19 @@ function loadProfileData(profileIdentifiant) {
                                         <th>Entreprise</th>
                                         <th>Localisation</th>
                                         <th>Description</th>
+                                        <th>URL</th>
                                         <th class="text-end"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     ${data.experience.map(exp => `
-                                        <tr class="experience-row" data-id="${exp.id}" data-description="${exp.description}" data-dates="${exp.dates}" data-position="${exp.position}" data-company="${exp.company}" data-location="${exp.location}">
+                                        <tr class="experience-row" data-id="${exp.id}" data-description="${exp.description}" data-dates="${exp.dates}" data-position="${exp.position}" data-company="${exp.company}" data-location="${exp.location}" data-url="${exp.url}">
                                             <td>${exp.dates}</td>
                                             <td>${exp.position}</td>
                                             <td>${exp.company}</td>
                                             <td>${exp.location}</td>
                                             <td>${exp.description}</td>
+                                            <td>${exp.url}</td>
                                             <td class="text-end">
                                                 <button class="btn btn-danger btn-sm delete-experience" data-id="${exp.id}">
                                                     <i class="fas fa-trash"></i>

@@ -34,6 +34,7 @@ class Experience(models.Model):
     position = models.CharField(max_length=150)
     description = models.TextField()
     order = models.IntegerField(default=0)
+    url = models.URLField(blank=True, null=True)
 
     class Meta:
         ordering = ['order']  # Ordonne par ordre décroissant

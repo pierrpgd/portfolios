@@ -90,12 +90,18 @@ class PortfolioPageTest(BaseTest):
         project_section = self.browser.find_element(By.ID, 'projects')
 
         project_containers = project_section.find_elements(By.CLASS_NAME, 'project-container')
-
-        # Vérifier que le titre du projet est visible
         self.assertEqual(project_containers[0].find_element(By.CLASS_NAME, 'project-title').text, self.projects[0].title, "Project title doesn't appear on the portfolio.")
-
-        # Vérifier que la description du projet est visible
         self.assertEqual(project_containers[0].find_element(By.CLASS_NAME, 'project-description').text, self.projects[0].description, "Project description doesn't appear on the portfolio.")
-
-        # Vérifier que l'image du projet est visible
         self.assertEqual(project_containers[0].find_element(By.TAG_NAME, 'img').get_attribute('src').replace(self.live_server_url, ''), self.projects[0].image_url, "Project image doesn't appear on the portfolio.")
+
+    def test_experience_data_is_visible(self):
+        experience_section = self.browser.find_element(By.ID, 'experience')
+
+        experience_containers = experience_section.find_elements(By.CLASS_NAME, 'job-link')
+        self.assertEqual(experience_containers[0].find_element(By.CLASS_NAME, 'job-title').text, self.experiences[0].position, "Experience title doesn't appear on the portfolio.")
+        self.assertEqual(experience_containers[0].find_element(By.CLASS_NAME, 'job-description').text, self.experiences[0].description, "Experience description doesn't appear on the portfolio.")
+        self.assertEqual(experience_containers[0].find_element(By.CLASS_NAME, 'company').text, self.experiences[0].company, "Experience company doesn't appear on the portfolio.")
+        self.assertEqual(experience_containers[0].find_element(By.CLASS_NAME, 'location').text, self.experiences[0].location, "Experience location doesn't appear on the portfolio.")
+
+        expected_url = self.experiences[0].url if self.experiences[0].url.endswith('/') else f"{self.experiences[0].url}/"
+        self.assertEqual(experience_containers[0].get_attribute('href'), expected_url, "Experience URL doesn't appear on the portfolio.")

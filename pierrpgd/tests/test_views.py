@@ -1,7 +1,6 @@
 from django.test import TestCase
 from django.urls import resolve, reverse
 from django.http import HttpRequest
-from django.utils.html import escape
 from pierrpgd.views import portfolio, data_display
 from pierrpgd.models import Profile, About, Experience, Project
 from bs4 import BeautifulSoup
@@ -68,6 +67,10 @@ class PortfolioViewTest(BaseTest):
         self.assertIn(self.experiences[0].position, exp_text)
         self.assertIn(self.experiences[0].company, exp_text)
         self.assertIn(self.experiences[0].description, exp_text)
+
+        exp_url = experience_section.find('a')
+        self.assertIsNotNone(exp_url)
+        self.assertEqual(exp_url['href'], self.experiences[0].url)
 
     def test_projects_display(self):
         """Teste l'affichage des projets"""
@@ -283,6 +286,7 @@ class LoadDataViewTest(BaseTest):
         self.assertEqual(data['experience'][0]['position'], self.experiences[0].position)
         self.assertEqual(data['experience'][0]['description'], self.experiences[0].description)
         self.assertEqual(data['experience'][0]['location'], self.experiences[0].location)
+        self.assertEqual(data['experience'][0]['url'], self.experiences[0].url)
 
     def test_update_experience(self):
         """Teste la mise à jour d'une expérience"""
@@ -294,6 +298,7 @@ class LoadDataViewTest(BaseTest):
             'location': 'Endroit mis à jour',
             'position': 'Poste mis à jour',
             'description': 'Description mise à jour',
+            'url': 'https://testurl2.com'
         }
         
         # Mettre à jour l'expérience
@@ -315,6 +320,7 @@ class LoadDataViewTest(BaseTest):
         self.assertEqual(data['experience'][0]['position'], 'Poste mis à jour')
         self.assertEqual(data['experience'][0]['description'], 'Description mise à jour')
         self.assertEqual(data['experience'][0]['dates'], '2024-2025')
+        self.assertEqual(data['experience'][0]['url'], 'https://testurl2.com')
 
     def test_delete_experience(self):
         """Teste la suppression d'une expérience"""
@@ -578,6 +584,7 @@ class SaveDataTest(BaseTest):
             'location': 'Endroit de test',
             'position': 'Poste de test',
             'description': 'Description de test',
+            'url': 'https://testurl4.com',
             'profile': self.profile.identifiant
         }
         
@@ -598,7 +605,7 @@ class SaveDataTest(BaseTest):
         
         # Vérifier que le profil a été créé
         self.assertEqual(result['success'], True)
-        self.assertTrue(Experience.objects.filter(dates=data['dates'], company=data['company'], location=data['location'], position=data['position'], description=data['description']).exists())
+        self.assertTrue(Experience.objects.filter(dates=data['dates'], company=data['company'], location=data['location'], position=data['position'], description=data['description'], url=data['url']).exists())
 
     def test_update_experience(self):
         """Teste la mise à jour d'un élément Experience via l'API"""
@@ -609,6 +616,7 @@ class SaveDataTest(BaseTest):
             'location': 'Endroit mis à jour',
             'position': 'Poste mis à jour',
             'description': 'Description mise à jour',
+            'url': 'https://testurl5.com',
             'id': self.experiences[0].id
         }
         
@@ -634,6 +642,7 @@ class SaveDataTest(BaseTest):
         self.assertEqual(updated_experience.location, updated_data['location'])
         self.assertEqual(updated_experience.position, updated_data['position'])
         self.assertEqual(updated_experience.description, updated_data['description'])
+        self.assertEqual(updated_experience.url, updated_data['url'])
 
     def test_create_project(self):
         """Teste la création d'un élément Project via l'API"""

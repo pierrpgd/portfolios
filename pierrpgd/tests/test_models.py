@@ -96,6 +96,7 @@ class ExperienceModelTest(BaseTest):
         self.assertEqual(self.experiences[0].location, 'Test Location')
         self.assertEqual(self.experiences[0].description, 'Test Description')
         self.assertEqual(self.experiences[0].order, 0)
+        self.assertEqual(self.experiences[0].url, 'https://testurl.com')
 
         self.assertEqual(self.experiences[1].dates, '2022-2023')
         self.assertEqual(self.experiences[1].company, 'Test Company 2')
@@ -103,6 +104,7 @@ class ExperienceModelTest(BaseTest):
         self.assertEqual(self.experiences[1].location, 'Test Location 2')
         self.assertEqual(self.experiences[1].description, 'Test Description 2')
         self.assertEqual(self.experiences[1].order, 1)
+        self.assertEqual(self.experiences[1].url, 'https://testurl2.com')
 
     def test_experience_string_representation(self):
         """Test la représentation en chaîne de caractères"""

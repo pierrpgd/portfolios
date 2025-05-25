@@ -140,7 +140,7 @@
         }
 
         section {
-            padding-top: 12vh;
+            padding-top: 12vh !important;
         }
 
         #experience .job {
@@ -175,6 +175,10 @@
             margin-bottom: 0;
         }
 
+        #about, #projects {
+            padding: 0.5rem;
+        }
+
         #about p {
             text-align: justify;
             text-justify: inter-word;
@@ -194,6 +198,27 @@
 
         .project-content {
             flex: 1;
+        }
+
+        .job-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            padding: 0.5rem;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .job-link:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+            color: inherit;
+        }
+        .job-link:hover .job-title {
+            color: #5ee7d4;
+        }
+        .job-container:hover .job-link:not(:hover) {
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
         }
 
         @media (max-width: 1200px) {
@@ -283,17 +308,26 @@
 
                 <section id="experience">
                     <h2>Experience</h2>
-                    <div class="row">
+                    <div class="job-container">
                         {% for exp in experience %}
-                            <div class="job-dates">{{ exp.dates }}</div>
-                            <div class="job-details">
-                                <div class="job-title">{{ exp.position }}</div>
-                                <div class="job-subtitle">
-                                    <span class="company">{{ exp.company }}</span>
-                                    <span class="location"> - {{ exp.location }}</span>
+                            {% if exp.url %}
+                                <a href="{{ exp.url }}" target="_blank" class="job-link">
+                            {% endif %}
+                                <div class="row">
+                                    <div class="job-dates">{{ exp.dates }}</div>
+                                    <div class="job-details">
+                                        <div class="job-title">{{ exp.position }}</div>
+                                        <div class="job-subtitle">
+                                            <span class="company">{{ exp.company }}</span>
+                                            <span> - </span>
+                                            <span class="location">{{ exp.location }}</span>
+                                        </div>
+                                        <div class="job-description">{{ exp.description }}</div>
+                                    </div>
                                 </div>
-                                <div class="job-description">{{ exp.description }}</div>
-                            </div>
+                            {% if exp.url %}
+                                </a>
+                            {% endif %}
                         {% endfor %}
                     </div>
                 </section>
