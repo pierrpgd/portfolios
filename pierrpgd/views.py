@@ -82,7 +82,8 @@ def load_data(request):
                             'order': project.order,
                             'title': project.title if project.title else '',
                             'image_url': project.image_url if project.image_url else '',
-                            'description': project.description if project.description else ''
+                            'description': project.description if project.description else '',
+                            'url': project.url if project.url else ''
                         } for project in projects
                     ]
                 }
@@ -172,6 +173,7 @@ def save_data(request):
                         title=content.get('title', ''),
                         description=content.get('description', ''),
                         image_url=content.get('image_url', ''),
+                        url=content.get('url', ''),
                         profile=profile
                     )
                 else:
@@ -179,6 +181,7 @@ def save_data(request):
                     obj.title = content.get('title', obj.title)
                     obj.description = content.get('description', obj.description)
                     obj.image_url = content.get('image_url', obj.image_url)
+                    obj.url = content.get('url', obj.url)
             else:
                 return JsonResponse({'success': False, 'error': 'Type de modal inconnu'}, status=400)
 

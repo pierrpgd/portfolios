@@ -80,9 +80,11 @@ class PortfolioViewTest(BaseTest):
         # Vérifier que les informations du projet sont présentes
         project_title = projects_section.find_all('p')[0].text
         project_description = projects_section.find_all('p')[1].text
+        project_url = projects_section.find('a')['href']
         
         self.assertEqual(project_title.strip(), self.projects[0].title)
         self.assertEqual(project_description.strip(), self.projects[0].description)
+        self.assertEqual(project_url, self.projects[0].url)
 
     def test_nonexistent_profile(self):
         """Test que l'accès à un profil inexistant renvoie une erreur 404"""
@@ -357,6 +359,7 @@ class LoadDataViewTest(BaseTest):
         self.assertEqual(data['projects'][0]['title'], self.projects[0].title)
         self.assertEqual(data['projects'][0]['description'], self.projects[0].description)
         self.assertEqual(data['projects'][0]['image_url'], self.projects[0].image_url)
+        self.assertEqual(data['projects'][0]['url'], self.projects[0].url)
 
     def test_update_project(self):
         """Teste la mise à jour d'un projet"""
@@ -366,6 +369,7 @@ class LoadDataViewTest(BaseTest):
             'title': 'Titre mis à jour',
             'description': 'Description mise à jour',
             'image_url': 'image_url',
+            'url': 'url',
         }
         
         # Mettre à jour le projet
@@ -385,6 +389,7 @@ class LoadDataViewTest(BaseTest):
         self.assertEqual(data['projects'][0]['title'], 'Titre mis à jour')
         self.assertEqual(data['projects'][0]['description'], 'Description mise à jour')
         self.assertEqual(data['projects'][0]['image_url'], 'image_url')
+        self.assertEqual(data['projects'][0]['url'], 'url')
 
     def test_delete_project(self):
         """Teste la suppression d'un projet"""
@@ -651,6 +656,7 @@ class SaveDataTest(BaseTest):
             'title': 'Titre de test save_data',
             'description': 'Description de test save_data',
             'image_url': 'image_url',
+            'url': 'url',
             'profile': self.profile.identifiant
         }
         
@@ -671,7 +677,7 @@ class SaveDataTest(BaseTest):
         
         # Vérifier que le profil a été créé
         self.assertEqual(result['success'], True)
-        self.assertTrue(Project.objects.filter(title=data['title'], description=data['description'], image_url=data['image_url']).exists())
+        self.assertTrue(Project.objects.filter(title=data['title'], description=data['description'], image_url=data['image_url'], url=data['url']).exists())
 
     def test_update_project(self):
         """Teste la mise à jour d'un élément Project"""
@@ -680,6 +686,7 @@ class SaveDataTest(BaseTest):
             'title': 'Titre mis à jour',
             'description': 'Description mise à jour',
             'image_url': 'image_url',
+            'url': 'url',
             'id': self.projects[0].id
         }
         
@@ -703,6 +710,7 @@ class SaveDataTest(BaseTest):
         self.assertEqual(updated_project.title, updated_data['title'])
         self.assertEqual(updated_project.description, updated_data['description'])
         self.assertEqual(updated_project.image_url, updated_data['image_url'])
+        self.assertEqual(updated_project.url, updated_data['url'])
         
         # Effectuer la mise à jour via l'API
         response = self.client.post(
@@ -724,6 +732,7 @@ class SaveDataTest(BaseTest):
         self.assertEqual(updated_project.title, updated_data['title'])
         self.assertEqual(updated_project.description, updated_data['description'])
         self.assertEqual(updated_project.image_url, updated_data['image_url'])
+        self.assertEqual(updated_project.url, updated_data['url'])
 
 class DeleteDataTest(BaseTest):
 

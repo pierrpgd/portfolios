@@ -100,13 +100,7 @@ function addProjectSection() {
 // Fonction pour afficher une popup générique
 function showPopup(row, modalId, contentId) {
 
-    let content;
-    if (modalId === 'experienceModal' || modalId === 'projectModal') {
-        content = row.getAttribute('data-description');
-    } else {
-        content = row.getAttribute('data-content');
-    }
-
+    const content = row.getAttribute('data-content');
     const identifiant = row.getAttribute('data-identifiant');
     const name = row.getAttribute('data-name');
     const profileTitle = row.getAttribute('data-title');
@@ -114,10 +108,12 @@ function showPopup(row, modalId, contentId) {
     const company = row.getAttribute('data-company');
     const position = row.getAttribute('data-position');
     const location = row.getAttribute('data-location');
+    const experienceDescription = row.getAttribute('data-description');
+    const experienceUrl = row.getAttribute('data-url');
     const projectTitle = row.getAttribute('data-title');
     const projectDescription = row.getAttribute('data-description');
     const projectImageUrl = row.getAttribute('data-image-url');
-    const url = row.getAttribute('data-url');
+    const projectUrl = row.getAttribute('data-url');
     const title = modalId === 'profileModal' ? 'Profil' : 
                     modalId === 'aboutModal' ? 'À propos' : 
                     modalId === 'experienceModal' ? 'Expérience' : 
@@ -164,10 +160,10 @@ function showPopup(row, modalId, contentId) {
                             <span class="modal-content-info-title">Localisation :</span> <span contenteditable="true" class="editable-content" data-field="location">${location}</span>
                         </div>
                         <div class="editable-field">
-                            <span class="modal-content-info-title">URL :</span> <span contenteditable="true" class="editable-content" data-field="url">${url}</span>
+                            <span class="modal-content-info-title">URL :</span> <span contenteditable="true" class="editable-content" data-field="url">${experienceUrl}</span>
                         </div>
                         <span class="modal-content-info-title">Description :</span>
-                        <div contenteditable="true" class="editable-content" data-field="description">${content}</div>
+                        <div contenteditable="true" class="editable-content" data-field="description">${experienceDescription}</div>
                     </div>
                 ` : modalId === 'projectModal' ? `
                     <div class="modal-content-info">
@@ -176,6 +172,9 @@ function showPopup(row, modalId, contentId) {
                         </div>
                         <div class="editable-field">
                             <span class="modal-content-info-title">Image URL :</span> <span contenteditable="true" class="editable-content" data-field="image_url">${projectImageUrl}</span>
+                        </div>
+                        <div class="editable-field">
+                            <span class="modal-content-info-title">URL :</span> <span contenteditable="true" class="editable-content" data-field="url">${projectUrl}</span>
                         </div>
                         <span class="modal-content-info-title">Description :</span>
                         <div contenteditable="true" class="editable-content" data-field="description">${projectDescription}</div>
@@ -546,6 +545,7 @@ function updateProfileData(data) {
                             <th>Titre</th>
                             <th>Description</th>
                             <th>Image URL</th>
+                            <th>URL</th>
                             <th class="text-end"></th>
                         </tr>
                     </thead>
@@ -560,10 +560,11 @@ function updateProfileData(data) {
         if (projectsTable) {
             projectsTable.innerHTML = data.projects.map(project => `
                 <tr class="project-row" data-id="${project.id}" 
-                    data-title="${project.title}" data-content="${project.description}">
+                    data-title="${project.title}" data-content="${project.description}" data-image-url="${project.image_url}" data-url="${project.url}">
                     <td>${project.title}</td>
                     <td>${project.description}</td>
                     <td>${project.image_url}</td>
+                    <td>${project.url}</td>
                     <td class="text-end">
                         <button class="btn btn-danger btn-sm delete-project" data-id="${project.id}">
                             <i class="fas fa-trash"></i>
@@ -694,15 +695,17 @@ function loadProfileData(profileIdentifiant) {
                                         <th>Titre</th>
                                         <th>Description</th>
                                         <th>Image URL</th>
+                                        <th>URL</th>
                                         <th class="text-end"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     ${data.projects.map(project => `
-                                        <tr class="project-row" data-id="${project.id}" data-title="${project.title}" data-description="${project.description}" data-image-url="${project.image_url}">
+                                        <tr class="project-row" data-id="${project.id}" data-title="${project.title}" data-description="${project.description}" data-image-url="${project.image_url}" data-url="${project.url}">
                                             <td>${project.title}</td>
                                             <td>${project.description}</td>
                                             <td>${project.image_url}</td>
+                                            <td>${project.url}</td>
                                             <td class="text-end">
                                                 <button class="btn btn-danger btn-sm delete-project" data-id="${project.id}">
                                                     <i class="fas fa-trash"></i>

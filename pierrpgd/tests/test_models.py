@@ -85,7 +85,6 @@ class AboutModelTest(BaseTest):
         with self.assertRaises(About.DoesNotExist):
             About.objects.get(profile=profile_id)
 
-
 class ExperienceModelTest(BaseTest):
 
     def test_experience_creation(self):
@@ -131,7 +130,6 @@ class ExperienceModelTest(BaseTest):
         with self.assertRaises(Experience.DoesNotExist):
             Experience.objects.get(profile=profile_id)
 
-
 class ProjectModelTest(BaseTest):
 
     def test_project_creation(self):
@@ -140,10 +138,12 @@ class ProjectModelTest(BaseTest):
         self.assertEqual(self.projects[0].description, 'Test Project Description')
         self.assertEqual(self.projects[0].image_url, '/static/portfolio-example.png')
         self.assertEqual(self.projects[0].order, 0)
+        self.assertEqual(self.projects[0].url, 'https://testurl3.com')
 
         self.assertEqual(self.projects[1].title, 'Second Project')
         self.assertEqual(self.projects[1].description, 'Second Project Description')
         self.assertEqual(self.projects[1].order, 1)
+        self.assertEqual(self.projects[1].url, 'https://testurl4.com')
 
     def test_project_string_representation(self):
         """Test la représentation en chaîne de caractères"""

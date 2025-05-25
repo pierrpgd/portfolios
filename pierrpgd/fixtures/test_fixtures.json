@@ -69,7 +69,8 @@
             "profile": 1,
             "title": "Test Project",
             "description": "Test Project Description",
-            "image_url": "/static/portfolio-example.png"
+            "image_url": "/static/portfolio-example.png",
+            "url": "https://testurl3.com"
         }
     },
     {
@@ -78,7 +79,8 @@
         "fields": {
             "profile": 1,
             "title": "Second Project",
-            "description": "Second Project Description"
+            "description": "Second Project Description",
+            "url": "https://testurl4.com"
         }
     },
     {
@@ -117,7 +119,8 @@
         "fields": {
             "profile": 2,
             "title": "Second Profile Project",
-            "description": "Project Description for Second Profile"
+            "description": "Project Description for Second Profile",
+            "url": "https://testurl5.com"
         }
     }
 ]

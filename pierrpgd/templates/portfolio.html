@@ -170,7 +170,7 @@
 
         .project-title {
             color: #ccd6f6;
-            font-size: 18px;
+            font-size: 24px;
             font-weight: bold;
             margin-bottom: 0;
         }
@@ -200,7 +200,7 @@
             flex: 1;
         }
 
-        .job-link {
+        .job-link, .project-link {
             text-decoration: none;
             color: inherit;
             display: block;
@@ -208,15 +208,15 @@
             border-radius: 5px;
             transition: background-color 0.3s ease;
         }
-        .job-link:hover {
+        .job-link:hover, .project-link:hover {
             background-color: rgba(255, 255, 255, 0.05);
             box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
             color: inherit;
         }
-        .job-link:hover .job-title {
+        .job-link:hover .job-title, .project-link:hover .project-title {
             color: #5ee7d4;
         }
-        .job-container:hover .job-link:not(:hover) {
+        .tile-container:hover .job-link:not(:hover), .tile-container:hover .project-link:not(:hover) {
             opacity: 0.6;
             transition: opacity 0.3s ease;
         }
@@ -306,9 +306,9 @@
                     {% endfor %}
                 </section>
 
-                <section id="experience">
-                    <h2>Experience</h2>
-                    <div class="job-container">
+                <div class="tile-container">
+                    <section id="experience">
+                        <h2>Experience</h2>
                         {% for exp in experience %}
                             {% if exp.url %}
                                 <a href="{{ exp.url }}" target="_blank" class="job-link">
@@ -329,23 +329,29 @@
                                 </a>
                             {% endif %}
                         {% endfor %}
-                    </div>
-                </section>
+                    </section>
 
-                <section id="projects">
-                    <h2>Projects</h2>
-                    {% for project in projects %}
-                        <div class="project-container">
-                            <div class="project-image">
-                                <img src="{{ project.image_url }}" alt="{{ project.title }}" style="max-width: 185px; max-height: 185px;">
+                    <section id="projects">
+                        <h2>Projects</h2>
+                        {% for project in projects %}
+                            {% if project.url %}
+                                <a href="{{ project.url }}" target="_blank" class="project-link">
+                            {% endif %}
+                            <div class="row">
+                                <div class="project-image">
+                                    <img src="{{ project.image_url }}" alt="{{ project.title }}" style="max-width: 185px; max-height: 185px;">
+                                </div>
+                                <div class="project-content">
+                                    <p class="project-title">{{ project.title }}</p>
+                                    <p class="project-description">{{ project.description }}</p>
+                                </div>
                             </div>
-                            <div class="project-content">
-                                <p class="project-title">{{ project.title }}</p>
-                                <p class="project-description">{{ project.description }}</p>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </section>
+                            {% if project.url %}
+                                </a>
+                            {% endif %}
+                        {% endfor %}
+                    </section>
+                </div>
             </div>
         </div>
     </div>

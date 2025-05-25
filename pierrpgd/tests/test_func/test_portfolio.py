@@ -105,3 +105,15 @@ class PortfolioPageTest(BaseTest):
 
         expected_url = self.experiences[0].url if self.experiences[0].url.endswith('/') else f"{self.experiences[0].url}/"
         self.assertEqual(experience_containers[0].get_attribute('href'), expected_url, "Experience URL doesn't appear on the portfolio.")
+
+    def test_project_data_is_visible(self):
+        project_section = self.browser.find_element(By.ID, 'projects')
+
+        project_containers = project_section.find_elements(By.CLASS_NAME, 'project-link')
+        self.assertEqual(project_containers[0].find_element(By.CLASS_NAME, 'project-title').text, self.projects[0].title, "Project title doesn't appear on the portfolio.")
+        self.assertEqual(project_containers[0].find_element(By.CLASS_NAME, 'project-description').text, self.projects[0].description, "Project description doesn't appear on the portfolio.")
+        self.assertEqual(project_containers[0].find_element(By.TAG_NAME, 'img').get_attribute('src').replace(self.live_server_url, ''), self.projects[0].image_url, "Project image doesn't appear on the portfolio.")
+
+        expected_url = self.projects[0].url if self.projects[0].url.endswith('/') else f"{self.projects[0].url}/"
+        self.assertEqual(project_containers[0].get_attribute('href'), expected_url, "Project URL doesn't appear on the portfolio.")
+        

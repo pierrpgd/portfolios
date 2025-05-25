@@ -48,6 +48,7 @@ class Project(models.Model):
     description = models.TextField()
     order = models.IntegerField(default=0)
     image_url = models.URLField(blank=True, null=True)
+    url = models.URLField(blank=True, null=True)
 
     class Meta:
         ordering = ['order']
