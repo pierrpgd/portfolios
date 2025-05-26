@@ -7,199 +7,126 @@
     {% bootstrap_css %}
     {% bootstrap_javascript %}
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Raleway:400,700&display=swap" rel="stylesheet">
     <style>
+
+        /* Style global */
+
         body, a {
-            color: #8892b0;
+            opacity: 0.9;
+            color: #919dc5;
             text-decoration: none;
-            font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 0;
             line-height: 1.6;
         }
-
         body {
+            font-family: 'Inter', sans-serif;
             position: relative;
             background-color: #0f172a;
             margin: 0;
             width: 100%;
             min-height: 100vh;
-            overflow-x: hidden; /* Seulement bloquer le scroll horizontal */
-            overflow-y: auto; /* Autoriser le scroll vertical */
+            overflow-x: hidden;
+            overflow-y: auto;
+            text-align: justify;
+            text-justify: inter-word;
+            hyphens: auto;
         }
-
-        .layout {
-            display: flex;
-            width: 100vw;
-            max-width: 1200px;
-            padding-bottom: 10vh;
-            z-index: 100;
-        }
-
         .container-flex {
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 100%;
+            width: 100vw;
+        }
+        .layout {
+            display: flex;
+            max-width: 1200px;
+            padding-top: 10vh;
+            padding-bottom: 10vh;
+            z-index: 100;
         }
 
-        #title {
-            font-size: 1.5rem;
-            font-weight: 400;
-            color: #ccd6f6;
-            margin: 0.5rem 0 1.5rem;
-            line-height: 1.3;
-            max-width: 540px;
-        }
+        /* Style du menu de navigation */
 
         nav {
-            padding-top: 10vh;
             position: fixed;
             width: 36rem;
-            box-sizing: border-box;
         }
-
-        nav h1 {
-            font-size: 50px;
+        #name a {
+            font-size: 3.3rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            color: white;
         }
-
-        nav h1 a {
-            color: #ccd6f6;
+        #title {
+            font-size: 1.6rem;
+            font-weight: 500;
+            color: white;
         }
-
         nav ul {
             list-style: none;
-            padding: 20px 0 0 0;
+            padding: 3vh 0 0 0;
         }
-
         nav ul li {
-            font-size: 20px;
+            font-size: 1rem;
+            font-weight: 600;
             margin-bottom: 15px;
             cursor: pointer;
-            transition: color 0.3s;
+            transition: color 0.5s;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        nav h1 a:hover, nav ul li:hover a {
+            color: white;
         }
 
-        nav h1 a:hover, nav ul li:hover a {
-            color: #ccd6f6;
-        }
+        /* Style du contenu principal */
 
         .main-content {
             padding-left: 36rem;
             font-size: 16px;
             flex: 1;
             overflow-y: visible;
-            -ms-overflow-style: none;  /* IE et Edge */
-            scrollbar-width: none;  /* Firefox */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
-
-        /* Pour Chrome, Safari et Opera */
         .main-content::-webkit-scrollbar {
             display: none;
         }
 
-        .job-dates {
+        /* Style des sections */
+
+        section {
+            padding-bottom: 8vh;
+        }
+        section h2 {
+            display: none;
+            background-color: transparent;
+        }
+
+        /* Style de la section À propos */
+
+        #about {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+            padding-top: 1.8rem;
+        }
+        strong {
+            color: white;
+        }
+
+        /* Style des sections expérience et projets */
+
+        .job-dates, .project-image {
             width: 33.333333%;
             flex: 0 0 auto;
         }
-
-        /* Masquer les titres en mode desktop */
-        section h2 {
-            display: none;
-        }
-
-        .job-dates {
-            padding-top: 0.5rem;
-        }
-
-        .job-details {
+        .job-details, .project-content {
             margin-bottom: 30px;
             width: 66.666666%;
             flex: 0 0 auto;
         }
-
-        .job-title {
-            color: #ccd6f6;
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .job-subtitle {
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        .job-subtitle .company {
-            color: #ccd6f6;
-        }
-
-        .job-subtitle .location {
-            color: #8892b0;
-        }
-
-        .job-description {
-            font-size: 16px;
-        }
-
-        section {
-            padding-top: 12vh !important;
-        }
-
-        #experience .job {
-            margin-bottom: 40px;
-        }
-
-        .glow-overlay {
-            pointer-events: none;
-
-            /* Dégradé lumineux */
-            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgb(6, 36, 80) 0%, rgba(0,0,0,0) 40%);
-            transition: none;
-
-            position: fixed; /* Changé de absolute à fixed */
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 100%;
-            height: 100vh; /* Utiliser viewport height */
-            margin: 0;
-        }
-
-        strong {
-            color: #ccd6f6;
-        }
-
-        .project-title {
-            color: #ccd6f6;
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 0;
-        }
-
-        #about, #projects {
-            padding: 0.5rem;
-        }
-
-        #about p {
-            text-align: justify;
-            text-justify: inter-word;
-            hyphens: auto;
-        }
-
-        .project-container {
-            display: flex;
-            gap: 2rem;
-            margin-bottom: 2rem;
-            align-items: flex-start;
-        }
-
-        .project-image {
-            flex: 0 0;
-        }
-
-        .project-content {
-            flex: 1;
-        }
-
         .job-link, .project-link {
             text-decoration: none;
             color: inherit;
@@ -209,7 +136,7 @@
             transition: background-color 0.3s ease;
         }
         .job-link:hover, .project-link:hover {
-            background-color: rgba(255, 255, 255, 0.05);
+            background-color: rgba(255, 255, 255, 0.1);
             box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
             color: inherit;
         }
@@ -221,50 +148,129 @@
             transition: opacity 0.3s ease;
         }
 
+        /* Style de la section expérience */
+
+        .job-dates {
+            padding-top: 0.5rem;
+        }
+        .job-title {
+            color: white;
+            font-size: 24px;
+            font-weight: 500;
+        }
+        .job-subtitle {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .job-subtitle .company {
+            color: white;
+        }
+        .job-description {
+            font-size: 16px;
+        }
+
+        /* Style de la section projets */
+
+        .project-title {
+            color: white;
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 0;
+        }
+        .project-container {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            align-items: flex-start;
+        }
+        .project-image {
+            flex: 0 0;
+        }
+        .project-content {
+            flex: 1;
+        }
+
+        /* Lumos */
+
+        .glow-overlay {
+            pointer-events: none;
+            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgb(6, 36, 80) 0%, rgba(0,0,0,0) 40%);
+            transition: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* Styles mobile */
+
         @media (max-width: 1200px) {
+
+             /* Style global */
+
             .layout {
                 padding-right: 3rem;
                 flex-direction: column;
                 gap: 2rem;
             }
+            section p, section h2, section > div {
+                padding-left: 3rem;
+            }
+            nav, .tile-container section h2 {
+                padding-left: 3.5rem;
+            }
+
+            /* Style du menu de navigation */
 
             #title {
                 font-size: 1.1rem;
             }
-
             nav {
                 position: relative;
                 width: 100%;
             }
+            nav ul {
+                display: none;
+            }
+
+            /* Style du contenu principal */
 
             .main-content {
                 padding-left: 0;
             }
 
-            nav ul {
-                display: none;
-            }
-
-            nav, section p,section h2, section > div {
-                padding-left: 3rem;
-            }
+            /* Style des sections */
 
             section {
                 padding-top: 0;
             }
-
             section h2 {
-                position: sticky;
-                top: 0;
                 display: block;
-                margin-bottom: 1.5rem;
+                margin-top: 1rem;
                 font-size: 24px;
                 color: #ccd6f6;
-                background: rgba(10, 25, 47, 0.8);
-                backdrop-filter: blur(10px);
-                -webkit-backdrop-filter: blur(10px); /* Pour Safari */
                 padding-top: 1rem;
                 padding-bottom: 1rem;
+            }
+
+            /* Style des sections expérience et projets */
+
+            .job-link, .project-link {
+                margin-left: 3rem;
+            }
+            .tile-container:hover .job-link:not(:hover), .tile-container:hover .project-link:not(:hover) {
+                opacity: 1;
+                transition: opacity 0s ease;
+            }
+
+            /* Lumos */
+
+            .glow-overlay {
+                background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgb(6, 36, 80) 0%, rgba(0,0,0,0) 80%);
             }
         }
     </style>
@@ -272,13 +278,23 @@
         document.addEventListener('DOMContentLoaded', () => {
             const main = document.querySelector('body');
             const overlay = document.querySelector('.glow-overlay');
+            let isMobile = window.matchMedia('(max-width: 1200px)').matches;
 
             if (main && overlay) {
                 main.addEventListener('pointermove', (e) => {
-                    const x = e.clientX;
-                    const y = e.clientY;
-                    overlay.style.setProperty('--x', `${x}px`);
-                    overlay.style.setProperty('--y', `${y}px`);
+                    if (!isMobile) {
+                        const x = e.clientX;
+                        const y = e.clientY;
+                        overlay.style.setProperty('--x', `${x}px`);
+                        overlay.style.setProperty('--y', `${y}px`);
+                    } else {
+                        overlay.style.setProperty('--x', '0');
+                        overlay.style.setProperty('--y', '0');
+                    }
+                });
+
+                window.addEventListener('resize', () => {
+                    isMobile = window.matchMedia('(max-width: 1200px)').matches;
                 });
             }
         });
@@ -310,9 +326,7 @@
                     <section id="experience">
                         <h2>Experience</h2>
                         {% for exp in experience %}
-                            {% if exp.url %}
-                                <a href="{{ exp.url }}" target="_blank" class="job-link">
-                            {% endif %}
+                            <a {% if exp.url %} href="{{ exp.url }}" {% endif %} target="_blank" class="job-link">
                                 <div class="row">
                                     <div class="job-dates">{{ exp.dates }}</div>
                                     <div class="job-details">
@@ -325,30 +339,26 @@
                                         <div class="job-description">{{ exp.description }}</div>
                                     </div>
                                 </div>
-                            {% if exp.url %}
-                                </a>
-                            {% endif %}
+                            </a>
                         {% endfor %}
                     </section>
 
                     <section id="projects">
                         <h2>Projects</h2>
                         {% for project in projects %}
-                            {% if project.url %}
-                                <a href="{{ project.url }}" target="_blank" class="project-link">
-                            {% endif %}
-                            <div class="row">
-                                <div class="project-image">
-                                    <img src="{{ project.image_url }}" alt="{{ project.title }}" style="max-width: 185px; max-height: 185px;">
+                            <a {% if project.url %} href="{{ project.url }}" {% endif %} target="_blank" class="project-link">
+                                <div class="row">
+                                    {% if project.image_url %}
+                                        <div class="project-image">
+                                            <img src="{{ project.image_url }}" alt="{{ project.title }}" style="max-width: 185px; max-height: 185px;">
+                                        </div>
+                                    {% endif %}
+                                    <div class="project-content">
+                                        <p class="project-title">{{ project.title }}</p>
+                                        <p class="project-description">{{ project.description }}</p>
+                                    </div>
                                 </div>
-                                <div class="project-content">
-                                    <p class="project-title">{{ project.title }}</p>
-                                    <p class="project-description">{{ project.description }}</p>
-                                </div>
-                            </div>
-                            {% if project.url %}
-                                </a>
-                            {% endif %}
+                            </a>
                         {% endfor %}
                     </section>
                 </div>
