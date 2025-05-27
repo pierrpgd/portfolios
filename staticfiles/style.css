@@ -65,7 +65,7 @@
     z-index: 999;
 }
 
-/* Style pour les modals Experience et Projects */
+/* Style pour les modals */
 .modal {
     display: none;
     position: fixed;
@@ -195,6 +195,15 @@
     border-top: none;
     padding-bottom: 1.5rem;
     background-color: rgba(248, 249, 250);
+}
+
+/* Style pour les modals de skills */
+.skill-badge {
+    display: inline-block;
+    padding: 8px 12px;
+    border-radius: 12px;
+    background-color: #f0f0f079;
+    margin: 4px;
 }
 
 @media (max-width: 576px) {

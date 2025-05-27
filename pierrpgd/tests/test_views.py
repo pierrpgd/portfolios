@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import resolve, reverse
 from django.http import HttpRequest
 from pierrpgd.views import portfolio, data_display
-from pierrpgd.models import Profile, About, Experience, Project
+from pierrpgd.models import Profile, About, Experience, Project, Skill
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -16,6 +16,7 @@ class BaseTest(TestCase):
         cls.abouts = About.objects.filter(profile=cls.profile)
         cls.experiences = Experience.objects.filter(profile=cls.profile)
         cls.projects = Project.objects.filter(profile=cls.profile)
+        cls.skills = Skill.objects.all()
 
     @classmethod
     def tearDownClass(cls):
@@ -289,6 +290,7 @@ class LoadDataViewTest(BaseTest):
         self.assertEqual(data['experience'][0]['description'], self.experiences[0].description)
         self.assertEqual(data['experience'][0]['location'], self.experiences[0].location)
         self.assertEqual(data['experience'][0]['url'], self.experiences[0].url)
+        self.assertEqual(data['experience'][0]['skills'], [self.skills[0].id, self.skills[1].id])
 
     def test_update_experience(self):
         """Teste la mise à jour d'une expérience"""
@@ -323,6 +325,7 @@ class LoadDataViewTest(BaseTest):
         self.assertEqual(data['experience'][0]['description'], 'Description mise à jour')
         self.assertEqual(data['experience'][0]['dates'], '2024-2025')
         self.assertEqual(data['experience'][0]['url'], 'https://testurl2.com')
+        self.assertEqual(data['experience'][0]['skills'], [self.skills[0].id, self.skills[1].id])
 
     def test_delete_experience(self):
         """Teste la suppression d'une expérience"""
@@ -360,6 +363,7 @@ class LoadDataViewTest(BaseTest):
         self.assertEqual(data['projects'][0]['description'], self.projects[0].description)
         self.assertEqual(data['projects'][0]['image_url'], self.projects[0].image_url)
         self.assertEqual(data['projects'][0]['url'], self.projects[0].url)
+        self.assertEqual(data['projects'][0]['skills'], [self.skills[1].id, self.skills[2].id])
 
     def test_update_project(self):
         """Teste la mise à jour d'un projet"""
@@ -390,6 +394,7 @@ class LoadDataViewTest(BaseTest):
         self.assertEqual(data['projects'][0]['description'], 'Description mise à jour')
         self.assertEqual(data['projects'][0]['image_url'], 'image_url')
         self.assertEqual(data['projects'][0]['url'], 'url')
+        self.assertEqual(data['projects'][0]['skills'], [self.skills[1].id, self.skills[2].id])
 
     def test_delete_project(self):
         """Teste la suppression d'un projet"""
@@ -590,6 +595,7 @@ class SaveDataTest(BaseTest):
             'position': 'Poste de test',
             'description': 'Description de test',
             'url': 'https://testurl4.com',
+            'skills': [self.skills[0].id, self.skills[2].id],
             'profile': self.profile.identifiant
         }
         
@@ -610,7 +616,16 @@ class SaveDataTest(BaseTest):
         
         # Vérifier que le profil a été créé
         self.assertEqual(result['success'], True)
-        self.assertTrue(Experience.objects.filter(dates=data['dates'], company=data['company'], location=data['location'], position=data['position'], description=data['description'], url=data['url']).exists())
+        exp = Experience.objects.get(
+            dates=data['dates'], 
+            company=data['company'], 
+            location=data['location'],
+            position=data['position'],
+            description=data['description'],
+            url=data['url']
+        )
+        self.assertIsNotNone(exp)
+        self.assertEqual([skill.id for skill in exp.skills.all()], data['skills'])
 
     def test_update_experience(self):
         """Teste la mise à jour d'un élément Experience via l'API"""
@@ -622,6 +637,7 @@ class SaveDataTest(BaseTest):
             'position': 'Poste mis à jour',
             'description': 'Description mise à jour',
             'url': 'https://testurl5.com',
+            'skills': [self.skills[0].id, self.skills[2].id],
             'id': self.experiences[0].id
         }
         
@@ -648,6 +664,7 @@ class SaveDataTest(BaseTest):
         self.assertEqual(updated_experience.position, updated_data['position'])
         self.assertEqual(updated_experience.description, updated_data['description'])
         self.assertEqual(updated_experience.url, updated_data['url'])
+        self.assertEqual([skill.id for skill in updated_experience.skills.all()], updated_data['skills'])
 
     def test_create_project(self):
         """Teste la création d'un élément Project via l'API"""
@@ -657,6 +674,7 @@ class SaveDataTest(BaseTest):
             'description': 'Description de test save_data',
             'image_url': 'image_url',
             'url': 'url',
+            'skills': [self.skills[1].id, self.skills[2].id],
             'profile': self.profile.identifiant
         }
         
@@ -677,7 +695,15 @@ class SaveDataTest(BaseTest):
         
         # Vérifier que le profil a été créé
         self.assertEqual(result['success'], True)
-        self.assertTrue(Project.objects.filter(title=data['title'], description=data['description'], image_url=data['image_url'], url=data['url']).exists())
+
+        project = Project.objects.get(
+            title=data['title'], 
+            description=data['description'],
+            image_url=data['image_url'],
+            url=data['url']
+        )
+        self.assertIsNotNone(project)
+        self.assertEqual([skill.id for skill in project.skills.all()], data['skills'])
 
     def test_update_project(self):
         """Teste la mise à jour d'un élément Project"""
@@ -687,6 +713,7 @@ class SaveDataTest(BaseTest):
             'description': 'Description mise à jour',
             'image_url': 'image_url',
             'url': 'url',
+            'skills': [self.skills[0].id, self.skills[2].id],
             'id': self.projects[0].id
         }
         
@@ -711,14 +738,23 @@ class SaveDataTest(BaseTest):
         self.assertEqual(updated_project.description, updated_data['description'])
         self.assertEqual(updated_project.image_url, updated_data['image_url'])
         self.assertEqual(updated_project.url, updated_data['url'])
+        self.assertEqual([skill.id for skill in updated_project.skills.all()], updated_data['skills'])
+
+    def test_create_skill(self):
+        """Teste la création d'une compétence"""
         
-        # Effectuer la mise à jour via l'API
+        # Données pour la création
+        data = {
+            'category': 'New Test Category',
+            'name': 'New Test Skill'
+        }
+        
+        # Effectuer la création via l'API
         response = self.client.post(
             reverse('save_data'),
             {
-                'modalId': 'projectModal',
-                'isNew': False,
-                'data': updated_data
+                'modalId': 'skillModal',
+                'data': data
             },
             content_type='application/json'
         )
@@ -727,12 +763,9 @@ class SaveDataTest(BaseTest):
         self.assertEqual(response.status_code, 200)
         result = response.json()
         
-        # Vérifier que les modifications ont été sauvegardées
-        updated_project = Project.objects.get(id=self.projects[0].id)
-        self.assertEqual(updated_project.title, updated_data['title'])
-        self.assertEqual(updated_project.description, updated_data['description'])
-        self.assertEqual(updated_project.image_url, updated_data['image_url'])
-        self.assertEqual(updated_project.url, updated_data['url'])
+        # Vérifier que la compétence a été créée
+        self.assertEqual(result['success'], True)
+        self.assertTrue(Skill.objects.filter(name=data['name']).exists())
 
 class DeleteDataTest(BaseTest):
 

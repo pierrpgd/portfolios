@@ -66,6 +66,7 @@ function addExperienceSection() {
     dummyRow.setAttribute('data-location', '');
     dummyRow.setAttribute('data-description', '');
     dummyRow.setAttribute('data-url', '');
+    dummyRow.setAttribute('data-skills', '');
     
     // Ouvrir la popup avec le contenu vide
     showPopup(dummyRow, 'experienceModal', 'experienceModalContent');
@@ -85,6 +86,8 @@ function addProjectSection() {
     dummyRow.setAttribute('data-title', '');
     dummyRow.setAttribute('data-description', '');
     dummyRow.setAttribute('data-image-url', '');
+    dummyRow.setAttribute('data-url', '');
+    dummyRow.setAttribute('data-skills', '');
     
     // Ouvrir la popup avec le contenu vide
     showPopup(dummyRow, 'projectModal', 'projectModalContent');
@@ -95,6 +98,113 @@ function addProjectSection() {
         el.contentEditable = true;
         el.focus();
     });
+}
+
+// Fonction pour ajouter une compétence à un élément
+function addSkillToItem(modalId) {
+    // Créer une nouvelle ligne vide pour stocker les données
+    const dummyRow = document.createElement('div');
+    dummyRow.setAttribute('data-id', '');
+    dummyRow.setAttribute('data-category', '');
+    dummyRow.setAttribute('data-name', '');
+    
+    // Créer la modale
+    const modal = document.createElement('div');
+    modal.id = 'skillModal';
+    modal.className = 'modal fade';
+    modal.tabIndex = '-1';
+    modal.setAttribute('role', 'dialog', 'aria-hidden', 'true');
+    
+    modal.innerHTML = `
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ajouter une compétence</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="editable-field">
+                        <span class="modal-content-info-title">Catégorie : </span> 
+                        <span contenteditable="true" class="editable-content" data-field="category"></span>
+                    </div>
+                    <div class="editable-field">
+                        <span class="modal-content-info-title">Intitulé : </span> 
+                        <span contenteditable="true" class="editable-content" data-field="name"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" id="skillModalValidateButton">Ajouter</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Initialiser la modale proprement
+    $(modal).modal('show');
+    
+    // Gérer la validation
+    document.getElementById('skillModalValidateButton').addEventListener('click', async function() {
+        const category = modal.querySelector('[data-field="category"]').textContent;
+        const name = modal.querySelector('[data-field="name"]').textContent;
+
+        if (!category || !name) {
+            alert('Veuillez remplir tous les champs');
+            return;
+        }
+
+        const result = await saveModalContent(modal);
+
+        if (result.success) {
+            // Mettre à jour l'affichage des compétences
+            const skillsField = document.querySelector(`#${modalId} [data-field="skills"]`);
+            if (skillsField) {
+                console.log(skillsField.textContent)
+                skillsField.textContent = skillsField.textContent ? 
+                    `${skillsField.textContent},${result.data.id}` : result.data.id;
+                console.log(skillsField.textContent)
+            }
+
+            updateSkillsDisplay(modalId);
+            removeModal(modal);
+        }
+    });
+}
+
+async function updateSkillsDisplay(modalId) {
+    if (!selectedProfile) {
+        return;
+    }
+
+    const skillsField = document.querySelector(`#${modalId} [data-field="skills"]`);
+    if (!skillsField) {
+        return;
+    }
+
+    let skillsData = null;
+    // Récupérer tous les Skills en BDD
+    await fetch(`/load_data/?identifiant=${selectedProfile}`)
+        .then(response => response.json())
+        .then(data => {
+            skillsData = data.skills;
+        })
+        .catch(error => console.error("Erreur:", error))
+
+    const skillsNameField = document.querySelector(`#${modalId} #skills-name`);
+
+    if (skillsNameField) {
+        const skills = skillsField.textContent.split(',');
+        if (skills.length > 0) {
+            skillsNameField.innerHTML = skills.map(skillId => {
+                const skill = skillsData.find(s => s.id == skillId);
+                return `<span class="skill-badge">${skill.name}</span>`;
+            }).join('');
+        }
+    }
 }
 
 // Fonction pour afficher une popup générique
@@ -110,10 +220,12 @@ function showPopup(row, modalId, contentId) {
     const location = row.getAttribute('data-location');
     const experienceDescription = row.getAttribute('data-description');
     const experienceUrl = row.getAttribute('data-url');
+    const experienceSkills = row.getAttribute('data-skills');
     const projectTitle = row.getAttribute('data-title');
     const projectDescription = row.getAttribute('data-description');
     const projectImageUrl = row.getAttribute('data-image-url');
     const projectUrl = row.getAttribute('data-url');
+    const projectSkills = row.getAttribute('data-skills');
     const title = modalId === 'profileModal' ? 'Profil' : 
                     modalId === 'aboutModal' ? 'À propos' : 
                     modalId === 'experienceModal' ? 'Expérience' : 
@@ -136,60 +248,90 @@ function showPopup(row, modalId, contentId) {
                 ${modalId === 'profileModal' ? `
                     <div class="modal-content-info">
                         <div class="editable-field">
-                            <span class="modal-content-info-title">Identifiant :</span> <span contenteditable="true" class="editable-content" data-field="identifiant">${identifiant}</span>
+                            <span class="modal-content-info-title">Identifiant : </span> <span contenteditable="true" class="editable-content" data-field="identifiant">${identifiant}</span>
                         </div>
                         <div class="editable-field">
-                            <span class="modal-content-info-title">Nom :</span> <span contenteditable="true" class="editable-content" data-field="name">${name}</span>
+                            <span class="modal-content-info-title">Nom : </span> <span contenteditable="true" class="editable-content" data-field="name">${name}</span>
                         </div>
                         <div class="editable-field">
-                            <span class="modal-content-info-title">Titre :</span> <span contenteditable="true" class="editable-content" data-field="title">${profileTitle}</span>
+                            <span class="modal-content-info-title">Titre : </span> <span contenteditable="true" class="editable-content" data-field="title">${profileTitle}</span>
                         </div>
                     </div>
                 ` : modalId === 'experienceModal' ? `
                     <div class="modal-content-info">
                         <div class="editable-field">
-                            <span class="modal-content-info-title">Période :</span> <span contenteditable="true" class="editable-content" data-field="dates">${dates}</span>
+                            <span class="modal-content-info-title">Période : </span> <span contenteditable="true" class="editable-content" data-field="dates">${dates}</span>
                         </div>
                         <div class="editable-field">
-                            <span class="modal-content-info-title">Position :</span> <span contenteditable="true" class="editable-content" data-field="position">${position}</span>
+                            <span class="modal-content-info-title">Poste : </span> <span contenteditable="true" class="editable-content" data-field="position">${position}</span>
                         </div>
                         <div class="editable-field">
-                            <span class="modal-content-info-title">Entreprise :</span> <span contenteditable="true" class="editable-content" data-field="company">${company}</span>
+                            <span class="modal-content-info-title">Entreprise : </span> <span contenteditable="true" class="editable-content" data-field="company">${company}</span>
                         </div>
                         <div class="editable-field">
-                            <span class="modal-content-info-title">Localisation :</span> <span contenteditable="true" class="editable-content" data-field="location">${location}</span>
+                            <span class="modal-content-info-title">Localisation : </span> <span contenteditable="true" class="editable-content" data-field="location">${location}</span>
                         </div>
                         <div class="editable-field">
-                            <span class="modal-content-info-title">URL :</span> <span contenteditable="true" class="editable-content" data-field="url">${experienceUrl}</span>
+                            <span class="modal-content-info-title">URL : </span> <span contenteditable="true" class="editable-content" data-field="url">${experienceUrl}</span>
                         </div>
-                        <span class="modal-content-info-title">Description :</span>
+                        <div class="editable-field d-flex align-items-center">
+                            <span class="modal-content-info-title">Compétences : </span>
+                            <span data-field="skills" style="display: none">${experienceSkills}</span>
+                            <div id="skills-name"></div>
+                            <button id="experienceSkillsButton" class="btn btn-sm btn-outline-primary rounded-circle ms-2" style="width: 25px; height: 25px; padding: 0" onclick="addSkillToItem('${modalId}')">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <span class="modal-content-info-title">Description : </span>
                         <div contenteditable="true" class="editable-content" data-field="description">${experienceDescription}</div>
                     </div>
                 ` : modalId === 'projectModal' ? `
                     <div class="modal-content-info">
                         <div class="editable-field">
-                            <span class="modal-content-info-title">Titre :</span> <span contenteditable="true" class="editable-content" data-field="title">${projectTitle}</span>
+                            <span class="modal-content-info-title">Titre : </span> <span contenteditable="true" class="editable-content" data-field="title">${projectTitle}</span>
                         </div>
                         <div class="editable-field">
-                            <span class="modal-content-info-title">Image URL :</span> <span contenteditable="true" class="editable-content" data-field="image_url">${projectImageUrl}</span>
+                            <span class="modal-content-info-title">Image URL : </span> <span contenteditable="true" class="editable-content" data-field="image_url">${projectImageUrl}</span>
                         </div>
                         <div class="editable-field">
-                            <span class="modal-content-info-title">URL :</span> <span contenteditable="true" class="editable-content" data-field="url">${projectUrl}</span>
+                            <span class="modal-content-info-title">URL : </span> <span contenteditable="true" class="editable-content" data-field="url">${projectUrl}</span>
                         </div>
-                        <span class="modal-content-info-title">Description :</span>
+                        <div class="editable-field d-flex align-items-center">
+                            <span class="modal-content-info-title">Compétences : </span>
+                            <span data-field="skills" style="display: none">${projectSkills}</span>
+                            <div id="skills-name"></div>
+                            <button id="projectSkillsButton" class="btn btn-sm btn-outline-primary rounded-circle ms-2" style="width: 25px; height: 25px; padding: 0" onclick="addSkillToItem('${modalId}')">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <span class="modal-content-info-title">Description : </span>
                         <div contenteditable="true" class="editable-content" data-field="description">${projectDescription}</div>
                     </div>
-                ` : `<span class="modal-content-info-title">Contenu :</span>
+                ` : `<span class="modal-content-info-title">Contenu : </span>
                     <div contenteditable="true" class="editable-content" data-field="content">${content}</div>`}
             </div>
             <div class="w-100 text-end mb-3">
-                <button id="${modalId}ValidateButton" type="button" class="btn btn-primary" onclick="saveModalContent(this.closest('.modal'))">
+                <button id="${modalId}ValidateButton" type="button" class="btn btn-primary">
                     Enregistrer
                 </button>
             </div>
         `;
         document.body.appendChild(modal);
     }
+
+    if (modalId === 'experienceModal' || modalId === 'projectModal') {
+        updateSkillsDisplay(modalId);
+    }
+
+    document.getElementById(`${modalId}ValidateButton`).addEventListener('click', async function() {
+        const result = await saveModalContent(modal);
+
+        if (result.success) {
+            removeModal(modal);
+            refreshData();
+        }
+    });
+    
     if (!backdrop) {
         backdrop = document.createElement('div');
         backdrop.id = 'modalBackdrop';
@@ -233,10 +375,15 @@ function showPopup(row, modalId, contentId) {
 // Fonction pour supprimer une modal
 function removeModal(modal) {
     if (!modal) return;
+    
+    // Cacher la modale d'abord pour un meilleur feedback visuel
+    modal.style.display = 'none';
+
     const backdrop = document.getElementById('modalBackdrop');
     if (backdrop) {
         backdrop.remove();
     }
+
     modal.remove();
 }
 
@@ -253,10 +400,15 @@ async function saveModalContent(modal) {
     };
 
     // Récupérer les champs éditables
-    const editableFields = modal.querySelectorAll('.editable-content');
-    editableFields.forEach(field => {
-        requestData.data[field.dataset.field] = field.textContent.trim();
+    const fieldsWithDataField = modal.querySelectorAll('[data-field]');
+    fieldsWithDataField.forEach(field => {
+        if (field.dataset.field === 'skills') {
+            requestData.data[field.dataset.field] = field.textContent.trim().split(',').map(skill => skill.trim());
+        } else {
+            requestData.data[field.dataset.field] = field.textContent.trim();
+        }
     });
+
 
     requestData.data.profile = selectedProfile;
 
@@ -299,27 +451,21 @@ async function saveModalContent(modal) {
             const errorMsg = result.error.message || result.error;
             console.error('[saveModalContent] Erreur du serveur:', errorMsg);
             alert('Erreur: ' + errorMsg);
-            return;
         }
         
         if (result.success) {
             if (result.type === 'profile') {
                 selectedProfile = result.data.identifiant;
             }
-            // Cacher la modale d'abord pour un meilleur feedback visuel
-            modal.style.display = 'none';
-            // Supprimer la modale et son backdrop
-            setTimeout(() => {
-                removeModal(modal);
-            }, 300);
-            
-            refreshData();
-
         } else {
             console.error('[saveModalContent] Erreur du serveur:', result.error || 'Erreur inconnue');
         }
+
+        return result;
+
     } catch (error) {
         console.error('[saveModalContent] Erreur lors de la sauvegarde:', error);
+        return { error: error.message };
     }
 }
 
@@ -493,6 +639,7 @@ function updateProfileData(data) {
                             <th>Localisation</th>
                             <th>Description</th>
                             <th>URL</th>
+                            <th>Compétences</th>
                             <th class="text-end"></th>
                         </tr>
                     </thead>
@@ -506,13 +653,14 @@ function updateProfileData(data) {
 
         if (expTable) {
             expTable.innerHTML = data.experience.map(exp => `
-                <tr class="experience-row" data-id="${exp.id}" data-description="${exp.description}" data-dates="${exp.dates}" data-position="${exp.position}" data-company="${exp.company}" data-location="${exp.location}" data-url="${exp.url}">
+                <tr class="experience-row" data-id="${exp.id}" data-description="${exp.description}" data-dates="${exp.dates}" data-position="${exp.position}" data-company="${exp.company}" data-location="${exp.location}" data-url="${exp.url}" data-skills="${exp.skills}">
                     <td>${exp.dates}</td>
                     <td>${exp.position}</td>
                     <td>${exp.company}</td>
                     <td>${exp.location}</td>
                     <td>${exp.description}</td>
                     <td>${exp.url}</td>
+                    <td>${exp.skills ? exp.skills.length : 0}</td>
                     <td class="text-end">
                         <button class="btn btn-danger btn-sm delete-experience" data-id="${exp.id}">
                             <i class="fas fa-trash"></i>
@@ -546,6 +694,7 @@ function updateProfileData(data) {
                             <th>Description</th>
                             <th>Image URL</th>
                             <th>URL</th>
+                            <th>Compétences</th>
                             <th class="text-end"></th>
                         </tr>
                     </thead>
@@ -560,11 +709,12 @@ function updateProfileData(data) {
         if (projectsTable) {
             projectsTable.innerHTML = data.projects.map(project => `
                 <tr class="project-row" data-id="${project.id}" 
-                    data-title="${project.title}" data-content="${project.description}" data-image-url="${project.image_url}" data-url="${project.url}">
+                    data-title="${project.title}" data-content="${project.description}" data-image-url="${project.image_url}" data-url="${project.url}" data-skills="${project.skills}">
                     <td>${project.title}</td>
                     <td>${project.description}</td>
                     <td>${project.image_url}</td>
                     <td>${project.url}</td>
+                    <td>${project.skills ? project.skills.length : 0}</td>
                     <td class="text-end">
                         <button class="btn btn-danger btn-sm delete-project" data-id="${project.id}">
                             <i class="fas fa-trash"></i>
@@ -652,18 +802,20 @@ function loadProfileData(profileIdentifiant) {
                                         <th>Localisation</th>
                                         <th>Description</th>
                                         <th>URL</th>
+                                        <th>Compétences</th>
                                         <th class="text-end"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     ${data.experience.map(exp => `
-                                        <tr class="experience-row" data-id="${exp.id}" data-description="${exp.description}" data-dates="${exp.dates}" data-position="${exp.position}" data-company="${exp.company}" data-location="${exp.location}" data-url="${exp.url}">
+                                        <tr class="experience-row" data-id="${exp.id}" data-description="${exp.description}" data-dates="${exp.dates}" data-position="${exp.position}" data-company="${exp.company}" data-location="${exp.location}" data-url="${exp.url}" data-skills="${exp.skills}">
                                             <td>${exp.dates}</td>
                                             <td>${exp.position}</td>
                                             <td>${exp.company}</td>
                                             <td>${exp.location}</td>
                                             <td>${exp.description}</td>
                                             <td>${exp.url}</td>
+                                            <td>${exp.skills ? exp.skills.length : 0}</td>
                                             <td class="text-end">
                                                 <button class="btn btn-danger btn-sm delete-experience" data-id="${exp.id}">
                                                     <i class="fas fa-trash"></i>
@@ -696,16 +848,18 @@ function loadProfileData(profileIdentifiant) {
                                         <th>Description</th>
                                         <th>Image URL</th>
                                         <th>URL</th>
+                                        <th>Compétences</th>
                                         <th class="text-end"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     ${data.projects.map(project => `
-                                        <tr class="project-row" data-id="${project.id}" data-title="${project.title}" data-description="${project.description}" data-image-url="${project.image_url}" data-url="${project.url}">
+                                        <tr class="project-row" data-id="${project.id}" data-title="${project.title}" data-description="${project.description}" data-image-url="${project.image_url}" data-url="${project.url}" data-skills="${project.skills}">
                                             <td>${project.title}</td>
                                             <td>${project.description}</td>
                                             <td>${project.image_url}</td>
                                             <td>${project.url}</td>
+                                            <td>${project.skills ? project.skills.length : 0}</td>
                                             <td class="text-end">
                                                 <button class="btn btn-danger btn-sm delete-project" data-id="${project.id}">
                                                     <i class="fas fa-trash"></i>
@@ -768,8 +922,7 @@ function handleProfileSelection(row, profileIdentifiant) {
         document.querySelector('#profile-data').innerHTML = `
             <div class="text-muted text-center py-5">
                 Sélectionnez un profil pour voir ses données
-            </div>
-        `;
+            </div>`;
         selectedProfile = null;
         return false;
     }

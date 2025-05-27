@@ -5,10 +5,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException
-from pierrpgd.models import Profile, About, Experience, Project
+from pierrpgd.models import Profile, About, Experience, Project, Skill
 from selenium.webdriver.common.keys import Keys
 from django.test import Client
 from django.conf import settings
+import time
 
 class BaseTest(LiveServerTestCase):
     fixtures = ['test_fixtures.json']
@@ -327,6 +328,7 @@ class PopupTest(BaseTest):
         location = modal_content.find_element(By.CSS_SELECTOR, '[data-field="location"]').text
         description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
         experience_url = modal_content.find_element(By.CSS_SELECTOR, '[data-field="url"]').text
+        skills = modal_content.find_element(By.ID, 'skills-name').text
 
         self.assertEqual(dates, '2023-2024')
         self.assertEqual(position, 'Test Position')
@@ -334,6 +336,7 @@ class PopupTest(BaseTest):
         self.assertEqual(description, 'Test Description')
         self.assertEqual(location, 'Test Location')
         self.assertEqual(experience_url, 'https://testurl.com')
+        self.assertEqual(skills, 'Test Skill, Second Skill')
         
         # Fermer la popup
         close_button = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-header button.close')
@@ -377,6 +380,7 @@ class PopupTest(BaseTest):
         location = modal_content.find_element(By.CSS_SELECTOR, '[data-field="location"]').text
         description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
         experience_url = modal_content.find_element(By.CSS_SELECTOR, '[data-field="url"]').text
+        skills = modal_content.find_element(By.ID, 'skills-name').text
 
         self.assertEqual(dates, '2022-2023')
         self.assertEqual(position, 'Test Position 2')
@@ -384,6 +388,7 @@ class PopupTest(BaseTest):
         self.assertEqual(description, 'Test Description 2')
         self.assertEqual(location, 'Test Location 2')
         self.assertEqual(experience_url, 'https://testurl2.com')
+        self.assertEqual(skills, 'Test Skill')
         
         # Vérifier les informations de l'expérience
         info = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-content-info')
@@ -440,12 +445,14 @@ class PopupTest(BaseTest):
         description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
         image_url = modal_content.find_element(By.CSS_SELECTOR, '[data-field="image_url"]').text
         url = modal_content.find_element(By.CSS_SELECTOR, '[data-field="url"]').text
+        skills = modal_content.find_element(By.ID, 'skills-name').text
 
         self.assertEqual(title, 'Test Project')
         self.assertEqual(description, 'Test Project Description')
         self.assertEqual(image_url, '/static/portfolio-example.png')
         self.assertEqual(url, 'https://testurl3.com')
-
+        self.assertEqual(skills, 'Second Skill, Third Skill')
+    
         # Vérifier le titre du projet
         title = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-content-info')
         self.assertIn(self.projects[0].title, title.text)
@@ -467,7 +474,7 @@ class PopupTest(BaseTest):
         with self.assertRaises(NoSuchElementException):
             self.browser.find_element(By.ID, 'projectModal')
         
-        # Trouver la ligne du tableau Projets pour la deuxième expérience
+        # Trouver la ligne du tableau Projets pour la deuxième ligne
         project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.projects[1].title}')]/..")
 
         # Effectuer un double clic
@@ -490,11 +497,13 @@ class PopupTest(BaseTest):
         description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
         image_url = modal_content.find_element(By.CSS_SELECTOR, '[data-field="image_url"]').text
         url = modal_content.find_element(By.CSS_SELECTOR, '[data-field="url"]').text
+        skills = modal_content.find_element(By.ID, 'skills-name').text
 
         self.assertEqual(title, 'Second Project')
         self.assertEqual(description, 'Second Project Description')
         self.assertEqual(image_url, '')
         self.assertEqual(url, 'https://testurl4.com')
+        self.assertEqual(skills, 'Second Skill')
         
         # Fermer la popup
         close_button = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-header button.close')
@@ -787,6 +796,121 @@ class ModifyAndSaveTest(BaseTest):
         )
         self.assertTrue(updated_row.is_displayed())
 
+    def test_modify_and_save_experience_skills(self):
+        """
+        Teste la modification et le sauvegarde des compétences d'une expérience via l'interface
+        1. Ouvre la page data_display
+        2. Double clique sur une expérience
+        3. Ajoute une compétence
+        4. Valide et vérifie l'affichage
+        """
+
+        new_skill = Skill(
+            category='New special category',
+            name='New special name'
+        )
+
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.ID, "experience-table"))
+        )
+        
+        # Trouver la ligne du tableau Projects
+        experience_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), '{self.experiences[0].company}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(experience_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'experienceModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'experienceModal')
+        self.assertTrue(modal.is_displayed())
+        
+        # Ouvrir la popup de création de compétence
+        skills_field = modal.find_element(By.ID, "experienceSkillsButton")
+        self.browser.execute_script("arguments[0].click();", skills_field)
+
+        # Attendre que la modal soit visible
+        skillModal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "skillModal"))
+        )
+
+        # Remplir le champ catégorie
+        category_field = skillModal.find_element(By.CSS_SELECTOR, "[data-field='category']")
+        category_field.send_keys(new_skill.category)
+
+        # Remplir le champ compétence
+        skill_field = skillModal.find_element(By.CSS_SELECTOR, "[data-field='name']")
+        skill_field.send_keys(new_skill.name)
+
+        # Cliquer sur valider
+        validate_button = skillModal.find_element(By.ID, "skillModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+
+        max_attempts = 50  # 50 * 0.2s = 10s max
+        attempts = 0
+        while attempts < max_attempts:
+            attempts += 1
+            try:
+                new_skill = Skill.objects.get(category=new_skill.category, name=new_skill.name)
+                if new_skill:
+                    break
+            except:
+                time.sleep(0.2)
+            if attempts >= max_attempts:
+                self.fail("Timeout waiting for skill creation")
+
+        # Vérifier l'affichage de la nouvelle compétence
+        WebDriverWait(self.browser, 10).until(
+            EC.text_to_be_present_in_element(
+                (By.ID, "skills-name"), 
+                new_skill.name
+            )
+        )
+
+        skill_name = self.browser.find_element(By.ID, "skills-name")
+        self.assertIn(new_skill.name, skill_name.text)
+
+        # Cliquer sur valider
+        validate_button = modal.find_element(By.ID, "experienceModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#experience-table tbody"))
+        )
+
+        # Vérifier l'affichage dans le tableau
+        WebDriverWait(self.browser, 20).until(
+            EC.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, "#experience-table tbody"), 
+                str(self.experiences[0].skills.all().count())
+            )
+        )
+
+        time.sleep(0.5)
+
+        # Vérification finale
+        rows = self.browser.find_elements(By.CSS_SELECTOR, "#experience-table tbody tr")
+        new_row = None
+        for row in rows:
+            if row.find_elements(By.CSS_SELECTOR, "td")[4].text == self.experiences[0].description:
+                new_row = row
+                break
+        if new_row:
+            self.assertEqual(str(self.experiences[0].skills.all().count()), new_row.find_elements(By.CSS_SELECTOR, "td")[6].text)
+        else:
+            self.fail("New row not found")
+
     def test_modify_and_save_project(self):
         """Teste la modification et la sauvegarde d'un élément Project"""
 
@@ -873,6 +997,122 @@ class ModifyAndSaveTest(BaseTest):
                 f"//div[@id='profile-data']//table[@id='projects-table']//td[contains(., '{new_content.title}')]"))
         )
         self.assertTrue(updated_row.is_displayed())
+
+    def test_modify_and_save_project_skills(self):
+        """
+        Teste la modification et le sauvegarde des compétences d'un projet via l'interface
+        1. Ouvre la page data_display
+        2. Double clique sur un projet
+        3. Ajoute une compétence
+        4. Valide et vérifie l'affichage
+        """
+
+        new_skill = Skill(
+            category='New special category',
+            name='New special name'
+        )
+
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.ID, "projects-table"))
+        )
+        
+        # Trouver la ligne du tableau Projects
+        project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.projects[0].title}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(project_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'projectModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'projectModal')
+        self.assertTrue(modal.is_displayed())
+        
+        # Ouvrir la popup de création de compétence
+        skills_field = modal.find_element(By.ID, "projectSkillsButton")
+        self.browser.execute_script("arguments[0].click();", skills_field)
+
+        # Attendre que la modal soit visible
+        skillModal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "skillModal"))
+        )
+
+        # Remplir le champ catégorie
+        category_field = skillModal.find_element(By.CSS_SELECTOR, "[data-field='category']")
+        category_field.send_keys(new_skill.category)
+
+        # Remplir le champ compétence
+        skill_field = skillModal.find_element(By.CSS_SELECTOR, "[data-field='name']")
+        skill_field.send_keys(new_skill.name)
+
+        # Cliquer sur valider
+        validate_button = skillModal.find_element(By.ID, "skillModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+
+        max_attempts = 50  # 50 * 0.2s = 10s max
+        attempts = 0
+        while attempts < max_attempts:
+            attempts += 1
+            try:
+                new_skill = Skill.objects.get(category=new_skill.category, name=new_skill.name)
+                if new_skill:
+                    break
+            except:
+                time.sleep(0.2)
+            if attempts >= max_attempts:
+                self.fail("Timeout waiting for skill creation")
+
+        # Vérifier l'affichage de la nouvelle compétence
+        WebDriverWait(self.browser, 10).until(
+            EC.text_to_be_present_in_element(
+                (By.ID, "skills-name"), 
+                new_skill.name
+            )
+        )
+
+        skill_name = self.browser.find_element(By.ID, "skills-name")
+        self.assertIn(new_skill.name, skill_name.text)
+
+        # Cliquer sur valider
+        validate_button = modal.find_element(By.ID, "projectModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#projects-table tbody"))
+        )
+
+        # Vérifier l'affichage dans le tableau
+        WebDriverWait(self.browser, 20).until(
+            EC.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, "#projects-table tbody"), 
+                str(self.projects[0].skills.all().count())
+            )
+        )
+
+        time.sleep(0.5)
+
+        # Vérification finale
+        rows = self.browser.find_elements(By.CSS_SELECTOR, "#projects-table tbody tr")
+        new_row = None
+        for row in rows:
+            if row.find_elements(By.CSS_SELECTOR, "td")[0].text == self.projects[0].title:
+                new_row = row
+                break
+        if new_row:
+            self.assertEqual(str(self.projects[0].skills.all().count()), new_row.find_elements(By.CSS_SELECTOR, "td")[4].text)
+        else:
+            self.fail("New row not found")
+
 
 class AddElementTest(BaseTest):
 
@@ -1023,6 +1263,8 @@ class AddElementTest(BaseTest):
                 "Nouveau contenu de test"
             )
         )
+
+        time.sleep(0.2)
         
         # Vérification finale
         rows = self.browser.find_elements(By.CSS_SELECTOR, "#about-table tbody tr")
@@ -1038,6 +1280,10 @@ class AddElementTest(BaseTest):
         """
 
         # Créer un nouveau contenu pour l'expérience
+        new_skill = Skill.objects.create(
+            category='New Category',
+            name='New Skill'
+        )
         new_content = Experience(
             profile=self.profile,
             dates="2024-2025",
@@ -1045,7 +1291,7 @@ class AddElementTest(BaseTest):
             position="Nouveau poste",
             location="Nouveau lieu",
             description="Nouvelle description",
-            url="https://nouvelleurl.com"
+            url="https://nouvelleurl.com",
         )
         
         # Sélectionner le profil
@@ -1097,6 +1343,48 @@ class AddElementTest(BaseTest):
         # Remplir le champ url
         url_field = modal.find_element(By.CSS_SELECTOR, "[data-field='url']")
         url_field.send_keys(new_content.url)
+
+        # Ouvrir la popup de création de compétence
+        skills_field = modal.find_element(By.ID, "experienceSkillsButton")
+        self.browser.execute_script("arguments[0].click();", skills_field)
+
+        # Attendre que la modal soit visible
+        skillModal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "skillModal"))
+        )
+
+        # Remplir le champ catégorie
+        category_field = skillModal.find_element(By.CSS_SELECTOR, "[data-field='category']")
+        category_field.send_keys(new_skill.category)
+
+        # Remplir le champ compétence
+        skill_field = skillModal.find_element(By.CSS_SELECTOR, "[data-field='name']")
+        skill_field.send_keys(new_skill.name)
+
+        # Cliquer sur valider
+        validate_button = skillModal.find_element(By.ID, "skillModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+
+        max_attempts = 50  # 50 * 0.2s = 10s max
+        attempts = 0
+        while attempts < max_attempts:
+            attempts += 1
+            try:
+                new_skill = Skill.objects.get(category=new_skill.category, name=new_skill.name)
+                if new_skill:
+                    break
+            except:
+                time.sleep(0.2)
+            if attempts >= max_attempts:
+                self.fail("Timeout waiting for skill creation")
+
+        # Vérifier l'affichage de la nouvelle compétence
+        WebDriverWait(self.browser, 20).until(
+            EC.text_to_be_present_in_element(
+                (By.ID, "skills-name"), 
+                str(new_skill.name)
+            )
+        )
         
         # Cliquer sur valider
         validate_button = modal.find_element(By.ID, "experienceModalValidateButton")
@@ -1109,15 +1397,35 @@ class AddElementTest(BaseTest):
                 new_content.description
             )
         )
+
+        # Vérifier l'affichage dans le tableau
+        WebDriverWait(self.browser, 20).until(
+            EC.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, "#experience-table tbody"), 
+                new_content.description
+            )
+        )
         
+        time.sleep(0.5)
+        
+
         # Vérification finale
         rows = self.browser.find_elements(By.CSS_SELECTOR, "#experience-table tbody tr")
-        self.assertTrue(any(new_content.description in row.text for row in rows))
-        self.assertTrue(any(new_content.dates in row.text for row in rows))
-        self.assertTrue(any(new_content.company in row.text for row in rows))
-        self.assertTrue(any(new_content.position in row.text for row in rows))
-        self.assertTrue(any(new_content.location in row.text for row in rows))
-        self.assertTrue(any(new_content.url in row.text for row in rows))
+        new_row = None
+        for row in rows:
+            if row.find_elements(By.CSS_SELECTOR, "td")[4].text == new_content.description:
+                new_row = row
+                break
+        if new_row:
+            self.assertEqual(new_content.dates, new_row.find_elements(By.CSS_SELECTOR, "td")[0].text)
+            self.assertEqual(new_content.position, new_row.find_elements(By.CSS_SELECTOR, "td")[1].text)
+            self.assertEqual(new_content.company, new_row.find_elements(By.CSS_SELECTOR, "td")[2].text)
+            self.assertEqual(new_content.location, new_row.find_elements(By.CSS_SELECTOR, "td")[3].text)
+            self.assertEqual(new_content.description, new_row.find_elements(By.CSS_SELECTOR, "td")[4].text)
+            self.assertEqual(new_content.url, new_row.find_elements(By.CSS_SELECTOR, "td")[5].text)
+            self.assertEqual('1', new_row.find_elements(By.CSS_SELECTOR, "td")[6].text)
+        else:
+            self.fail("New row not found")
 
     def test_add_project_section(self):
         """
@@ -1128,6 +1436,10 @@ class AddElementTest(BaseTest):
         4. Valide et vérifie l'affichage
         """
 
+        new_skill = Skill.objects.create(
+            category='New Category',
+            name='New Skill'
+        )
         new_content = Project(
             profile=self.profile,
             title='New Project',
@@ -1179,10 +1491,57 @@ class AddElementTest(BaseTest):
         # Remplir le champ url
         url_field = modal.find_element(By.CSS_SELECTOR, "[data-field='url']")
         url_field.send_keys(new_content.url)
-        
+
+        # Ouvrir la popup de création de compétence
+        skills_field = modal.find_element(By.ID, "projectSkillsButton")
+        self.browser.execute_script("arguments[0].click();", skills_field)
+
+        # Attendre que la modal soit visible
+        skillModal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "skillModal"))
+        )
+
+        # Remplir le champ catégorie
+        category_field = skillModal.find_element(By.CSS_SELECTOR, "[data-field='category']")
+        category_field.send_keys(new_skill.category)
+
+        # Remplir le champ compétence
+        skill_field = skillModal.find_element(By.CSS_SELECTOR, "[data-field='name']")
+        skill_field.send_keys(new_skill.name)
+
+        # Cliquer sur valider
+        validate_button = skillModal.find_element(By.ID, "skillModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+
+        max_attempts = 50  # 50 * 0.2s = 10s max
+        attempts = 0
+        while attempts < max_attempts:
+            attempts += 1
+            try:
+                new_skill = Skill.objects.get(category=new_skill.category, name=new_skill.name)
+                if new_skill:
+                    break
+            except:
+                time.sleep(0.2)
+            if attempts >= max_attempts:
+                self.fail("Timeout waiting for skill creation")
+
+        # Vérifier l'affichage de la nouvelle compétence
+        WebDriverWait(self.browser, 20).until(
+            EC.text_to_be_present_in_element(
+                (By.ID, "skills-name"), 
+                str(new_skill.name)
+            )
+        )
+
         # Cliquer sur valider
         validate_button = modal.find_element(By.ID, "projectModalValidateButton")
         self.browser.execute_script("arguments[0].click();", validate_button)
+
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#projects-table tbody"))
+        )
 
         # Vérifier l'affichage dans le tableau
         WebDriverWait(self.browser, 20).until(
@@ -1192,13 +1551,23 @@ class AddElementTest(BaseTest):
             )
         )
         
+        time.sleep(0.5)
+        
         # Vérification finale
         rows = self.browser.find_elements(By.CSS_SELECTOR, "#projects-table tbody tr")
-        self.assertTrue(any(new_content.title in row.text for row in rows))
-        self.assertTrue(any(new_content.description in row.text for row in rows))
-        self.assertTrue(any(new_content.image_url in row.text for row in rows))
-        self.assertTrue(any(new_content.url in row.text for row in rows))
-
+        new_row = None
+        for row in rows:
+            if row.find_elements(By.CSS_SELECTOR, "td")[0].text == new_content.title:
+                new_row = row
+                break
+        if new_row:
+            self.assertEqual(new_content.description, new_row.find_elements(By.CSS_SELECTOR, "td")[1].text)
+            self.assertEqual(new_content.image_url, new_row.find_elements(By.CSS_SELECTOR, "td")[2].text)
+            self.assertEqual(new_content.url, new_row.find_elements(By.CSS_SELECTOR, "td")[3].text)
+            self.assertEqual('1', new_row.find_elements(By.CSS_SELECTOR, "td")[4].text)
+        else:
+            self.fail("New row not found")
+        
 class DeleteElementTest(BaseTest):
 
     def setUp(self):

@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, Http404
-from .models import Profile, About, Experience, Project
+from .models import Profile, About, Experience, Project, Skill
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -14,6 +14,7 @@ def portfolio(request, identifiant):
             about = profile.about.all()
             experience = profile.experience.all()
             projects = profile.projects.all()
+            skills = Skill.objects.all()
         except Profile.DoesNotExist:
             raise Http404("Le profil demandé n'existe pas")
 
@@ -22,6 +23,7 @@ def portfolio(request, identifiant):
             'about': about,
             'experience': experience,
             'projects': projects,
+            'skills': skills,
         }
         
         return render(request, 'portfolio.html', context)
@@ -47,6 +49,7 @@ def load_data(request):
                 abouts = profile.about.all()
                 experiences = profile.experience.all()
                 projects = profile.projects.all()
+                skills = Skill.objects.all()
                 
                 data = {
                     'profile': {
@@ -73,7 +76,8 @@ def load_data(request):
                             'company': exp.company if exp.company else '',
                             'location': exp.location if exp.location else '',
                             'description': exp.description if exp.description else '',
-                            'url': exp.url if exp.url else ''
+                            'url': exp.url if exp.url else '',
+                            'skills': [skill.id for skill in exp.skills.all()]
                         } for exp in experiences
                     ],
                     'projects': [
@@ -83,10 +87,20 @@ def load_data(request):
                             'title': project.title if project.title else '',
                             'image_url': project.image_url if project.image_url else '',
                             'description': project.description if project.description else '',
-                            'url': project.url if project.url else ''
+                            'url': project.url if project.url else '',
+                            'skills': [skill.id for skill in project.skills.all()]
                         } for project in projects
+                    ],
+                    'skills': [
+                        {
+                            'id': skill.id,
+                            'category': skill.category if skill.category else '',
+                            'name': skill.name if skill.name else ''
+                        } for skill in skills
                     ]
                 }
+
+                # print(data)
                 
                 return JsonResponse(data)
             except Profile.DoesNotExist:
@@ -109,7 +123,7 @@ def save_data(request):
             
             # Gestion du profil
             profile_id = content.get('profile')
-            if isNew and modalId != 'profileModal':
+            if isNew and modalId not in ['profileModal', 'skillModal']:
                 if not profile_id:
                     return JsonResponse({'success': False, 'error': 'Profile ID manquant'}, status=400)
                 else:
@@ -138,7 +152,6 @@ def save_data(request):
                     obj.identifiant = content.get('identifiant', obj.identifiant)
                     obj.name = content.get('name', obj.name)
                     obj.title = content.get('title', obj.title)
-
             elif modalId == 'aboutModal':
                 type = 'about'
                 if isNew:
@@ -158,6 +171,7 @@ def save_data(request):
                         url=content.get('url', ''),
                         profile=profile
                     )
+                    skills = content.get('skills', [])
                 else:
                     obj = Experience.objects.get(id=content.get('id'))
                     obj.dates = content.get('dates', obj.dates)
@@ -166,6 +180,11 @@ def save_data(request):
                     obj.location = content.get('location', obj.location)
                     obj.description = content.get('description', obj.description)
                     obj.url = content.get('url', obj.url)
+                    skills = content.get('skills', [])
+                if skills != []:
+                    obj.skills.clear()
+                    for skill_id in skills:
+                        obj.skills.add(skill_id)
             elif modalId == 'projectModal':
                 type = 'project'
                 if isNew:
@@ -176,12 +195,31 @@ def save_data(request):
                         url=content.get('url', ''),
                         profile=profile
                     )
+                    skills = content.get('skills', [])
                 else:
                     obj = Project.objects.get(id=content.get('id'))
                     obj.title = content.get('title', obj.title)
                     obj.description = content.get('description', obj.description)
                     obj.image_url = content.get('image_url', obj.image_url)
                     obj.url = content.get('url', obj.url)
+                    skills = content.get('skills', [])
+                if skills != []:
+                    obj.skills.clear()
+                    for skill_id in skills:
+                        obj.skills.add(skill_id)
+            elif modalId == 'skillModal':
+                type = 'skill'
+                if not Skill.objects.filter(name=content.get('name'), category=content.get('category')).exists():
+                    obj = Skill.objects.create(
+                        category=content.get('category', ''),
+                        name=content.get('name', '')
+                    )
+                else:
+                    obj = Skill.objects.get(
+                        category=content.get('category', ''),
+                        name=content.get('name', '')
+                    )
+                
             else:
                 return JsonResponse({'success': False, 'error': 'Type de modal inconnu'}, status=400)
 

@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.db import IntegrityError
-from pierrpgd.models import Profile, About, Experience, Project
+from django.core.exceptions import ValidationError
+from pierrpgd.models import Profile, About, Experience, Project, Skill
 
 class BaseTest(TestCase):
     fixtures = ['test_fixtures.json']
@@ -12,6 +13,7 @@ class BaseTest(TestCase):
         cls.abouts = About.objects.filter(profile=cls.profile)
         cls.experiences = Experience.objects.filter(profile=cls.profile)
         cls.projects = Project.objects.filter(profile=cls.profile)
+        cls.skills = Skill.objects.all()
 
 class ProfileModelTest(BaseTest):
     def test_profile_creation(self):
@@ -96,7 +98,11 @@ class ExperienceModelTest(BaseTest):
         self.assertEqual(self.experiences[0].description, 'Test Description')
         self.assertEqual(self.experiences[0].order, 0)
         self.assertEqual(self.experiences[0].url, 'https://testurl.com')
-
+        self.assertEqual(self.experiences[0].skills.count(), 2)
+        skills = list(self.experiences[0].skills.all())
+        self.assertIn(self.skills[0], skills)
+        self.assertIn(self.skills[1], skills)
+        
         self.assertEqual(self.experiences[1].dates, '2022-2023')
         self.assertEqual(self.experiences[1].company, 'Test Company 2')
         self.assertEqual(self.experiences[1].position, 'Test Position 2')
@@ -104,6 +110,9 @@ class ExperienceModelTest(BaseTest):
         self.assertEqual(self.experiences[1].description, 'Test Description 2')
         self.assertEqual(self.experiences[1].order, 1)
         self.assertEqual(self.experiences[1].url, 'https://testurl2.com')
+        self.assertEqual(self.experiences[1].skills.count(), 1)
+        skills = list(self.experiences[1].skills.all())
+        self.assertIn(self.skills[0], skills)
 
     def test_experience_string_representation(self):
         """Test la représentation en chaîne de caractères"""
@@ -139,11 +148,18 @@ class ProjectModelTest(BaseTest):
         self.assertEqual(self.projects[0].image_url, '/static/portfolio-example.png')
         self.assertEqual(self.projects[0].order, 0)
         self.assertEqual(self.projects[0].url, 'https://testurl3.com')
+        self.assertEqual(self.projects[0].skills.count(), 2)
+        skills = list(self.projects[0].skills.all())
+        self.assertIn(self.skills[1], skills)
+        self.assertIn(self.skills[2], skills)
 
         self.assertEqual(self.projects[1].title, 'Second Project')
         self.assertEqual(self.projects[1].description, 'Second Project Description')
         self.assertEqual(self.projects[1].order, 1)
         self.assertEqual(self.projects[1].url, 'https://testurl4.com')
+        self.assertEqual(self.projects[1].skills.count(), 1)
+        skills = list(self.projects[1].skills.all())
+        self.assertIn(self.skills[1], skills)
 
     def test_project_string_representation(self):
         """Test la représentation en chaîne de caractères"""
@@ -168,3 +184,49 @@ class ProjectModelTest(BaseTest):
         self.profile.delete()
         with self.assertRaises(Project.DoesNotExist):
             Project.objects.get(profile=profile_id)
+
+class SkillModelTest(BaseTest):
+    def test_skill_creation(self):
+        """Test la création d'une compétence"""
+        self.assertEqual(self.skills[0].name, 'Test Skill')
+        self.assertEqual(self.skills[0].category, 'Test Category')
+
+        self.assertEqual(self.skills[1].name, 'Second Skill')
+        self.assertEqual(self.skills[1].category, 'Second Category')
+    
+    def test_skill_string_representation(self):
+        """Test la représentation en chaîne de caractères"""
+        self.assertEqual(str(self.skills[0]), 'Test Category - Test Skill')
+        self.assertEqual(str(self.skills[1]), 'Second Category - Second Skill')
+    
+    def test_skill_update(self):
+        """Test la modification d'une compétence"""
+        skill = self.skills[0]
+        skill.name = 'Compétence Modifiée'
+        skill.save()
+        
+        updated_skill = Skill.objects.get(pk=skill.pk)
+        self.assertEqual(updated_skill.name, 'Compétence Modifiée')
+    
+    def test_skill_deletion(self):
+        """Test la suppression d'une compétence"""
+        initial_count = Skill.objects.count()
+        self.skills[0].delete()
+        self.assertEqual(Skill.objects.count(), initial_count - 1)
+    
+    def test_skill_required_fields(self):
+        """Test que les champs requis sont bien validés"""        
+        # Test category vide
+        with self.assertRaises(ValidationError):
+            skill = Skill(category='', name='Test')
+            skill.full_clean()
+        
+        # Test name vide
+        with self.assertRaises(ValidationError):
+            skill = Skill(category='Test', name='')
+            skill.full_clean()
+        
+        # Test les deux champs vides
+        with self.assertRaises(ValidationError):
+            skill = Skill(category='', name='')
+            skill.full_clean()
