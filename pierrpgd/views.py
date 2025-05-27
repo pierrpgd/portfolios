@@ -12,8 +12,8 @@ def portfolio(request, identifiant):
         try:
             profile = Profile.objects.get(identifiant=identifiant)
             about = profile.about.all()
-            experience = profile.experience.all()
-            projects = profile.projects.all()
+            experience = profile.experience.all().prefetch_related('skills')
+            projects = profile.projects.all().prefetch_related('skills')
             skills = Skill.objects.all()
         except Profile.DoesNotExist:
             raise Http404("Le profil demandé n'existe pas")

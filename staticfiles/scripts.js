@@ -584,12 +584,6 @@ function updateProfileData(data) {
 
             aboutTable.innerHTML = `
                 <table id="about-table" class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Contenu</th>
-                            <th class="text-end"></th>
-                        </tr>
-                    </thead>
                     <tbody>
                     </tbody>
                 </table>
@@ -756,12 +750,6 @@ function loadProfileData(profileIdentifiant) {
                     <div id="about-table-container" class="card-body">
                         ${data.about.length > 0 ? `
                             <table id="about-table" class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Contenu</th>
-                                        <th class="text-end"></th>
-                                    </tr>
-                                </thead>
                                 <tbody>
                                     ${data.about.map(about => `
                                         <tr class="about-row" data-id="${about.id}" data-content="${about.content}">

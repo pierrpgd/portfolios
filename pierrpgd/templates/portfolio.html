@@ -147,6 +147,27 @@
             opacity: 0.6;
             transition: opacity 0.3s ease;
         }
+        .job-skills {
+            text-align: left;
+        }
+        .skill-badge {
+            display: inline-block;
+            position: relative;
+            margin-top: 10px;
+            margin-right: 2px;
+            padding: 6px 12px;
+            border-radius: 60px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .skill-badge[category="Développement"]{
+            background-color: rgba(94, 231, 212, 0.15);
+            color: #5ee7d4;
+        }
+        .skill-badge[category="Outils"]{
+            background-color: rgba(254, 209, 140, 0.15);
+            color: #FED18C;
+        }
 
         /* Style de la section expérience */
 
@@ -337,6 +358,13 @@
                                             <span class="location">{{ exp.location }}</span>
                                         </div>
                                         <div class="job-description">{{ exp.description|safe }}</div>
+                                        {% if exp.skills.all %}
+                                            <div class="job-skills">
+                                                {% for skill in exp.skills.all %}
+                                                    <span class="skill-badge" category="{{ skill.category }}">{{ skill.name }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </a>
@@ -354,8 +382,15 @@
                                         </div>
                                     {% endif %}
                                     <div class="project-content">
-                                        <p class="project-title">{{ project.title }}</p>
-                                        <p class="project-description">{{ project.description }}</p>
+                                        <div class="project-title">{{ project.title }}</div>
+                                        <div class="project-description">{{ project.description }}</div>
+                                        {% if project.skills.all %}
+                                            <div class="job-skills">
+                                                {% for skill in project.skills.all %}
+                                                    <span class="skill-badge" category="{{ skill.category }}">{{ skill.name }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </a>

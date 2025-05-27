@@ -62,30 +62,37 @@ class PortfolioViewTest(BaseTest):
         """Teste l'affichage des expériences"""
         experience_section = self.soup.find(id="experience")
         self.assertIsNotNone(experience_section)
-        
-        exp_text = experience_section.get_text(strip=True, separator='.')
-        self.assertIn(self.experiences[0].dates, exp_text)
-        self.assertIn(self.experiences[0].position, exp_text)
-        self.assertIn(self.experiences[0].company, exp_text)
-        self.assertIn(self.experiences[0].description, exp_text)
 
         exp_url = experience_section.find('a')
         self.assertIsNotNone(exp_url)
         self.assertEqual(exp_url['href'], self.experiences[0].url)
 
+        rows = experience_section.find_all('div', class_='row')
+        
+        self.assertEqual(self.experiences[0].dates, rows[0].find('div', class_='job-dates').text.strip())
+        self.assertEqual(self.experiences[0].position, rows[0].find('div', class_='job-title').text.strip())
+        self.assertEqual(self.experiences[0].location, rows[0].find('div', class_='job-subtitle').find('span', class_='location').text.strip())
+        self.assertEqual(self.experiences[0].company, rows[0].find('div', class_='job-subtitle').find('span', class_='company').text.strip())
+        self.assertEqual(self.experiences[0].description, rows[0].find('div', class_='job-description').text.strip())
+
+        skills = [skill.name for skill in self.experiences[0].skills.all()]
+        self.assertEqual(skills, [exp.text for exp in rows[0].find_all('span', class_='skill-badge')])
+
     def test_projects_display(self):
         """Teste l'affichage des projets"""
         projects_section = self.soup.find(id="projects")
         self.assertIsNotNone(projects_section)
-        
-        # Vérifier que les informations du projet sont présentes
-        project_title = projects_section.find_all('p')[0].text
-        project_description = projects_section.find_all('p')[1].text
+
         project_url = projects_section.find('a')['href']
-        
-        self.assertEqual(project_title.strip(), self.projects[0].title)
-        self.assertEqual(project_description.strip(), self.projects[0].description)
         self.assertEqual(project_url, self.projects[0].url)
+        
+        rows = projects_section.find_all('div', class_='row')
+        
+        self.assertEqual(self.projects[0].title, rows[0].find('div', class_='project-title').text.strip())
+        self.assertEqual(self.projects[0].description, rows[0].find('div', class_='project-description').text.strip())
+        
+        skills = [skill.name for skill in self.projects[0].skills.all()]
+        self.assertEqual(skills, [skill.text for skill in rows[0].find_all('span', class_='skill-badge')])
 
     def test_nonexistent_profile(self):
         """Test que l'accès à un profil inexistant renvoie une erreur 404"""
