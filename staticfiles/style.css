@@ -200,10 +200,38 @@
 /* Style pour les modals de skills */
 .skill-badge {
     display: inline-block;
+    position: relative;
     padding: 8px 12px;
     border-radius: 12px;
-    background-color: #f0f0f079;
+    background-color: rgba(200, 200, 200, 0.5);
     margin: 4px;
+    cursor: pointer;
+}
+
+.skill-badge .deleteSkill {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: none;  /* Caché par défaut */
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    padding: 0;
+}
+
+.skill-badge:hover .deleteSkill {
+    display: flex;  /* Affiché au survol */
+}
+
+.skill-badge .deleteSkill:hover {
+    background-color: #c82333;
 }
 
 @media (max-width: 576px) {

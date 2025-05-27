@@ -328,7 +328,8 @@ class PopupTest(BaseTest):
         location = modal_content.find_element(By.CSS_SELECTOR, '[data-field="location"]').text
         description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
         experience_url = modal_content.find_element(By.CSS_SELECTOR, '[data-field="url"]').text
-        skills = modal_content.find_element(By.ID, 'skills-name').text
+        skills_elements = modal_content.find_elements(By.CLASS_NAME, 'skill-badge')
+        skills = [skill.text for skill in skills_elements]
 
         self.assertEqual(dates, '2023-2024')
         self.assertEqual(position, 'Test Position')
@@ -336,7 +337,7 @@ class PopupTest(BaseTest):
         self.assertEqual(description, 'Test Description')
         self.assertEqual(location, 'Test Location')
         self.assertEqual(experience_url, 'https://testurl.com')
-        self.assertEqual(skills, 'Test Skill, Second Skill')
+        self.assertEqual(skills, ['Test Skill', 'Second Skill'])
         
         # Fermer la popup
         close_button = self.browser.find_element(By.CSS_SELECTOR, '#experienceModal .modal-header button.close')
@@ -445,13 +446,14 @@ class PopupTest(BaseTest):
         description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
         image_url = modal_content.find_element(By.CSS_SELECTOR, '[data-field="image_url"]').text
         url = modal_content.find_element(By.CSS_SELECTOR, '[data-field="url"]').text
-        skills = modal_content.find_element(By.ID, 'skills-name').text
+        skills_elements = modal_content.find_elements(By.CLASS_NAME, 'skill-badge')
+        skills = [skill.text for skill in skills_elements]
 
         self.assertEqual(title, 'Test Project')
         self.assertEqual(description, 'Test Project Description')
         self.assertEqual(image_url, '/static/portfolio-example.png')
         self.assertEqual(url, 'https://testurl3.com')
-        self.assertEqual(skills, 'Second Skill, Third Skill')
+        self.assertEqual(skills, ['Second Skill', 'Third Skill'])
     
         # Vérifier le titre du projet
         title = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-content-info')
@@ -911,6 +913,93 @@ class ModifyAndSaveTest(BaseTest):
         else:
             self.fail("New row not found")
 
+        ## Supprimer la compétence
+
+        # Trouver la ligne du tableau Experience
+        project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), '{self.experiences[0].description}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(project_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'experienceModal'))
+        )
+        
+        # Trouver le champ compétence
+        modal = self.browser.find_element(By.ID, "experienceModal")
+        skills_field = modal.find_element(By.ID, "skills-name")
+        skills_name = skills_field.find_elements(By.CLASS_NAME, "skill-badge")
+        self.assertTrue(any(new_skill.name in skill_name.text for skill_name in skills_name), "La compétence n'est pas dans la liste")
+
+        skill_to_delete = None
+        for skill_name in skills_name:
+            if skill_name.text == new_skill.name:
+                skill_to_delete = skill_name
+                break
+        
+        if skill_to_delete:
+            # Cliquer sur supprimer
+            delete_button = skill_to_delete.find_element(By.CLASS_NAME, "deleteSkill")
+            self.browser.execute_script("arguments[0].click();", delete_button)
+
+        # Après avoir cliqué sur le bouton delete, rafraîchir la référence aux éléments
+        skills_field = modal.find_element(By.ID, "skills-name")
+        skills_name = skills_field.find_elements(By.CLASS_NAME, "skill-badge")
+
+        # Vérifier la suppression de la compétence
+        self.assertFalse(any(new_skill.name in skill_name.text for skill_name in skills_name), "La compétence n'a pas été supprimée")
+
+        # Cliquer sur valider
+        validate_button = modal.find_element(By.ID, "experienceModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#experience-table tbody"))
+        )
+
+        # Vérifier l'affichage dans le tableau
+        WebDriverWait(self.browser, 20).until(
+            EC.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, "#experience-table tbody"), 
+                str(self.experiences[0].skills.all().count())
+            )
+        )
+
+        time.sleep(0.5)
+
+        # Vérification finale
+        rows = self.browser.find_elements(By.CSS_SELECTOR, "#experience-table tbody tr")
+        new_row = None
+        for row in rows:
+            if row.find_elements(By.CSS_SELECTOR, "td")[4].text == self.experiences[0].description:
+                new_row = row
+                break
+        if new_row:
+            self.assertEqual(str(self.experiences[0].skills.all().count()), new_row.find_elements(By.CSS_SELECTOR, "td")[6].text)
+        else:
+            self.fail("New row not found")
+
+        # Trouver la ligne du tableau Experience
+        project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), '{self.experiences[0].description}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(project_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'experienceModal'))
+        )
+
+        # Trouver le champ compétence
+        modal = self.browser.find_element(By.ID, 'experienceModal')
+        skills_field = modal.find_element(By.ID, "skills-name")
+        skills_name = skills_field.find_elements(By.CLASS_NAME, "skill-badge")
+        self.assertFalse(any(new_skill.name in skill_name.text for skill_name in skills_name), "La compétence est toujours dans la liste")
+
     def test_modify_and_save_project(self):
         """Teste la modification et la sauvegarde d'un élément Project"""
 
@@ -1113,6 +1202,92 @@ class ModifyAndSaveTest(BaseTest):
         else:
             self.fail("New row not found")
 
+        ## Supprimer la compétence
+
+        # Trouver la ligne du tableau Projects
+        project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.projects[0].title}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(project_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'projectModal'))
+        )
+
+        # Trouver le champ compétence
+        modal = self.browser.find_element(By.ID, 'projectModal')
+        skills_field = modal.find_element(By.ID, "skills-name")
+        skills_name = skills_field.find_elements(By.CLASS_NAME, "skill-badge")
+        self.assertTrue(any(new_skill.name in skill_name.text for skill_name in skills_name), "La compétence n'est pas dans la liste")
+
+        skill_to_delete = None
+        for skill_name in skills_name:
+            if skill_name.text == new_skill.name:
+                skill_to_delete = skill_name
+                break
+        
+        if skill_to_delete:
+            # Cliquer sur supprimer
+            delete_button = skill_to_delete.find_element(By.CLASS_NAME, "deleteSkill")
+            self.browser.execute_script("arguments[0].click();", delete_button)
+
+        # Après avoir cliqué sur le bouton delete, rafraîchir la référence aux éléments
+        skills_field = self.browser.find_element(By.ID, "skills-name")
+        skills_name = skills_field.find_elements(By.CLASS_NAME, "skill-badge")
+
+        # Vérifier la suppression de la compétence
+        self.assertFalse(any(new_skill.name in skill_name.text for skill_name in skills_name), "La compétence n'a pas été supprimée")
+
+        # Cliquer sur valider
+        validate_button = modal.find_element(By.ID, "projectModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#projects-table tbody"))
+        )
+
+        # Vérifier l'affichage dans le tableau
+        WebDriverWait(self.browser, 20).until(
+            EC.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, "#projects-table tbody"), 
+                str(self.projects[0].skills.all().count())
+            )
+        )
+
+        time.sleep(0.5)
+
+        # Vérification finale
+        rows = self.browser.find_elements(By.CSS_SELECTOR, "#projects-table tbody tr")
+        new_row = None
+        for row in rows:
+            if row.find_elements(By.CSS_SELECTOR, "td")[0].text == self.projects[0].title:
+                new_row = row
+                break
+        if new_row:
+            self.assertEqual(str(self.projects[0].skills.all().count()), new_row.find_elements(By.CSS_SELECTOR, "td")[4].text)
+        else:
+            self.fail("New row not found")
+
+        # Trouver la ligne du tableau Projects
+        project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.projects[0].title}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(project_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'projectModal'))
+        )
+
+        # Trouver le champ compétence
+        modal = self.browser.find_element(By.ID, 'projectModal')
+        skills_field = modal.find_element(By.ID, "skills-name")
+        skills_name = skills_field.find_elements(By.CLASS_NAME, "skill-badge")
+        self.assertFalse(any(new_skill.name in skill_name.text for skill_name in skills_name), "La compétence est toujours dans la liste")
 
 class AddElementTest(BaseTest):
 

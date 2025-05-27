@@ -163,10 +163,8 @@ function addSkillToItem(modalId) {
             // Mettre à jour l'affichage des compétences
             const skillsField = document.querySelector(`#${modalId} [data-field="skills"]`);
             if (skillsField) {
-                console.log(skillsField.textContent)
                 skillsField.textContent = skillsField.textContent ? 
                     `${skillsField.textContent},${result.data.id}` : result.data.id;
-                console.log(skillsField.textContent)
             }
 
             updateSkillsDisplay(modalId);
@@ -201,7 +199,7 @@ async function updateSkillsDisplay(modalId) {
         if (skills.length > 0) {
             skillsNameField.innerHTML = skills.map(skillId => {
                 const skill = skillsData.find(s => s.id == skillId);
-                return `<span class="skill-badge">${skill.name}</span>`;
+                return `<span class="skill-badge">${skill.name}<button class="deleteSkill" data-skill-id="${skill.id}">×</button></span>`;
             }).join('');
         }
     }
@@ -1054,5 +1052,30 @@ $(function() {
 
     $('#cancelDeleteButton').click(function() {
         $('#confirmDeleteModal').modal('hide');
+    });
+
+    // Ajout du gestionnaire d'événement pour la suppression
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('deleteSkill')) {
+            const skillId = e.target.getAttribute('data-skill-id');
+            
+            // Suppression de l'ID de la competence
+            const skills = document.querySelector('[data-field="skills"]');
+            if (skills) {
+                // Nettoyer les IDs vides et espaces
+                const skillIds = skills.textContent.split(',')
+                    .map(id => id.trim())
+                    .filter(id => id !== '');
+                
+                const index = skillIds.indexOf(skillId);
+                if (index > -1) {
+                    skillIds.splice(index, 1);
+                    skills.textContent = skillIds.join(',');
+                }
+            }
+
+            // Suppression du nom de la competence
+            e.target.parentElement.remove();
+        }
     });
 });

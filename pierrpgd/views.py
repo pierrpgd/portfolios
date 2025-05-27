@@ -99,8 +99,6 @@ def load_data(request):
                         } for skill in skills
                     ]
                 }
-
-                # print(data)
                 
                 return JsonResponse(data)
             except Profile.DoesNotExist:
