@@ -1,0 +1,78 @@
+{
+  "profile": {
+    "name": "Pierrick Pagaud",
+    "identifiant": "pierrpgd",
+    "title": "Ingénieur développement logiciel"
+  },
+  "about": [
+    "<strong>Bonjour</strong>, bienvenue sur mon portfolio.",
+    "Ingénieur généraliste de formation, je suis passionné par la création d'application intelligente et robuste, co-construite avec l'utilisateur final a chaque étape du projet. Ce que je préfère dans mon travail : le travail de conception en équipe, où la magie opère quand un problème complexe se débloque par des solutions simples et élégantes.",
+    "Actuellement ingénieur logiciel chez <strong>Betakron</strong>, je pilote la mise en place d'un workflow sur-mesure pour le service Méthodes, facilitant ses interactions avec les services internes, clients, fournisseurs et partenaires de l'entreprise.",
+    "Précédemment, j'ai eu l'occasion de travailler comme ingénieur logiciel dans divers <strong>contextes internationaux</strong> (USA, LATAM, Europe) — du pilotage de projet à la mise en œuvre de solution MES sur-mesure pour des <strong>secteurs industriels</strong> variés tels que l’aéronautique, l’automobile ou la pharmaceutique.",
+    "Sur mon temps libre, je suis joueur et passionné de <strong>rugby</strong>. Quand je ne suis pas sur un terrain, je me plonge dans un <strong>roman d’histoire</strong> ou de fantasy… ou je prépare ma prochaine <strong>escapade en montagne</strong>."
+  ],
+  "skills": [
+    {"category": "Développement", "name": "Python"},
+    {"category": "Développement", "name": "JavaScript"},
+    {"category": "Développement", "name": "HTML/CSS"},
+    {"category": "Développement", "name": "Django"},
+    {"category": "Développement", "name": "Windev/Webdev"},
+    {"category": "Développement", "name": "SQL"},
+    {"category": "Développement", "name": "REST API"},
+    {"category": "Développement", "name": "R"},
+    {"category": "Développement", "name": "LabVIEW"},
+    {"category": "Développement", "name": "Bootstrap"},
+    {"category": "Développement", "name": "jQuery"},
+    {"category": "Outils", "name": "ERP/MES"},
+    {"category": "Outils", "name": "Git"},
+    {"category": "Outils", "name": "MQTT"},
+    {"category": "Outils", "name": "ArcGIS"}
+  ],
+  "experiences": [
+    {
+      "dates": "MAR. 2023 - MAR. 2025",
+      "position": "Ingénieur logiciel MES",
+      "company": "Alpha 3i",
+      "location": "Jacksonville FL, USA",
+      "description": "Conception, développement et intégration de modules MES au sein de systèmes ERP pour des acteurs industriels de secteurs variés (aéronautique, santé, automobile).<br>- Référent technique pour les clients USA / LATAM<br>- Gestion de projet en mode Agile Scrum<br>- Développement modules MES en mode TDD<br>- Support technique aux équipes de vente USA",
+      "url": "https://www.alpha3i.com/",
+      "skills": ["Python", "Windev/Webdev", "SQL", "ERP/MES", "Git"]
+    },
+    {
+      "dates": "SEP. 2019 - FEB. 2023",
+      "position": "Chef de projet informatique junior",
+      "company": "PAPREC France",
+      "location": "Lyon, FRA",
+      "description": "Déploiement d'une plateforme IoT pour l'activité Collecte et Transports de déchets.<br>- Intégration des données GPS issues de systèmes embarqués (MQTT, PostgreSQL)<br>- Gestion de l’interopérabilité entre les équipements du fournisseur et les services internes (Python, API REST)<br>- Visualisation des données GPS via des applications web SIG sécurisées (ArcGIS, solutions tiers)",
+      "url": "https://www.paprec.fr/",
+      "skills": ["Python", "SQL", "REST API", "MQTT", "ArcGIS"]
+    },
+    {
+      "dates": "SEP. 2018 - SEP. 2019",
+      "position": "Assistant chef de projet informatique (alternance)",
+      "company": "PAPREC France",
+      "location": "Lyon, FRA",
+      "description": "Développement d’une application web d’optimisation de circuit pour l’activité Collecte et Transports de déchets.<br>- Gestion de prestataire, écriture des spécifications<br>- Traitement, analyse de données et modélisation",
+      "url": "https://www.paprec.fr/",
+      "skills": ["Python", "R", "ArcGIS"]
+    },
+    {
+      "dates": "SEP. 2017 – DEC. 2017",
+      "position": "Développeur LabVIEW (stage)",
+      "company": "KTH Royal Institute of Technology",
+      "location": "Stockholm, SWE",
+      "description": "Développement d’un logiciel de supervision des tests avec LabVIEV pour le Department of Energy Technology du KTH Institute, Stockholm.",
+      "url": "https://www.kth.se/en",
+      "skills": ["LabVIEW"]
+    }
+  ],
+  "projects": [
+    {
+      "title":"Django Portfolio Generator",
+      "description":"Une solution de création de portfolio basée sur python, Django, JS et Bootstrap CSS.",
+      "image_url":"/static/portfolio-example.png",
+      "url":"https://github.com/pierrpgd/portfolios",
+      "skills": ["Python", "Django", "JavaScript", "HTML/CSS", "Bootstrap", "jQuery", "Git"]
+    }
+  ]
+}
