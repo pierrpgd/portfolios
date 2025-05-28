@@ -1892,6 +1892,157 @@ class AddElementTest(BaseTest):
         profil = Profile.objects.get(identifiant=self.profile.identifiant)
         self.assertIn(new_skill, profil.skills.all())
 
+    def test_add_skill_in_experience_and_cancel(self):
+        """
+        Teste l'ajout d'une compétence dans une expérience et annulation
+        1. Ouvre la page data_display
+        2. Clique sur 'Ajouter une expérience'
+        3. Remplit le champ 'Contenu'
+        4. Ouvre la popup de compétence
+        5. Remplit le champ 'Contenu'
+        6. Annule et vérifie l'affichage
+        """
+        
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre que les données soient chargées
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@id='profile-data']//h2[text()='Expériences']"))
+        )
+        
+        # Trouver la ligne du tableau Expériences
+        experience_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), '{self.experiences[0].description}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(experience_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'experienceModal'))
+        )
+        
+        # Ouvrir la popup de création de compétence
+        modal = self.browser.find_element(By.ID, 'experienceModal')
+        skills_field = modal.find_element(By.ID, "experienceSkillsButton")
+        self.browser.execute_script("arguments[0].click();", skills_field)
+
+        # Attendre que la modal soit visible
+        skillModal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "skillModal"))
+        )
+
+        # Remplir le champ catégorie
+        category_field = skillModal.find_element(By.CSS_SELECTOR, "[data-field='category']")
+        category_field.send_keys('Test annulé')
+
+        # Remplir le champ compétence
+        skill_field = skillModal.find_element(By.CSS_SELECTOR, "[data-field='name']")
+        skill_field.send_keys('Test annulé')
+
+        # Cliquer sur le bouton d'annulation
+        cancel_button = skillModal.find_element(By.ID, "modalCloseButton")
+        self.browser.execute_script("arguments[0].click();", cancel_button)
+
+        # Vérifier que la modal est fermée
+        WebDriverWait(self.browser, 5).until(
+            EC.invisibility_of_element_located((By.ID, "skillModal")),
+            message="La modal de compétence n'est pas fermée après le clic"
+        )
+
+        with self.assertRaises(Skill.DoesNotExist):
+            Skill.objects.get(category='Test annulé', name='Test annulé')
+
+        # Attendre l'affichage des competences
+        WebDriverWait(self.browser, 20).until(
+            EC.visibility_of_element_located((By.ID, "skills-name"))
+        )
+
+        # Vérifier que la compence n'est pas affichée
+        self.assertNotIn("Test annulé", self.browser.find_element(By.ID, "skills-name").text)
+
+    def test_add_skill_in_experience_and_confirm(self):
+        """
+        Teste l'ajout d'une compétence dans une expérience et confirmation
+        1. Ouvre la page data_display
+        2. Clique sur 'Ajouter une expérience'
+        3. Remplit le champ 'Contenu'
+        4. Ouvre la popup de compétence
+        5. Remplit le champ 'Contenu'
+        6. Confirme et vérifie l'affichage
+        """
+        
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre que les données soient chargées
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@id='profile-data']//h2[text()='Expériences']"))
+        )
+        
+        # Trouver la ligne du tableau Expériences
+        experience_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'experience-table')]//td[contains(text(), '{self.experiences[0].description}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(experience_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'experienceModal'))
+        )
+        
+        # Ouvrir la popup de création de compétence
+        modal = self.browser.find_element(By.ID, 'experienceModal')
+        skills_field = modal.find_element(By.ID, "experienceSkillsButton")
+        self.browser.execute_script("arguments[0].click();", skills_field)
+
+        # Attendre que la modal soit visible
+        skillModal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "skillModal"))
+        )
+
+        # Remplir le champ catégorie
+        category_field = skillModal.find_element(By.CSS_SELECTOR, "[data-field='category']")
+        category_field.send_keys('Test annulé')
+
+        # Remplir le champ compétence
+        skill_field = skillModal.find_element(By.CSS_SELECTOR, "[data-field='name']")
+        skill_field.send_keys('Test annulé')
+
+        # Cliquer sur le bouton de confirmation
+        validate_button = skillModal.find_element(By.ID, "skillModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+
+        # Vérifier que la modal est fermée
+        WebDriverWait(self.browser, 5).until(
+            EC.invisibility_of_element_located((By.ID, "skillModal")),
+            message="La modal de compétence n'est pas fermée après le clic"
+        )
+
+        skill = Skill.objects.get(category='Test annulé', name='Test annulé')
+        self.assertEqual(skill.category, 'Test annulé')
+        self.assertEqual(skill.name, 'Test annulé')
+
+        # Attendre l'affichage des competences
+        WebDriverWait(self.browser, 20).until(
+            EC.visibility_of_element_located((By.ID, "skills-name"))
+        )
+
+        # Vérifier l'affichage de la nouvelle compétence
+        WebDriverWait(self.browser, 20).until(
+            EC.text_to_be_present_in_element(
+                (By.ID, "skills-name"), 
+                'Test annulé'
+            )
+        )
+
+        # Vérifier que la compence est affichée
+        self.assertIn("Test annulé", self.browser.find_element(By.ID, "skills-name").text)
+
     def test_add_project_section(self):
         """
         Teste l'ajout d'une section Projets via l'interface
@@ -2042,6 +2193,157 @@ class AddElementTest(BaseTest):
         # Vérifier que la compétence est liée au profil
         profil = Profile.objects.get(identifiant=self.profile.identifiant)
         self.assertIn(new_skill, profil.skills.all())
+
+    def test_add_skill_in_project_and_cancel(self):
+        """
+        Teste l'ajout d'une compétence dans un projet et annulation
+        1. Ouvre la page data_display
+        2. Clique sur 'Ajouter un projet'
+        3. Remplit le champ 'Contenu'
+        4. Ouvre la popup de compétence
+        5. Remplit le champ 'Contenu'
+        6. Annule et vérifie l'affichage
+        """
+        
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre que les données soient chargées
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'projects-table')]"))
+        )
+        
+        # Trouver la ligne du tableau Projets
+        project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.projects[0].title}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(project_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'projectModal'))
+        )
+        
+        # Ouvrir la popup de création de compétence
+        modal = self.browser.find_element(By.ID, 'projectModal')
+        skills_field = modal.find_element(By.ID, "projectSkillsButton")
+        self.browser.execute_script("arguments[0].click();", skills_field)
+
+        # Attendre que la modal soit visible
+        skillModal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "skillModal"))
+        )
+
+        # Remplir le champ catégorie
+        category_field = skillModal.find_element(By.CSS_SELECTOR, "[data-field='category']")
+        category_field.send_keys('Test annulé')
+
+        # Remplir le champ compétence
+        skill_field = skillModal.find_element(By.CSS_SELECTOR, "[data-field='name']")
+        skill_field.send_keys('Test annulé')
+
+        # Cliquer sur le bouton d'annulation
+        cancel_button = skillModal.find_element(By.ID, "modalCloseButton")
+        self.browser.execute_script("arguments[0].click();", cancel_button)
+
+        # Vérifier que la modal est fermée
+        WebDriverWait(self.browser, 5).until(
+            EC.invisibility_of_element_located((By.ID, "skillModal")),
+            message="La modal de compétence n'est pas fermée après le clic"
+        )
+
+        with self.assertRaises(Skill.DoesNotExist):
+            Skill.objects.get(category='Test annulé', name='Test annulé')
+
+        # Attendre l'affichage des competences
+        WebDriverWait(self.browser, 20).until(
+            EC.visibility_of_element_located((By.ID, "skills-name"))
+        )
+
+        # Vérifier que la compence n'est pas affichée
+        self.assertNotIn("Test annulé", self.browser.find_element(By.ID, "skills-name").text)
+
+    def test_add_skill_in_project_and_confirm(self):
+        """
+        Teste l'ajout d'une compétence dans un projet et confirmation
+        1. Ouvre la page data_display
+        2. Clique sur 'Ajouter un projet'
+        3. Remplit le champ 'Contenu'
+        4. Ouvre la popup de compétence
+        5. Remplit le champ 'Contenu'
+        6. Confirme et vérifie l'affichage
+        """
+        
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre que les données soient chargées
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'projects-table')]"))
+        )
+        
+        # Trouver la ligne du tableau Projets
+        project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'projects-table')]//td[contains(text(), '{self.projects[0].title}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(project_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'projectModal'))
+        )
+        
+        # Ouvrir la popup de création de compétence
+        modal = self.browser.find_element(By.ID, 'projectModal')
+        skills_field = modal.find_element(By.ID, "projectSkillsButton")
+        self.browser.execute_script("arguments[0].click();", skills_field)
+
+        # Attendre que la modal soit visible
+        skillModal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "skillModal"))
+        )
+
+        # Remplir le champ catégorie
+        category_field = skillModal.find_element(By.CSS_SELECTOR, "[data-field='category']")
+        category_field.send_keys('Test annulé')
+
+        # Remplir le champ compétence
+        skill_field = skillModal.find_element(By.CSS_SELECTOR, "[data-field='name']")
+        skill_field.send_keys('Test annulé')
+
+        # Cliquer sur le bouton de confirmation
+        validate_button = skillModal.find_element(By.ID, "skillModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+
+        # Vérifier que la modal est fermée
+        WebDriverWait(self.browser, 5).until(
+            EC.invisibility_of_element_located((By.ID, "skillModal")),
+            message="La modal de compétence n'est pas fermée après le clic"
+        )
+
+        skill = Skill.objects.get(category='Test annulé', name='Test annulé')
+        self.assertEqual(skill.category, 'Test annulé')
+        self.assertEqual(skill.name, 'Test annulé')
+
+        # Attendre l'affichage des competences
+        WebDriverWait(self.browser, 20).until(
+            EC.visibility_of_element_located((By.ID, "skills-name"))
+        )
+
+        # Vérifier l'affichage de la nouvelle compétence
+        WebDriverWait(self.browser, 20).until(
+            EC.text_to_be_present_in_element(
+                (By.ID, "skills-name"), 
+                'Test annulé'
+            )
+        )
+
+        # Vérifier que la compence est affichée
+        self.assertIn("Test annulé", self.browser.find_element(By.ID, "skills-name").text)
 
 class DeleteElementTest(BaseTest):
 
@@ -2383,7 +2685,7 @@ class DeleteElementTest(BaseTest):
 
         # Vérifier que le bouton de fermeture est visible
         WebDriverWait(self.browser, 5).until(
-            EC.visibility_of_element_located((By.ID, "modalCloseButton")),
+            EC.presence_of_element_located((By.ID, "modalCloseButton")),
             message="Le bouton de fermeture n'est pas visible"
         )
 

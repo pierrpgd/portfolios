@@ -129,18 +129,14 @@ function addSkillToItem(modalId) {
     // Créer la modale
     const modal = document.createElement('div');
     modal.id = 'skillModal';
-    modal.className = 'modal fade';
-    modal.tabIndex = '-1';
-    modal.setAttribute('role', 'dialog', 'aria-hidden', 'true');
+    modal.className = 'modal';
     
     modal.innerHTML = `
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Ajouter une compétence</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="modalCloseButton">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="modalCloseButton">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="editable-field">
@@ -153,7 +149,7 @@ function addSkillToItem(modalId) {
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-secondary" id="modalCancelButton">Annuler</button>
                     <button type="button" class="btn btn-primary" id="skillModalValidateButton">Ajouter</button>
                 </div>
             </div>
@@ -189,6 +185,24 @@ function addSkillToItem(modalId) {
             removeModal(modal);
         }
     });
+
+    // Ajouter l'événement de fermeture
+    document.querySelector(`#modalCloseButton`).onclick = function() {
+        removeModal(modal);
+    };
+
+    // Ajouter l'événement d'annulation
+    document.querySelector(`#modalCancelButton`).onclick = function() {
+        removeModal(modal);
+    };
+    
+    // Fermer la popup en cliquant en dehors
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            removeModal(modal);
+        }
+    };
+
 }
 
 async function updateSkillsDisplay(modalId) {
@@ -225,6 +239,8 @@ async function updateSkillsDisplay(modalId) {
 
 // Fonction pour afficher une popup générique
 function showPopup(row, modalId, contentId) {
+
+    document.body.style.overflowY = 'hidden';
 
     let profileIdentifiant = '';
     let profileName = '';
@@ -430,6 +446,8 @@ function showPopup(row, modalId, contentId) {
 // Fonction pour supprimer une modal
 function removeModal(modal) {
     if (!modal) return;
+
+    console.log('closeModal');
     
     // Cacher la modale d'abord pour un meilleur feedback visuel
     modal.style.display = 'none';
@@ -440,6 +458,12 @@ function removeModal(modal) {
     }
 
     modal.remove();
+
+    const remainingModals = document.querySelectorAll('.modal[style*="display: block"], .modal:not([style*="display: none"])');
+    console.log(remainingModals.length);
+    if (remainingModals.length === 0) {
+        document.body.style.overflowY = 'auto';
+    }
 }
 
 // Enregistrement des données dans la base de données
