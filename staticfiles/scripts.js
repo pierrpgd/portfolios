@@ -120,89 +120,149 @@ function addProjectSection() {
 
 // Fonction pour ajouter une compétence à un élément
 function addSkillToItem(modalId) {
-    // Créer une nouvelle ligne vide pour stocker les données
-    const dummyRow = document.createElement('div');
-    dummyRow.setAttribute('data-id', '');
-    dummyRow.setAttribute('data-category', '');
-    dummyRow.setAttribute('data-name', '');
-    
-    // Créer la modale
-    const modal = document.createElement('div');
-    modal.id = 'skillModal';
-    modal.className = 'modal';
-    
-    modal.innerHTML = `
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Ajouter une compétence</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="modalCloseButton">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="editable-field">
-                        <span class="modal-content-info-title">Catégorie : </span> 
-                        <span contenteditable="true" class="editable-content" data-field="category"></span>
-                    </div>
-                    <div class="editable-field">
-                        <span class="modal-content-info-title">Intitulé : </span> 
-                        <span contenteditable="true" class="editable-content" data-field="name"></span>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" id="modalCancelButton">Annuler</button>
-                    <button type="button" class="btn btn-primary" id="skillModalValidateButton">Ajouter</button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // Initialiser la modale proprement
-    $(modal).modal('show');
-    
-    // Gérer la validation
-    document.getElementById('skillModalValidateButton').addEventListener('click', async function() {
-        const category = modal.querySelector('[data-field="category"]').textContent;
-        const name = modal.querySelector('[data-field="name"]').textContent;
-
-        if (!category || !name) {
-            alert('Veuillez remplir tous les champs');
-            return;
-        }
-
-        const result = await saveModalContent(modal);
-
-        if (result.success) {
-            // Mettre à jour l'affichage des compétences
-            const skillsField = document.querySelector(`#${modalId} [data-field="skills"]`);
-            if (skillsField) {
-                skillsField.textContent = skillsField.textContent ? 
-                    `${skillsField.textContent},${result.data.id}` : result.data.id;
+    fetch(`/load_data/?identifiant=${selectedProfile}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                document.querySelector('#profile-data').innerHTML = `
+                    <div class="alert alert-danger">${data.error}</div>
+                `;
+                return Promise.reject(data.error);
             }
-
-            updateSkillsDisplay(modalId);
-            removeModal(modal);
-        }
-    });
-
-    // Ajouter l'événement de fermeture
-    document.querySelector(`#modalCloseButton`).onclick = function() {
-        removeModal(modal);
-    };
-
-    // Ajouter l'événement d'annulation
-    document.querySelector(`#modalCancelButton`).onclick = function() {
-        removeModal(modal);
-    };
+            
+            // Créer une nouvelle ligne vide pour stocker les données
+            const dummyRow = document.createElement('div');
+            dummyRow.setAttribute('data-id', '');
+            dummyRow.setAttribute('data-category', '');
+            dummyRow.setAttribute('data-name', '');
     
-    // Fermer la popup en cliquant en dehors
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            removeModal(modal);
-        }
-    };
+            // Créer la modale
+            const modal = document.createElement('div');
+            modal.id = 'skillModal';
+            modal.className = 'modal';
 
+            const uniqueCategories = [...new Set(data.skills.map(skill => skill.category))];
+            
+            modal.innerHTML = `
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Ajouter une compétence</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="modalCloseButton">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="editable-field">
+                                <span class="modal-content-info-title">Catégorie : </span> 
+                                <select class="form-select" data-field="category">
+                                    <option value="">Sélectionnez une catégorie</option>
+                                    ${uniqueCategories.map(category => `
+                                        <option value="${category}">${category}</option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                            <div class="editable-field">
+                                <span class="modal-content-info-title">Intitulé : </span> 
+                                <select class="form-select" data-field="name">
+                                    <option value="">Sélectionnez d'abord une catégorie</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" id="modalCancelButton">Annuler</button>
+                            <button type="button" class="btn btn-primary" id="skillModalValidateButton">Ajouter</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Initialiser la modale proprement
+            $(modal).modal('show');
+
+            // Après avoir créé la modal
+            const categorySelect = modal.querySelector('[data-field="category"]');
+            const nameSelect = modal.querySelector('[data-field="name"]');
+            
+            // Stocker les compétences par catégorie
+            const skillsByCategory = {};
+            data.skills.forEach(skill => {
+                if (!skillsByCategory[skill.category]) {
+                    skillsByCategory[skill.category] = [];
+                }
+                skillsByCategory[skill.category].push(skill);
+            });
+            
+            // Écouter les changements de catégorie
+            categorySelect.addEventListener('change', function() {
+
+                if (this.value === '') {
+                    nameSelect.innerHTML = '<option value="">Sélectionnez d\'abord une catégorie</option>';
+                    return;
+                }
+                else {
+                    nameSelect.innerHTML = '<option value="">Sélectionnez une compétence</option>';
+
+                    const selectedCategory = this.value;
+                
+                    if (selectedCategory && skillsByCategory[selectedCategory]) {
+                        skillsByCategory[selectedCategory].forEach(skill => {
+                            const option = document.createElement('option');
+                            option.value = skill.name;
+                            option.textContent = skill.name;
+                            nameSelect.appendChild(option);
+                        });
+                    }
+                }
+            });
+            
+            // Déclencher immédiatement le changement si une catégorie est déjà sélectionnée
+            if (categorySelect.value) {
+                categorySelect.dispatchEvent(new Event('change'));
+            }
+    
+            // Gérer la validation
+            document.getElementById('skillModalValidateButton').addEventListener('click', async function() {
+                const category = modal.querySelector('[data-field="category"]').value;
+                const name = modal.querySelector('[data-field="name"]').value;
+
+                if (!category || !name) {
+                    alert('Veuillez remplir tous les champs');
+                    return;
+                }
+
+                const result = await saveModalContent(modal);
+
+                if (result.success) {
+                    // Mettre à jour l'affichage des compétences
+                    const skillsField = document.querySelector(`#${modalId} [data-field="skills"]`);
+                    if (skillsField) {
+                        skillsField.textContent = skillsField.textContent ? 
+                            `${skillsField.textContent},${result.data.id}` : result.data.id;
+                    }
+
+                    updateSkillsDisplay(modalId);
+                    removeModal(modal);
+                }
+            });
+
+            // Ajouter l'événement de fermeture
+            document.querySelector(`#modalCloseButton`).onclick = function() {
+                removeModal(modal);
+            };
+
+            // Ajouter l'événement d'annulation
+            document.querySelector(`#modalCancelButton`).onclick = function() {
+                removeModal(modal);
+            };
+            
+            // Fermer la popup en cliquant en dehors
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    removeModal(modal);
+                }
+            };
+        });
 }
 
 async function updateSkillsDisplay(modalId) {
@@ -238,7 +298,7 @@ async function updateSkillsDisplay(modalId) {
 }
 
 // Fonction pour afficher une popup générique
-function showPopup(row, modalId, contentId) {
+function showPopup(row, modalId, contentId, skillsData) {
 
     document.body.style.overflowY = 'hidden';
 
@@ -446,8 +506,6 @@ function showPopup(row, modalId, contentId) {
 // Fonction pour supprimer une modal
 function removeModal(modal) {
     if (!modal) return;
-
-    console.log('closeModal');
     
     // Cacher la modale d'abord pour un meilleur feedback visuel
     modal.style.display = 'none';
@@ -460,7 +518,6 @@ function removeModal(modal) {
     modal.remove();
 
     const remainingModals = document.querySelectorAll('.modal[style*="display: block"], .modal:not([style*="display: none"])');
-    console.log(remainingModals.length);
     if (remainingModals.length === 0) {
         document.body.style.overflowY = 'auto';
     }
@@ -482,15 +539,20 @@ async function saveModalContent(modal) {
     const fieldsWithDataField = modal.querySelectorAll('[data-field]');
     fieldsWithDataField.forEach(field => {
         if (field.dataset.field === 'skills') {
-            requestData.data[field.dataset.field] = field.textContent.trim().split(',').map(skill => skill.trim());
+            requestData.data[field.dataset.field] = field.value ? 
+            field.value.trim().split(',').map(skill => skill.trim()) :
+            field.textContent.trim().split(',').map(skill => skill.trim());
         } else {
-            requestData.data[field.dataset.field] = field.textContent.trim();
+            requestData.data[field.dataset.field] = field.value ?
+            field.value.trim() :
+            field.textContent.trim();
         }
     });
 
-    requestData.data.profile = selectedProfile;
+    console.log(modalId)
+    console.log(requestData.data);
 
-    console.log(requestData);
+    requestData.data.profile = selectedProfile;
 
     // Ajouter l'ID seulement pour les modifications
     if (!isNew) {
