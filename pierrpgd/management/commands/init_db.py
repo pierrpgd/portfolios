@@ -1,0 +1,93 @@
+from django.core.management.base import BaseCommand
+import json
+from pierrpgd.models import Profile, About, Experience, Project, Skill
+import os
+
+class Command(BaseCommand):
+    help = 'Initialize database with JSON data'
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--force', 
+            action='store_true',
+            help='Force reset database before initialization'
+        )
+
+    def handle(self, *args, **options):
+        if options['force']:
+            self.stdout.write("Force resetting database...")
+            Profile.objects.all().delete()
+            About.objects.all().delete()
+            Experience.objects.all().delete()
+            Project.objects.all().delete()
+            Skill.objects.all().delete()
+
+        try:
+            # Charger les données depuis le fichier JSON
+            with open(os.path.join(os.path.dirname(__file__), 'init_db.json'), 'r', encoding='utf-8') as f:
+                data = json.load(f)
+
+            # Vérifier si le profil existe déjà
+            if Profile.objects.filter(identifiant=data["profile"]["identifiant"]).exists():
+                self.stdout.write("Profile already exists")
+                return
+
+            # Création des compétences
+            self.stdout.write("Création des compétences...")
+            for skill_data in data["skills"]:
+                if Skill.objects.filter(name=skill_data["name"], category=skill_data["category"]).exists():
+                    continue
+                skill = Skill.objects.create(category=skill_data["category"], name=skill_data["name"])
+                self.stdout.write(f"Compétence créée: {skill.name} (ID: {skill.id})")
+
+            # Création du profil
+            self.stdout.write("Création du profil...")
+            profile = Profile.objects.create(
+                name=data["profile"]["name"],
+                identifiant=data["profile"]["identifiant"],
+                title=data["profile"]["title"]
+            )
+            skills = Skill.objects.all()
+            profile.skills.add(*skills)
+            self.stdout.write(f"Profil créé avec l'ID: {profile.id}")
+
+            # Création des sections A propos
+            self.stdout.write("Création des sections À propos...")
+            for content in data["about"]:
+                about = About.objects.create(profile=profile, content=content)
+                self.stdout.write(f"Section À propos créée (ID: {about.id})")
+
+            # Création des expériences
+            self.stdout.write("Création des expériences...")
+            for exp_data in data["experiences"]:
+                exp = Experience.objects.create(
+                    profile=profile,
+                    dates=exp_data["dates"],
+                    position=exp_data["position"],
+                    company=exp_data["company"],
+                    location=exp_data["location"],
+                    description=exp_data["description"],
+                    url=exp_data["url"]
+                )
+                skill_ids = [Skill.objects.get(name=skill_name).id for skill_name in exp_data["skills"]]
+                exp.skills.add(*skill_ids)
+                self.stdout.write(f"Expérience créée (ID: {exp.id})")
+
+            # Création des projets
+            self.stdout.write("Création des projets...")
+            for project_data in data["projects"]:
+                project = Project.objects.create(
+                    profile=profile,
+                    title=project_data["title"],
+                    description=project_data["description"],
+                    image_url=project_data["image_url"],
+                    url=project_data["url"]
+                )
+                skill_ids = [Skill.objects.get(name=skill_name).id for skill_name in project_data["skills"]]
+                project.skills.add(*skill_ids)
+                self.stdout.write(f"Projet créé (ID: {project.id})")
+
+            self.stdout.write("Initialisation de la base de données terminée avec succès!")
+
+        except Exception as e:
+            self.stderr.write(f"Error: {str(e)}")

@@ -49,7 +49,7 @@ def load_data(request):
                 abouts = profile.about.all()
                 experiences = profile.experience.all()
                 projects = profile.projects.all()
-                skills = Skill.objects.all()
+                skills = profile.skills.all()
                 
                 data = {
                     'profile': {
@@ -58,7 +58,7 @@ def load_data(request):
                         'title': profile.title if profile.title else '',
                         'id': profile.id,
                         'created_at': profile.created_at,
-                        'updated_at': profile.updated_at
+                        'updated_at': profile.updated_at,
                     },
                     'about': [
                         {
@@ -121,7 +121,7 @@ def save_data(request):
             
             # Gestion du profil
             profile_id = content.get('profile')
-            if isNew and modalId not in ['profileModal', 'skillModal']:
+            if (isNew and modalId != 'profileModal') or modalId == 'skillModal':
                 if not profile_id:
                     return JsonResponse({'success': False, 'error': 'Profile ID manquant'}, status=400)
                 else:
@@ -207,17 +207,20 @@ def save_data(request):
                         obj.skills.add(skill_id)
             elif modalId == 'skillModal':
                 type = 'skill'
-                if not Skill.objects.filter(name=content.get('name'), category=content.get('category')).exists():
+                if isNew and not Skill.objects.filter(category=content.get('category'), name=content.get('name')).exists():
                     obj = Skill.objects.create(
                         category=content.get('category', ''),
                         name=content.get('name', '')
                     )
                 else:
-                    obj = Skill.objects.get(
-                        category=content.get('category', ''),
-                        name=content.get('name', '')
-                    )
-                
+                    skillId = content.get('id')
+                    if skillId:
+                        obj = Skill.objects.get(id=skillId)
+                        obj.category = content.get('category', obj.category)
+                        obj.name = content.get('name', obj.name)
+                    else:
+                        obj = Skill.objects.get(category=content.get('category'), name=content.get('name'))
+                profile.skills.add(obj)
             else:
                 return JsonResponse({'success': False, 'error': 'Type de modal inconnu'}, status=400)
 
@@ -275,3 +278,28 @@ def delete_project(request, project_id):
         return JsonResponse({'success': True})
     except Project.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Project not found'}, status=404)
+
+@require_http_methods(["DELETE"])
+def delete_skill(request, profile_identifiant, skill_id):
+    try:
+        skill = Skill.objects.get(id=skill_id)
+
+        # Supprimer la compétence du profil
+        profile = Profile.objects.get(identifiant=profile_identifiant)
+        profile.skills.remove(skill)
+
+        # Supprimer la compétence des expériences du profil
+        experiences = Experience.objects.filter(profile=profile)
+        for experience in experiences:
+            experience.skills.remove(skill)
+
+        # Supprimer la compétence des projets du profil
+        projects = Project.objects.filter(profile=profile)
+        for project in projects:
+            project.skills.remove(skill)
+        
+        return JsonResponse({'success': True})
+    except Skill.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Skill not found'}, status=404)
+    except Profile.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Profile not found'}, status=404)

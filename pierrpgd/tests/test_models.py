@@ -23,6 +23,10 @@ class ProfileModelTest(BaseTest):
         self.assertEqual(self.profile.title, 'Test Title')
         self.assertIsNotNone(self.profile.created_at)
         self.assertIsNotNone(self.profile.updated_at)
+        skills = list(self.profile.skills.all())
+        self.assertIn(self.skills[0], skills)
+        self.assertIn(self.skills[1], skills)
+        self.assertIn(self.skills[2], skills)
 
     def test_profile_creation_with_same_identifiant(self):
         """Test que la création d'un profil avec un identifiant déjà existant échoue"""
@@ -38,11 +42,14 @@ class ProfileModelTest(BaseTest):
         self.profile.name = 'Updated Profile'
         self.profile.identifiant = 'updated-identifiant'
         self.profile.title = 'Updated Title'
+        self.profile.skills.remove(self.skills[0])
         self.profile.save()
         updated_profile = Profile.objects.get(id=self.profile.id)
         self.assertEqual(updated_profile.name, 'Updated Profile')
         self.assertEqual(updated_profile.identifiant, 'updated-identifiant')
         self.assertEqual(updated_profile.title, 'Updated Title')
+        skills = list(self.profile.skills.all())
+        self.assertNotIn(self.skills[0], skills)
 
     def test_profile_deletion(self):
         """Test la suppression d'un profil"""

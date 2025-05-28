@@ -220,6 +220,70 @@ class LoadDataViewTest(BaseTest):
         self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
         self.assertEqual(self.response.status_code, 404)
 
+    def test_create_skill(self):
+        """Teste la création d'une compétence"""
+        
+        # Vérifier que l'objet a été créé
+        self.assertTrue(Skill.objects.filter(name='Test Skill').exists())
+        
+        # Vérifier que la section apparaît dans l'interface
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
+        
+        # Vérifier que la compétence a été créée
+        data = self.response.json()
+        self.assertIn('skills', data)
+        self.assertEqual(data['skills'][0]['name'], 'Test Skill')
+        self.assertEqual(data['skills'][1]['name'], 'Second Skill')
+        self.assertEqual(data['skills'][2]['name'], 'Third Skill')
+
+    def test_update_skill(self):
+        """Teste la mise à jour d'une compétence"""
+        
+        # Données pour la mise à jour
+        updated_data = {
+            'name': 'Nom mis à jour',
+            'category': 'Catégorie mis à jour'
+        }
+        
+        # Mettre à jour la compétence
+        Skill.objects.filter(id=self.skills[0].id).update(**updated_data)
+        self.skills[0].refresh_from_db()
+        
+        # Vérifier que les modifications ont été sauvegardées
+        self.assertEqual(self.skills[0].name, 'Nom mis à jour')
+        self.assertEqual(self.skills[0].category, 'Catégorie mis à jour')
+        
+        # Vérifier que les changements apparaissent dans l'interface via load_data
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
+        
+        # Vérifier que la compétence a été mise à jour
+        data = self.response.json()
+        self.assertIn('skills', data)
+        self.assertEqual(data['skills'][0]['name'], 'Nom mis à jour')
+        self.assertEqual(data['skills'][0]['category'], 'Catégorie mis à jour')
+
+    def test_delete_skill(self):
+        """Teste la suppression d'une compétence"""
+
+        id_skill = self.skills[0].id
+        
+        # Supprimer la compétence
+        self.skills[0].delete()
+        
+        # Vérifier que l'objet a été supprimé
+        self.assertFalse(Skill.objects.filter(id=id_skill).exists())
+        
+        # Vérifier que la section ne s'affiche plus
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
+        
+        # Vérifier que la compétence a été supprimée
+        data = self.response.json()
+        self.assertIn('skills', data)
+        self.assertEqual(len(data['skills']), 2)
+
     def test_create_about(self):
         """Teste la création d'une section About"""
         
@@ -753,7 +817,8 @@ class SaveDataTest(BaseTest):
         # Données pour la création
         data = {
             'category': 'New Test Category',
-            'name': 'New Test Skill'
+            'name': 'New Test Skill',
+            'profile': self.profile.identifiant
         }
         
         # Effectuer la création via l'API
@@ -761,6 +826,37 @@ class SaveDataTest(BaseTest):
             reverse('save_data'),
             {
                 'modalId': 'skillModal',
+                'isNew': True,
+                'data': data
+            },
+            content_type='application/json'
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        skill_id = result['data']['id']
+        
+        # Vérifier que la compétence a été créée
+        self.assertEqual(result['success'], True)
+        self.assertTrue(Skill.objects.filter(name=data['name']).exists())
+
+        # Vérifier que le profil est lié à la compétence
+        profile = Profile.objects.get(identifiant=data['profile'])
+        skill = Skill.objects.get(name=data['name'])
+        self.assertIn(skill, profile.skills.all())
+
+        ## Test de création d'un compétence qui existe déjà
+
+        # Deuxième profil de test
+        data['profile'] = "second-profile"
+
+        # Effectuer la création via l'API
+        response = self.client.post(
+            reverse('save_data'),
+            {
+                'modalId': 'skillModal',
+                'isNew': True,
                 'data': data
             },
             content_type='application/json'
@@ -770,9 +866,52 @@ class SaveDataTest(BaseTest):
         self.assertEqual(response.status_code, 200)
         result = response.json()
         
-        # Vérifier que la compétence a été créée
+        # Vérifier que la compétence n'a pas été créée
         self.assertEqual(result['success'], True)
-        self.assertTrue(Skill.objects.filter(name=data['name']).exists())
+        self.assertEqual(skill_id, result['data']['id'])
+
+        # Vérifier que le deuxième profil est lié à la compétence
+        profile = Profile.objects.get(identifiant=data['profile'])
+        self.assertIn(skill, profile.skills.all())
+
+    def test_update_skill(self):
+        """Teste la mise à jour d'une compétence"""
+        # Données pour la mise à jour
+        updated_data = {
+            'name': 'Nouveau nom de test',
+            'category': 'Nouvelle catégorie de test',
+            'id': self.skills[0].id,
+            'profile': self.profile.identifiant
+        }
+        
+        # Effectuer la mise à jour via l'API
+        response = self.client.post(
+            reverse('save_data'),
+            {
+                'modalId': 'skillModal',
+                'isNew': False,
+                'data': updated_data
+            },
+            content_type='application/json'
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        
+        # Vérifier que les modifications ont été sauvegardées
+        updated_skill = Skill.objects.get(id=self.skills[0].id)
+        self.assertEqual(updated_skill.name, updated_data['name'])
+        self.assertEqual(updated_skill.category, updated_data['category'])
+        
+        # Vérifier que le profil est lié à la compétence
+        profile = Profile.objects.get(identifiant=updated_data['profile'])
+        skill = Skill.objects.get(name=updated_data['name'])
+        self.assertIn(skill, profile.skills.all())
+
+        # Vérifier que les autres profils liés à la compétence ont été mis à jour
+        profile = Profile.objects.get(identifiant='second-profile')
+        skill = Skill.objects.get(name=updated_data['name'])
+        self.assertIn(skill, profile.skills.all())
 
 class DeleteDataTest(BaseTest):
 
@@ -850,3 +989,34 @@ class DeleteDataTest(BaseTest):
         # Vérifier que le profil a été supprimé
         self.assertEqual(result['success'], True)
         self.assertFalse(Project.objects.filter(id=project_id).exists())
+
+    def test_delete_skill(self):
+        """Teste la suppression d'une compétence liée au profil"""
+
+        # Effectuer la suppression
+        response = self.client.delete(
+            reverse('delete_skill', args=[self.profile.identifiant, self.skills[0].id])
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+
+        # Vérifier que la compétence existe toujours
+        skill = Skill.objects.get(id=self.skills[0].id)
+        self.assertTrue(skill)
+
+        # Vérifier que la compétence a été supprimée pour le profil
+        self.assertEqual(result['success'], True)
+        profile = Profile.objects.get(identifiant=self.profile.identifiant)
+        self.assertNotIn(skill, profile.skills.all())
+
+        # Vérifier que la compétence a été supprimée des expériences du profil
+        experiences = Experience.objects.filter(profile=profile)
+        for experience in experiences:
+            self.assertNotIn(skill, experience.skills.all())
+        
+        # Vérifier que la compétence a été supprimée des projets du profil
+        projects = Project.objects.filter(profile=profile)
+        for project in projects:
+            self.assertNotIn(skill, project.skills.all())

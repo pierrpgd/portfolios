@@ -17,7 +17,8 @@
         "fields": {
             "name": "Test Profile",
             "identifiant": "test-profile",
-            "title": "Test Title"
+            "title": "Test Title",
+            "skills": [1, 2, 3]
         }
     },
     {
@@ -112,12 +113,21 @@
         }
     },
     {
+        "model": "pierrpgd.skill",
+        "pk": 4,
+        "fields": {
+            "category": "Fourth Category",
+            "name": "Fourth Skill"
+        }
+    },
+    {
         "model": "pierrpgd.profile",
         "pk": 2,
         "fields": {
             "name": "Second Profile",
             "identifiant": "second-profile",
-            "title": "Second Title"
+            "title": "Second Title",
+            "skills": [1, 2]
         }
     },
     {

@@ -14,8 +14,10 @@ if [[ $CREATE_SUPERUSER ]]; then
   python manage.py createsuperuser --no-input
 fi
 
-# Initiate database for 'pierrpgd' user
-python manage.py shell < initiate_db.py
+if [[ $INIT_DB ]]; then
+  # Initiate database for 'pierrpgd' user
+  python manage.py init_db --force
+fi
 
 # Convert static asset files
 python manage.py collectstatic --no-input

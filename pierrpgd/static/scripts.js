@@ -40,6 +40,24 @@ function addProfileSection() {
 }
 
 // Fonction pour ajouter une nouvelle section À propos
+function addSkillSection() {
+    // Créer un élément row factice avec des attributs vides
+    const dummyRow = document.createElement('div');
+    dummyRow.setAttribute('data-category', '');
+    dummyRow.setAttribute('data-name', '');
+    
+    // Ouvrir la popup avec le contenu vide
+    showPopup(dummyRow, 'skillModal', 'skillModalContent');
+    
+    // Rendre tous les champs éditables
+    const modal = document.getElementById('skillModal');
+    modal.querySelectorAll('.editable-content').forEach(el => {
+        el.contentEditable = true;
+        el.focus();
+    });
+}
+
+// Fonction pour ajouter une nouvelle section À propos
 function addAboutSection() {
     // Créer un élément row factice avec des attributs vides
     const dummyRow = document.createElement('div');
@@ -120,7 +138,7 @@ function addSkillToItem(modalId) {
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Ajouter une compétence</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="modalCloseButton">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -208,26 +226,55 @@ async function updateSkillsDisplay(modalId) {
 // Fonction pour afficher une popup générique
 function showPopup(row, modalId, contentId) {
 
-    const content = row.getAttribute('data-content');
-    const identifiant = row.getAttribute('data-identifiant');
-    const name = row.getAttribute('data-name');
-    const profileTitle = row.getAttribute('data-title');
-    const dates = row.getAttribute('data-dates');
-    const company = row.getAttribute('data-company');
-    const position = row.getAttribute('data-position');
-    const location = row.getAttribute('data-location');
-    const experienceDescription = row.getAttribute('data-description');
-    const experienceUrl = row.getAttribute('data-url');
-    const experienceSkills = row.getAttribute('data-skills');
-    const projectTitle = row.getAttribute('data-title');
-    const projectDescription = row.getAttribute('data-description');
-    const projectImageUrl = row.getAttribute('data-image-url');
-    const projectUrl = row.getAttribute('data-url');
-    const projectSkills = row.getAttribute('data-skills');
+    let profileIdentifiant = '';
+    let profileName = '';
+    let profileTitle = '';
+    let skillCategory = '';
+    let skillName = '';
+    let aboutContent = '';
+    let experienceDates = '';
+    let experienceCompany = '';
+    let experiencePosition = '';
+    let experienceLocation = '';
+    let experienceDescription = '';
+    let experienceUrl = '';
+    let experienceSkills = '';
+    let projectTitle = '';
+    let projectDescription = '';
+    let projectImageUrl = '';
+    let projectUrl = '';
+    let projectSkills = '';
+
+    if (modalId === 'profileModal') {
+        profileIdentifiant = row.getAttribute('data-identifiant');
+        profileName = row.getAttribute('data-name');
+        profileTitle = row.getAttribute('data-title');
+    } else if (modalId === 'skillModal') {
+        skillCategory = row.getAttribute('data-category');
+        skillName = row.getAttribute('data-name');
+    } else if (modalId === 'aboutModal') {
+        aboutContent = row.getAttribute('data-content');
+    } else if (modalId === 'experienceModal') {
+        experienceDates = row.getAttribute('data-dates');
+        experienceCompany = row.getAttribute('data-company');
+        experiencePosition = row.getAttribute('data-position');
+        experienceLocation = row.getAttribute('data-location');
+        experienceDescription = row.getAttribute('data-description');
+        experienceUrl = row.getAttribute('data-url');
+        experienceSkills = row.getAttribute('data-skills');
+    } else if (modalId === 'projectModal') {
+        projectTitle = row.getAttribute('data-title');
+        projectDescription = row.getAttribute('data-description');
+        projectImageUrl = row.getAttribute('data-image-url');
+        projectUrl = row.getAttribute('data-url');
+        projectSkills = row.getAttribute('data-skills');
+    }
+
     const title = modalId === 'profileModal' ? 'Profil' : 
                     modalId === 'aboutModal' ? 'À propos' : 
                     modalId === 'experienceModal' ? 'Expérience' : 
-                    modalId === 'projectModal' ? 'Projet' : '';
+                    modalId === 'projectModal' ? 'Projet' : 
+                    modalId === 'skillModal' ? 'Compétence' : '';
     
     // Créer la popup si elle n'existe pas déjà
     let modal = document.getElementById(modalId);
@@ -239,35 +286,44 @@ function showPopup(row, modalId, contentId) {
         modal.className = 'modal';
         modal.innerHTML = `
             <div class="modal-header">
-                <button class="close">&times;</button>
+                <button class="close" id="modalCloseButton">&times;</button>
             </div>
             <div class="modal-content">
                 <div class="modal-content-title">${title}</div>
                 ${modalId === 'profileModal' ? `
                     <div class="modal-content-info">
                         <div class="editable-field">
-                            <span class="modal-content-info-title">Identifiant : </span> <span contenteditable="true" class="editable-content" data-field="identifiant">${identifiant}</span>
+                            <span class="modal-content-info-title">Identifiant : </span> <span contenteditable="true" class="editable-content" data-field="identifiant">${profileIdentifiant}</span>
                         </div>
                         <div class="editable-field">
-                            <span class="modal-content-info-title">Nom : </span> <span contenteditable="true" class="editable-content" data-field="name">${name}</span>
+                            <span class="modal-content-info-title">Nom : </span> <span contenteditable="true" class="editable-content" data-field="name">${profileName}</span>
                         </div>
                         <div class="editable-field">
                             <span class="modal-content-info-title">Titre : </span> <span contenteditable="true" class="editable-content" data-field="title">${profileTitle}</span>
                         </div>
                     </div>
+                ` : modalId === 'skillModal' ? `
+                    <div class="modal-content-info">
+                        <div class="editable-field">
+                            <span class="modal-content-info-title">Catégorie : </span> <span contenteditable="true" class="editable-content" data-field="category">${skillCategory}</span>
+                        </div>
+                        <div class="editable-field">
+                            <span class="modal-content-info-title">Nom : </span> <span contenteditable="true" class="editable-content" data-field="name">${skillName}</span>
+                        </div>
+                    </div>
                 ` : modalId === 'experienceModal' ? `
                     <div class="modal-content-info">
                         <div class="editable-field">
-                            <span class="modal-content-info-title">Période : </span> <span contenteditable="true" class="editable-content" data-field="dates">${dates}</span>
+                            <span class="modal-content-info-title">Période : </span> <span contenteditable="true" class="editable-content" data-field="dates">${experienceDates}</span>
                         </div>
                         <div class="editable-field">
-                            <span class="modal-content-info-title">Poste : </span> <span contenteditable="true" class="editable-content" data-field="position">${position}</span>
+                            <span class="modal-content-info-title">Poste : </span> <span contenteditable="true" class="editable-content" data-field="position">${experiencePosition}</span>
                         </div>
                         <div class="editable-field">
-                            <span class="modal-content-info-title">Entreprise : </span> <span contenteditable="true" class="editable-content" data-field="company">${company}</span>
+                            <span class="modal-content-info-title">Entreprise : </span> <span contenteditable="true" class="editable-content" data-field="company">${experienceCompany}</span>
                         </div>
                         <div class="editable-field">
-                            <span class="modal-content-info-title">Localisation : </span> <span contenteditable="true" class="editable-content" data-field="location">${location}</span>
+                            <span class="modal-content-info-title">Localisation : </span> <span contenteditable="true" class="editable-content" data-field="location">${experienceLocation}</span>
                         </div>
                         <div class="editable-field">
                             <span class="modal-content-info-title">URL : </span> <span contenteditable="true" class="editable-content" data-field="url">${experienceUrl}</span>
@@ -306,7 +362,7 @@ function showPopup(row, modalId, contentId) {
                         <div contenteditable="true" class="editable-content" data-field="description">${projectDescription}</div>
                     </div>
                 ` : `<span class="modal-content-info-title">Contenu : </span>
-                    <div contenteditable="true" class="editable-content" data-field="content">${content}</div>`}
+                    <div contenteditable="true" class="editable-content" data-field="content">${aboutContent}</div>`}
             </div>
             <div class="w-100 text-end mb-3">
                 <button id="${modalId}ValidateButton" type="button" class="btn btn-primary">
@@ -321,6 +377,7 @@ function showPopup(row, modalId, contentId) {
         updateSkillsDisplay(modalId);
     }
 
+    // Ajout de l'écouteur d'événement pour le bouton Enregistrer
     document.getElementById(`${modalId}ValidateButton`).addEventListener('click', async function() {
         const result = await saveModalContent(modal);
 
@@ -407,8 +464,9 @@ async function saveModalContent(modal) {
         }
     });
 
-
     requestData.data.profile = selectedProfile;
+
+    console.log(requestData);
 
     // Ajouter l'ID seulement pour les modifications
     if (!isNew) {
@@ -574,6 +632,53 @@ function updateProfileData(data) {
             });
         }
     }
+
+    // Mise à jour de la section Compétences
+    if (data.skills && data.skills.length > 0) {
+        let skillTable = document.querySelector('#skill-table tbody');
+
+        if (!skillTable) {
+            skillTable = document.querySelector('#skill-table-container');
+
+            skillTable.innerHTML = `
+                <table id="skill-table" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Catégorie</th>
+                            <th>Nom</th>
+                            <th class="text-end"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            `;
+        }
+
+        skillTable = document.querySelector('#skill-table tbody');
+
+        if (skillTable) {
+            skillTable.innerHTML = data.skills.map(skill => `
+                <tr class="skill-row" data-id="${skill.id}" data-content="${skill.content}">
+                    <td>${skill.category}</td>
+                    <td>${skill.name}</td>
+                    <td class="text-end">
+                        <button class="btn btn-danger btn-sm delete-skill" data-id="${skill.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                    <input type="hidden" class="skill-id" value="${skill.id}">
+                </tr>
+            `).join('');
+
+            // Réattacher les événements
+            document.querySelectorAll('.skill-row').forEach(row => {
+                row.addEventListener('dblclick', function() {
+                    showPopup(row, 'skillModal', 'skillModalContent');
+                });
+            });
+        }
+    }
     
     // Mise à jour de la section About
     if (data.about && data.about.length > 0) {
@@ -631,7 +736,6 @@ function updateProfileData(data) {
                             <th>Localisation</th>
                             <th>Description</th>
                             <th>URL</th>
-                            <th>Compétences</th>
                             <th class="text-end"></th>
                         </tr>
                     </thead>
@@ -652,7 +756,6 @@ function updateProfileData(data) {
                     <td>${exp.location}</td>
                     <td>${exp.description}</td>
                     <td>${exp.url}</td>
-                    <td>${exp.skills ? exp.skills.length : 0}</td>
                     <td class="text-end">
                         <button class="btn btn-danger btn-sm delete-experience" data-id="${exp.id}">
                             <i class="fas fa-trash"></i>
@@ -686,7 +789,6 @@ function updateProfileData(data) {
                             <th>Description</th>
                             <th>Image URL</th>
                             <th>URL</th>
-                            <th>Compétences</th>
                             <th class="text-end"></th>
                         </tr>
                     </thead>
@@ -706,7 +808,6 @@ function updateProfileData(data) {
                     <td>${project.description}</td>
                     <td>${project.image_url}</td>
                     <td>${project.url}</td>
-                    <td>${project.skills ? project.skills.length : 0}</td>
                     <td class="text-end">
                         <button class="btn btn-danger btn-sm delete-project" data-id="${project.id}">
                             <i class="fas fa-trash"></i>
@@ -740,6 +841,44 @@ function loadProfileData(profileIdentifiant) {
 
             // Créer le HTML pour les données
             const html = `
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">Compétences</h2>
+                        <button id="addSkillSectionButton" class="btn btn-primary btn-sm" onclick="addSkillSection()">
+                            <i class="fas fa-plus"></i> Ajouter une compétence
+                        </button>
+                    </div>
+                    <div id="skill-table-container" class="card-body">
+                        ${data.skills.length > 0 ? `
+                            <table id="skill-table" class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Catégorie</th>
+                                        <th>Nom</th>
+                                        <th class="text-end"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.skills.map(skill => `
+                                        <tr class="skill-row" data-id="${skill.id}" data-category="${skill.category}" data-name="${skill.name}">
+                                            <td>${skill.category}</td>
+                                            <td>${skill.name}</td>
+                                            <td class="text-end">
+                                                <button class="btn btn-danger btn-sm delete-skill" data-id="${skill.id}">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                            <input type="hidden" class="skill-id" value="${skill.id}">
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        ` : `
+                            <p>Aucune compétence trouvée</p>
+                        `}
+                    </div>
+                </div>
+
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h2 class="mb-0">À propos</h2>
@@ -788,7 +927,6 @@ function loadProfileData(profileIdentifiant) {
                                         <th>Localisation</th>
                                         <th>Description</th>
                                         <th>URL</th>
-                                        <th>Compétences</th>
                                         <th class="text-end"></th>
                                     </tr>
                                 </thead>
@@ -801,7 +939,6 @@ function loadProfileData(profileIdentifiant) {
                                             <td>${exp.location}</td>
                                             <td>${exp.description}</td>
                                             <td>${exp.url}</td>
-                                            <td>${exp.skills ? exp.skills.length : 0}</td>
                                             <td class="text-end">
                                                 <button class="btn btn-danger btn-sm delete-experience" data-id="${exp.id}">
                                                     <i class="fas fa-trash"></i>
@@ -834,7 +971,6 @@ function loadProfileData(profileIdentifiant) {
                                         <th>Description</th>
                                         <th>Image URL</th>
                                         <th>URL</th>
-                                        <th>Compétences</th>
                                         <th class="text-end"></th>
                                     </tr>
                                 </thead>
@@ -845,7 +981,6 @@ function loadProfileData(profileIdentifiant) {
                                             <td>${project.description}</td>
                                             <td>${project.image_url}</td>
                                             <td>${project.url}</td>
-                                            <td>${project.skills ? project.skills.length : 0}</td>
                                             <td class="text-end">
                                                 <button class="btn btn-danger btn-sm delete-project" data-id="${project.id}">
                                                     <i class="fas fa-trash"></i>
@@ -866,6 +1001,13 @@ function loadProfileData(profileIdentifiant) {
             // Mettre à jour le DOM
             document.querySelector('#profile-data').innerHTML = html;
 
+            // Ajouter les gestionnaires d'événements pour les lignes Compétences
+            document.querySelectorAll('.skill-row').forEach(row => {
+                row.addEventListener('dblclick', function() {
+                    showPopup(row, 'skillModal', 'skillModalContent');
+                });
+            });
+            
             // Ajouter les gestionnaires d'événements pour les lignes About
             document.querySelectorAll('.about-row').forEach(row => {
                 row.addEventListener('dblclick', function() {
@@ -937,7 +1079,7 @@ $(function() {
         // Simple clic pour sélectionner le profil
         row.addEventListener('click', function(e) {
             // Ne pas traiter si le clic provient d'un bouton de suppression
-            if (e.target.closest('.btn-danger, .delete-profile, .delete-about, .delete-experience, .delete-project')) {
+            if (e.target.closest('.btn-danger, .delete-profile, .delete-about, .delete-experience, .delete-project, .delete-skill')) {
                 return;
             }
 
@@ -979,7 +1121,12 @@ $(function() {
     // Confirmation de suppression d'un element
     $('#confirmDeleteButton').click(function() {
         const csrfToken = getCsrfToken();
-        const url = `/delete_${currentDeleteType}/${currentDeleteId}/`;
+        let url = `/delete_${currentDeleteType}/`
+        if (currentDeleteType === 'skill') {
+            url += `${selectedProfile}/${currentDeleteId}/`;
+        } else {
+            url += `${currentDeleteId}/`;
+        }
         
         fetch(url, {
             method: 'DELETE',
@@ -1021,7 +1168,7 @@ $(function() {
     });
 
     // Clic sur le bouton de suppression
-    $(document).on('click', '.delete-profile, .delete-about, .delete-experience, .delete-project', function() {
+    $(document).on('click', '.delete-profile, .delete-about, .delete-experience, .delete-project, .delete-skill', function() {
         const btn = $(this);
         currentDeleteId = btn.data('id');
         
@@ -1031,8 +1178,10 @@ $(function() {
             currentDeleteType = 'about';
         } else if (btn.hasClass('delete-experience')) {
             currentDeleteType = 'experience';
-        } else {
+        } else if (btn.hasClass('delete-project')) {
             currentDeleteType = 'project';
+        } else {
+            currentDeleteType = 'skill';
         }
         
         $('#confirmDeleteModal').modal('show');

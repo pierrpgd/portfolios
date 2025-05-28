@@ -1,16 +1,4 @@
 {
-  "profile": {
-    "name": "Pierrick Pagaud",
-    "identifiant": "pierrpgd",
-    "title": "Ingénieur développement logiciel"
-  },
-  "about": [
-    "<strong>Bonjour</strong>, bienvenue sur mon portfolio.",
-    "Ingénieur généraliste de formation, je suis passionné par la création d'application intelligente et robuste, co-construite avec l'utilisateur final a chaque étape du projet. Ce que je préfère dans mon travail : le travail de conception en équipe, où la magie opère quand un problème complexe se débloque par des solutions simples et élégantes.",
-    "Actuellement ingénieur logiciel chez <strong>Betakron</strong>, je pilote la mise en place d'un workflow sur-mesure pour le service Méthodes, facilitant ses interactions avec les services internes, clients, fournisseurs et partenaires de l'entreprise.",
-    "Précédemment, j'ai eu l'occasion de travailler comme ingénieur logiciel dans divers <strong>contextes internationaux</strong> (USA, LATAM, Europe) — du pilotage de projet à la mise en œuvre de solution MES sur-mesure pour des <strong>secteurs industriels</strong> variés tels que l’aéronautique, l’automobile ou la pharmaceutique.",
-    "Sur mon temps libre, je suis joueur et passionné de <strong>rugby</strong>. Quand je ne suis pas sur un terrain, je me plonge dans un <strong>roman d’histoire</strong> ou de fantasy… ou je prépare ma prochaine <strong>escapade en montagne</strong>."
-  ],
   "skills": [
     {"category": "Développement", "name": "Python"},
     {"category": "Développement", "name": "JavaScript"},
@@ -27,6 +15,18 @@
     {"category": "Outils", "name": "Git"},
     {"category": "Outils", "name": "MQTT"},
     {"category": "Outils", "name": "ArcGIS"}
+  ],
+  "profile": {
+    "name": "Pierrick Pagaud",
+    "identifiant": "pierrpgd",
+    "title": "Ingénieur développement logiciel"
+  },
+  "about": [
+    "<strong>Bonjour</strong>, bienvenue sur mon portfolio.",
+    "Ingénieur généraliste de formation, je suis passionné par la création d'application intelligente et robuste, co-construite avec l'utilisateur final a chaque étape du projet. Ce que je préfère dans mon travail : le travail de conception en équipe, où la magie opère quand un problème complexe se débloque par des solutions simples et élégantes.",
+    "Actuellement ingénieur logiciel chez <strong>Betakron</strong>, je pilote la mise en place d'un workflow sur-mesure pour le service Méthodes, facilitant ses interactions avec les services internes, clients, fournisseurs et partenaires de l'entreprise.",
+    "Précédemment, j'ai eu l'occasion de travailler comme ingénieur logiciel dans divers <strong>contextes internationaux</strong> (USA, LATAM, Europe) — du pilotage de projet à la mise en œuvre de solution MES sur-mesure pour des <strong>secteurs industriels</strong> variés tels que l’aéronautique, l’automobile ou la pharmaceutique.",
+    "Sur mon temps libre, je suis joueur et passionné de <strong>rugby</strong>. Quand je ne suis pas sur un terrain, je me plonge dans un <strong>roman d’histoire</strong> ou de fantasy… ou je prépare ma prochaine <strong>escapade en montagne</strong>."
   ],
   "experiences": [
     {
