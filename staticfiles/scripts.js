@@ -390,7 +390,7 @@ function showPopup(row, modalId, contentId) {
                             <span class="modal-content-info-title">Nom : </span> <span contenteditable="true" class="editable-content" data-field="name">${skillName}</span>
                         </div>
                         <div class="editable-field">
-                            <span class="modal-content-info-title">Level : </span> 
+                            <span class="modal-content-info-title">Niveau : </span> 
                             <input type="range" class="form-range" data-field="level" min="0" max="10" step="1" value="${skillLevel}" oninput="this.nextElementSibling.value = this.value" style="width: 100%; height: 10px; background: #000; -webkit-appearance: none; border-radius: 5px;">
                             <output style="display: inline-block; margin-left: 10px; font-weight: bold;">${skillLevel}</output>
                         </div>
@@ -737,7 +737,7 @@ function updateProfileData(data) {
                         <tr>
                             <th>Catégorie</th>
                             <th>Nom</th>
-                            <th>Level</th>
+                            <th>Niveau</th>
                             <th class="text-end"></th>
                         </tr>
                     </thead>
@@ -948,7 +948,7 @@ function loadProfileData(profileIdentifiant) {
                                     <tr>
                                         <th>Catégorie</th>
                                         <th>Nom</th>
-                                        <th>Level</th>
+                                        <th>Niveau</th>
                                         <th class="text-end"></th>
                                     </tr>
                                 </thead>

@@ -17,6 +17,7 @@ class BaseTest(TestCase):
         cls.experiences = Experience.objects.filter(profile=cls.profile)
         cls.projects = Project.objects.filter(profile=cls.profile)
         cls.skills = Skill.objects.all()
+        cls.profile_skills = ProfileSkill.objects.filter(profile=cls.profile)
 
     @classmethod
     def tearDownClass(cls):
@@ -57,6 +58,16 @@ class PortfolioViewTest(BaseTest):
         
         about_content = about_section.find_all('p')[0].text
         self.assertEqual(about_content.strip(), self.abouts[0].content)
+
+    def test_skills_display(self):
+        """Teste l'affichage des sections Skills"""
+        skills_section = self.soup.find(id="skills")
+        self.assertIsNotNone(skills_section)
+
+        skills_names = skills_section.find_all(class_="skill-name")
+        skills_values = skills_section.find_all(class_="skill-level")
+        self.assertIn(self.profile_skills[0].skill.name, [skill_name.text for skill_name in skills_names])
+        self.assertIn(str(self.profile_skills[0].level), [skill_value.text for skill_value in skills_values])
 
     def test_experience_display(self):
         """Teste l'affichage des expériences"""

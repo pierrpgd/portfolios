@@ -13,8 +13,17 @@ def portfolio(request, identifiant):
             about = profile.about.all()
             experience = profile.experience.all().prefetch_related('skills')
             projects = profile.projects.all().prefetch_related('skills')
-            skills = Skill.objects.filter(profileskill__profile=profile).distinct()
-            project_skills = ProfileSkill.objects.filter(profile=profile)
+            profile_skills = ProfileSkill.objects.filter(profile=profile).order_by('skill__category', '-level')
+
+            skills_data = []
+                
+            for ps in profile_skills:
+                skills_data.append({
+                    'id': ps.skill.id,
+                    'category': ps.skill.category,
+                    'name': ps.skill.name,
+                    'level': ps.level
+                })
 
         except Profile.DoesNotExist:
             raise Http404("Le profil demandé n'existe pas")
@@ -24,7 +33,7 @@ def portfolio(request, identifiant):
             'about': about,
             'experience': experience,
             'projects': projects,
-            'skills': skills,
+            'skills': skills_data,
         }
         
         return render(request, 'portfolio.html', context)

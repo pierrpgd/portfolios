@@ -1,3 +1,4 @@
+{% load mathfilters %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -32,6 +33,7 @@
             text-align: justify;
             text-justify: inter-word;
             hyphens: auto;
+            cursor: default;
         }
         .container-flex {
             display: flex;
@@ -79,6 +81,103 @@
         }
         nav h1 a:hover, nav ul li:hover a {
             color: white;
+        }
+
+        /* Style du menu de compétences */
+
+        .container {
+            padding: 0;
+        }
+
+        .skill-category {
+            cursor: default;
+        }
+        
+        .table-container {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            width: 100%;
+        }
+        .skill-category:hover .table-container,
+        .skill-category:focus-within .table-container {
+            display: table;
+        }
+        .skill-category:hover .skill-row,
+        .skill-category:focus-within .skill-row {
+            display: table-row;
+        }
+        .skill-category:hover .left-col-item,
+        .skill-category:focus-within .left-col-item,
+        .skill-category:hover .right-col-item,
+        .skill-category:focus-within .right-col-item {
+            display: table-cell;
+            vertical-align: middle;
+        }
+        .skill-category:hover .left-col-item,
+        .skill-category:focus-within .left-col-item {
+            width: 30%;
+        }
+        .skill-category:hover .right-col-item,
+        .skill-category:focus-within .right-col-item {
+            width: 70%;
+        }
+
+        .skill-row:hover .skill-level-gauge:not(.active),
+        .skill-row:hover .skill-name:not(.active) {
+            background: rgba(94, 231, 212, 0.15);
+            font-weight: bold;
+        }
+
+        .skill-row.active .skill-level-gauge {
+            background-color: rgba(94, 231, 212, 0.3);
+        }
+        
+        .skill-row.active .skill-level {
+            font-size: 0.9rem;
+        }
+        
+        .skill-name {
+            text-align: center;
+            background: transparent;
+            color: #5ee7d4;
+            border: 1px solid #5ee7d4;
+            border-radius: 1rem;
+            cursor: pointer;
+            padding: 0.1rem 0.7rem;
+            margin: 0.2rem;
+        }
+
+        .right-col-item {
+            display: none;
+            position: relative;
+        }
+
+        .skill-name.active {
+            background-color: rgba(94, 231, 212, 0.3);
+            font-weight: bold;
+            border-width: 2px;
+        }
+        
+        .skill-level-gauge {
+            position: absolute;
+            top: 50%;
+            transform: translate(0%, -50%);
+            height: 50%;
+            border: 1px solid #5ee7d4;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+        
+        .skill-level {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.8rem;
+            color: #5ee7d4;
+            font-weight: bold;
+            pointer-events: none;
         }
 
         /* Style du contenu principal */
@@ -319,6 +418,30 @@
                 });
             }
         });
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const skillRows = document.querySelectorAll('.skill-row');
+            
+            skillRows.forEach(skillRow => {
+                skillRow.addEventListener('click', function() {
+                    const isActive = this.classList.contains('active');
+                    
+                    if (!isActive) {
+                        this.classList.add('active');
+                        this.querySelector('.skill-name').classList.add('active');
+                        this.querySelector('.skill-level-gauge').classList.add('active');
+                        this.querySelector('.skill-level').classList.add('active');
+                    } else {
+                        this.classList.remove('active');
+                        this.querySelector('.skill-name').classList.remove('active');
+                        this.querySelector('.skill-level-gauge').classList.remove('active');
+                        this.querySelector('.skill-level').classList.remove('active');
+                    }
+                });
+            });
+        });
+
+        
     </script>
 </head>
 <body>
@@ -333,6 +456,27 @@
                     <li class="nav-item"><a href="#experience">Experience</a></li>
                     <li class="nav-item"><a href="#projects">Projects</a></li>
                 </ul>
+                <div id="skills">
+                    {% regroup skills by category as skill_categories %}
+                    {% for category in skill_categories %}
+                    <div class="skill-category">
+                        <h3 class="category-title">{{ category.grouper }}</h3>
+                        <div class="table-container">
+                            {% for skill in category.list %}
+                            <div class="skill-row">
+                                <div class="left-col-item">
+                                    <div class="skill-name">{{ skill.name }}</div>
+                                </div>
+                                <div class="right-col-item">
+                                    <div class="skill-level-gauge" style="width: {{ skill.level|mul:10 }}%"></div>
+                                    <span class="skill-level" style="left: {{ skill.level|mul:5 }}%;">{{ skill.level }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </nav>
 
             <div id="col-2" class="main-content">
