@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 import json
-from pierrpgd.models import Profile, About, Experience, Project, Skill
+from pierrpgd.models import Profile, About, Experience, Project, Skill, ProfileSkill
 import os
 
 class Command(BaseCommand):
@@ -32,14 +32,6 @@ class Command(BaseCommand):
                 self.stdout.write("Profile already exists")
                 return
 
-            # Création des compétences
-            self.stdout.write("Création des compétences...")
-            for skill_data in data["skills"]:
-                if Skill.objects.filter(name=skill_data["name"], category=skill_data["category"]).exists():
-                    continue
-                skill = Skill.objects.create(category=skill_data["category"], name=skill_data["name"])
-                self.stdout.write(f"Compétence créée: {skill.name} (ID: {skill.id})")
-
             # Création du profil
             self.stdout.write("Création du profil...")
             profile = Profile.objects.create(
@@ -47,9 +39,16 @@ class Command(BaseCommand):
                 identifiant=data["profile"]["identifiant"],
                 title=data["profile"]["title"]
             )
-            skills = Skill.objects.all()
-            profile.skills.add(*skills)
             self.stdout.write(f"Profil créé avec l'ID: {profile.id}")
+
+            # Création des compétences
+            self.stdout.write("Création des compétences...")
+            for skill_data in data["skills"]:
+                if not Skill.objects.filter(name=skill_data["name"], category=skill_data["category"]).exists():
+                    Skill.objects.create(category=skill_data["category"], name=skill_data["name"])
+                skill = Skill.objects.get(name=skill_data["name"], category=skill_data["category"])
+                ProfileSkill.objects.create(profile=profile, skill=skill, level=skill_data["level"])
+                self.stdout.write(f"Compétence créée: {skill.name} (ID: {skill.id})")
 
             # Création des sections A propos
             self.stdout.write("Création des sections À propos...")

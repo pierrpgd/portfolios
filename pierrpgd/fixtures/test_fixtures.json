@@ -12,13 +12,71 @@
         }
     },
     {
+        "model": "pierrpgd.skill",
+        "pk": 1,
+        "fields": {
+            "category": "Test Category",
+            "name": "Test Skill"
+        }
+    },
+    {
+        "model": "pierrpgd.skill",
+        "pk": 2,
+        "fields": {
+            "category": "Second Category",
+            "name": "Second Skill"
+        }
+    },
+    {
+        "model": "pierrpgd.skill",
+        "pk": 3,
+        "fields": {
+            "category": "Third Category",
+            "name": "Third Skill"
+        }
+    },
+    {
+        "model": "pierrpgd.skill",
+        "pk": 4,
+        "fields": {
+            "category": "Fourth Category",
+            "name": "Fourth Skill"
+        }
+    },
+    {
         "model": "pierrpgd.profile",
         "pk": 1,
         "fields": {
             "name": "Test Profile",
             "identifiant": "test-profile",
-            "title": "Test Title",
-            "skills": [1, 2, 3]
+            "title": "Test Title"
+        }
+    },
+    {
+        "model": "pierrpgd.profileskill",
+        "pk": 1,
+        "fields": {
+            "profile": 1,
+            "skill": 1,
+            "level": 6
+        }
+    },
+    {
+        "model": "pierrpgd.profileskill",
+        "pk": 2,
+        "fields": {
+            "profile": 1,
+            "skill": 2,
+            "level": 6
+        }
+    },
+    {
+        "model": "pierrpgd.profileskill",
+        "pk": 3,
+        "fields": {
+            "profile": 1,
+            "skill": 3,
+            "level": 6
         }
     },
     {
@@ -89,45 +147,30 @@
         }
     },
     {
-        "model": "pierrpgd.skill",
-        "pk": 1,
-        "fields": {
-            "category": "Test Category",
-            "name": "Test Skill"
-        }
-    },
-    {
-        "model": "pierrpgd.skill",
-        "pk": 2,
-        "fields": {
-            "category": "Second Category",
-            "name": "Second Skill"
-        }
-    },
-    {
-        "model": "pierrpgd.skill",
-        "pk": 3,
-        "fields": {
-            "category": "Third Category",
-            "name": "Third Skill"
-        }
-    },
-    {
-        "model": "pierrpgd.skill",
-        "pk": 4,
-        "fields": {
-            "category": "Fourth Category",
-            "name": "Fourth Skill"
-        }
-    },
-    {
         "model": "pierrpgd.profile",
         "pk": 2,
         "fields": {
             "name": "Second Profile",
             "identifiant": "second-profile",
-            "title": "Second Title",
-            "skills": [1, 2]
+            "title": "Second Title"
+        }
+    },
+    {
+        "model": "pierrpgd.profileskill",
+        "pk": 4,
+        "fields": {
+            "profile": 2,
+            "skill": 1,
+            "level": 6
+        }
+    },
+    {
+        "model": "pierrpgd.profileskill",
+        "pk": 5,
+        "fields": {
+            "profile": 2,
+            "skill": 2,
+            "level": 6
         }
     },
     {

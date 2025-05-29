@@ -7,7 +7,7 @@ class Profile(models.Model):
     title = models.CharField(max_length=100, default='')
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
-    skills = models.ManyToManyField('Skill', blank=True)
+    skills = models.ManyToManyField('Skill', through='ProfileSkill', blank=True)
 
     def save(self, *args, **kwargs):
         self.updated_at = timezone.now()
@@ -22,6 +22,11 @@ class Skill(models.Model):
     
     def __str__(self):
         return f"{self.category} - {self.name}"
+
+class ProfileSkill(models.Model):
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    skill = models.ForeignKey(Skill, on_delete=models.CASCADE)
+    level = models.IntegerField(default=0)
 
 class About(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='about')

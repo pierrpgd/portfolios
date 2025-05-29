@@ -1,7 +1,6 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.http import JsonResponse, Http404
-from .models import Profile, About, Experience, Project, Skill
-from django.conf import settings
+from .models import Profile, About, Experience, Project, Skill, ProfileSkill
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
@@ -14,7 +13,9 @@ def portfolio(request, identifiant):
             about = profile.about.all()
             experience = profile.experience.all().prefetch_related('skills')
             projects = profile.projects.all().prefetch_related('skills')
-            skills = Skill.objects.all()
+            skills = Skill.objects.filter(profileskill__profile=profile).distinct()
+            project_skills = ProfileSkill.objects.filter(profile=profile)
+
         except Profile.DoesNotExist:
             raise Http404("Le profil demandé n'existe pas")
 
@@ -49,8 +50,19 @@ def load_data(request):
                 abouts = profile.about.all()
                 experiences = profile.experience.all()
                 projects = profile.projects.all()
-                skills = profile.skills.all()
+                profile_skills = ProfileSkill.objects.filter(profile=profile)
                 
+                # Récupération de toutes les compétences liées au profil
+                skills_data = []
+                
+                for ps in profile_skills:
+                    skills_data.append({
+                        'id': ps.skill.id,
+                        'category': ps.skill.category,
+                        'name': ps.skill.name,
+                        'level': ps.level
+                    })
+                                
                 data = {
                     'profile': {
                         'name': profile.name if profile.name else '',
@@ -91,13 +103,7 @@ def load_data(request):
                             'skills': [skill.id for skill in project.skills.all()]
                         } for project in projects
                     ],
-                    'skills': [
-                        {
-                            'id': skill.id,
-                            'category': skill.category if skill.category else '',
-                            'name': skill.name if skill.name else ''
-                        } for skill in skills
-                    ]
+                    'skills': skills_data
                 }
                 
                 return JsonResponse(data)
@@ -221,6 +227,7 @@ def save_data(request):
                     else:
                         obj = Skill.objects.get(category=content.get('category'), name=content.get('name'))
                 profile.skills.add(obj)
+                ProfileSkill.objects.update_or_create(profile=profile, skill=obj, defaults={'level': content.get('level', 5)})
             else:
                 return JsonResponse({'success': False, 'error': 'Type de modal inconnu'}, status=400)
 

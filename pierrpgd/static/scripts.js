@@ -45,6 +45,7 @@ function addSkillSection() {
     const dummyRow = document.createElement('div');
     dummyRow.setAttribute('data-category', '');
     dummyRow.setAttribute('data-name', '');
+    dummyRow.setAttribute('data-level', '');
     
     // Ouvrir la popup avec le contenu vide
     showPopup(dummyRow, 'skillModal', 'skillModalContent');
@@ -298,7 +299,7 @@ async function updateSkillsDisplay(modalId) {
 }
 
 // Fonction pour afficher une popup générique
-function showPopup(row, modalId, contentId, skillsData) {
+function showPopup(row, modalId, contentId) {
 
     document.body.style.overflowY = 'hidden';
 
@@ -307,6 +308,7 @@ function showPopup(row, modalId, contentId, skillsData) {
     let profileTitle = '';
     let skillCategory = '';
     let skillName = '';
+    let skillLevel = 0;
     let aboutContent = '';
     let experienceDates = '';
     let experienceCompany = '';
@@ -328,6 +330,7 @@ function showPopup(row, modalId, contentId, skillsData) {
     } else if (modalId === 'skillModal') {
         skillCategory = row.getAttribute('data-category');
         skillName = row.getAttribute('data-name');
+        skillLevel = parseInt(row.getAttribute('data-level')) || 0;
     } else if (modalId === 'aboutModal') {
         aboutContent = row.getAttribute('data-content');
     } else if (modalId === 'experienceModal') {
@@ -385,6 +388,11 @@ function showPopup(row, modalId, contentId, skillsData) {
                         </div>
                         <div class="editable-field">
                             <span class="modal-content-info-title">Nom : </span> <span contenteditable="true" class="editable-content" data-field="name">${skillName}</span>
+                        </div>
+                        <div class="editable-field">
+                            <span class="modal-content-info-title">Niveau : </span> 
+                            <input type="range" class="form-range" data-field="level" min="0" max="10" step="1" value="${skillLevel}" oninput="this.nextElementSibling.value = this.value" style="width: 100%; height: 10px; background: #000; -webkit-appearance: none; border-radius: 5px;">
+                            <output style="display: inline-block; margin-left: 10px; font-weight: bold;">${skillLevel}</output>
                         </div>
                     </div>
                 ` : modalId === 'experienceModal' ? `
@@ -729,6 +737,7 @@ function updateProfileData(data) {
                         <tr>
                             <th>Catégorie</th>
                             <th>Nom</th>
+                            <th>Niveau</th>
                             <th class="text-end"></th>
                         </tr>
                     </thead>
@@ -742,9 +751,10 @@ function updateProfileData(data) {
 
         if (skillTable) {
             skillTable.innerHTML = data.skills.map(skill => `
-                <tr class="skill-row" data-id="${skill.id}" data-content="${skill.content}">
+                <tr class="skill-row" data-id="${skill.id}" data-content="${skill.category}" data-name="${skill.name}" data-level="${skill.level}">
                     <td>${skill.category}</td>
                     <td>${skill.name}</td>
+                    <td>${skill.level}</td>
                     <td class="text-end">
                         <button class="btn btn-danger btn-sm delete-skill" data-id="${skill.id}">
                             <i class="fas fa-trash"></i>
@@ -938,14 +948,16 @@ function loadProfileData(profileIdentifiant) {
                                     <tr>
                                         <th>Catégorie</th>
                                         <th>Nom</th>
+                                        <th>Niveau</th>
                                         <th class="text-end"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     ${data.skills.map(skill => `
-                                        <tr class="skill-row" data-id="${skill.id}" data-category="${skill.category}" data-name="${skill.name}">
+                                        <tr class="skill-row" data-id="${skill.id}" data-category="${skill.category}" data-name="${skill.name}" data-level="${skill.level}">
                                             <td>${skill.category}</td>
                                             <td>${skill.name}</td>
+                                            <td>${skill.level}</td>
                                             <td class="text-end">
                                                 <button class="btn btn-danger btn-sm delete-skill" data-id="${skill.id}">
                                                     <i class="fas fa-trash"></i>

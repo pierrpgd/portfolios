@@ -5,11 +5,12 @@ from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException
-from pierrpgd.models import Profile, About, Experience, Project, Skill
+from pierrpgd.models import Profile, About, Experience, Project, Skill, ProfileSkill
 from selenium.webdriver.common.keys import Keys
 from django.test import Client
 from django.conf import settings
 import time
+
 class BaseTest(LiveServerTestCase):
     fixtures = ['test_fixtures.json']
 
@@ -110,8 +111,10 @@ class ProfileTest(BaseTest):
         # Vérifier l'affichage des données Compétences
         skill_name = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'skill-table')]//td[contains(text(), 'Test Skill')]")
         skill_category = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'skill-table')]//td[contains(text(), 'Test Category')]")
+        skill_level = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'skill-table')]//td[contains(text(), '6')]")
         self.assertTrue(skill_name.is_displayed())
         self.assertTrue(skill_category.is_displayed())
+        self.assertTrue(skill_level.is_displayed())
 
         # Vérifier l'affichage des données About
         about_content = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'about-table')]//td[contains(text(), 'Test About Content')]")
@@ -243,8 +246,10 @@ class PopupTest(BaseTest):
             modal_content = self.browser.find_element(By.CSS_SELECTOR, '#skillModal .modal-content')
             category = modal_content.find_element(By.CSS_SELECTOR, '[data-field="category"]').text
             name = modal_content.find_element(By.CSS_SELECTOR, '[data-field="name"]').text
+            level = modal_content.find_element(By.CSS_SELECTOR, '[data-field="level"]').get_attribute('value')
             self.assertEqual(category, 'Test Category')
             self.assertEqual(name, 'Test Skill')
+            self.assertEqual(level, '6')
             
             # Fermer la popup
             close_button = self.browser.find_element(By.CSS_SELECTOR, '#skillModal .modal-header button.close')
@@ -738,8 +743,9 @@ class ModifyAndSaveTest(BaseTest):
 
         new_content = Skill(
             category="Nouvelle catégorie",
-            name="Nouveau nom"
+            name="Nouveau nom",
         )
+        skill_level = 7
 
         # Sélectionner le profil
         profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
@@ -779,6 +785,12 @@ class ModifyAndSaveTest(BaseTest):
         action = ActionChains(self.browser)
         action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
         action.send_keys(new_content.name).perform()
+
+        # Modifier le level
+        level_field = modal.find_element(By.CSS_SELECTOR, 'input[data-field="level"]')
+        level_field.click()
+        self.browser.execute_script("arguments[0].value = arguments[1]", level_field, skill_level)
+        self.browser.execute_script("arguments[0].dispatchEvent(new Event('input'))", level_field)
         
         # Enregistrer et vérifier
         save_button = modal.find_element(By.CSS_SELECTOR, '.btn-primary')
@@ -793,6 +805,8 @@ class ModifyAndSaveTest(BaseTest):
         skill_obj = Skill.objects.get(id=self.skills[0].id)
         self.assertEqual(skill_obj.category, new_content.category)
         self.assertEqual(skill_obj.name, new_content.name)
+        profile_skill = ProfileSkill.objects.get(skill=skill_obj, profile=self.profile)
+        self.assertEqual(profile_skill.level, skill_level)
         
         # Vérifier que le tableau est mis à jour
         updated_row = WebDriverWait(self.browser, 10).until(
@@ -1668,7 +1682,7 @@ class AddElementTest(BaseTest):
         )
         
         time.sleep(0.5)
-
+        
         # Vérification finale
         rows = self.browser.find_elements(By.CSS_SELECTOR, "#skill-table tbody tr")
         new_row = None
@@ -1839,7 +1853,7 @@ class AddElementTest(BaseTest):
             position="Nouveau poste",
             location="Nouveau lieu",
             description="Nouvelle description",
-            url="https://nouvelleurl.com",
+            url="https://nouvelleurl.com"
         )
         
         # Sélectionner le profil

@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import resolve, reverse
 from django.http import HttpRequest
 from pierrpgd.views import portfolio, data_display
-from pierrpgd.models import Profile, About, Experience, Project, Skill
+from pierrpgd.models import Profile, About, Experience, Project, Skill, ProfileSkill
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -818,7 +818,8 @@ class SaveDataTest(BaseTest):
         data = {
             'category': 'New Test Category',
             'name': 'New Test Skill',
-            'profile': self.profile.identifiant
+            'profile': self.profile.identifiant,
+            'level': 7
         }
         
         # Effectuer la création via l'API
@@ -845,11 +846,14 @@ class SaveDataTest(BaseTest):
         profile = Profile.objects.get(identifiant=data['profile'])
         skill = Skill.objects.get(name=data['name'])
         self.assertIn(skill, profile.skills.all())
+        profile_skill = ProfileSkill.objects.get(profile=profile, skill=skill)
+        self.assertEqual(profile_skill.level, data['level'])
 
         ## Test de création d'un compétence qui existe déjà
 
         # Deuxième profil de test
         data['profile'] = "second-profile"
+        data["level"] = 2
 
         # Effectuer la création via l'API
         response = self.client.post(
@@ -873,6 +877,8 @@ class SaveDataTest(BaseTest):
         # Vérifier que le deuxième profil est lié à la compétence
         profile = Profile.objects.get(identifiant=data['profile'])
         self.assertIn(skill, profile.skills.all())
+        profile_skill = ProfileSkill.objects.get(profile=profile, skill=skill)
+        self.assertEqual(profile_skill.level, data['level'])
 
     def test_update_skill(self):
         """Teste la mise à jour d'une compétence"""
@@ -881,7 +887,8 @@ class SaveDataTest(BaseTest):
             'name': 'Nouveau nom de test',
             'category': 'Nouvelle catégorie de test',
             'id': self.skills[0].id,
-            'profile': self.profile.identifiant
+            'profile': self.profile.identifiant,
+            'level': 4
         }
         
         # Effectuer la mise à jour via l'API
@@ -908,10 +915,16 @@ class SaveDataTest(BaseTest):
         skill = Skill.objects.get(name=updated_data['name'])
         self.assertIn(skill, profile.skills.all())
 
+        profile_skill = ProfileSkill.objects.get(profile=profile, skill=skill)
+        self.assertEqual(profile_skill.level, updated_data['level'])
+
         # Vérifier que les autres profils liés à la compétence ont été mis à jour
         profile = Profile.objects.get(identifiant='second-profile')
         skill = Skill.objects.get(name=updated_data['name'])
         self.assertIn(skill, profile.skills.all())
+
+        profile_skill = ProfileSkill.objects.get(profile=profile, skill=skill)
+        self.assertEqual(profile_skill.level, 6)
 
 class DeleteDataTest(BaseTest):
 
