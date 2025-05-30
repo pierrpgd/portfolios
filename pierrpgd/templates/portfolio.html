@@ -100,7 +100,6 @@
 
         .skill-badge {
             text-align: center;
-            background: transparent;
             color: #5ee7d4;
             border: 1px solid #5ee7d4;
             border-radius: 1rem;
@@ -192,10 +191,10 @@
             vertical-align: middle;
             border-radius: 12px;
         }
-        .skill-level-gauge[category="Développement"] {
+        .skill-level-gauge[data-category="Développement"] {
             border: 1px solid #5ee7d4;
         }
-        .skill-level-gauge[category="Outils"] {
+        .skill-level-gauge[data-category="Outils"] {
             border: 1px solid #FED18C;
         }
         
@@ -206,10 +205,10 @@
             font-weight: bold;
             pointer-events: none;
         }
-        .skill-level[category="Développement"] {
+        .skill-level[data-category="Développement"] {
             color: #5ee7d4;
         }
-        .skill-level[category="Outils"] {
+        .skill-level[data-category="Outils"] {
             color: #FED18C;
         }
 
@@ -255,7 +254,6 @@
             flex: 0 0 auto;
         }
         .job-details, .project-content {
-            margin-bottom: 30px;
             width: 66.666666%;
             flex: 0 0 auto;
         }
@@ -264,6 +262,7 @@
             color: inherit;
             display: block;
             padding: 0.5rem;
+            margin-bottom: 2rem;
             border-radius: 5px;
             transition: background-color 0.3s ease;
         }
@@ -278,6 +277,9 @@
         .tile-container:hover .job-link:not(:hover), .tile-container:hover .project-link:not(:hover) {
             opacity: 0.6;
             transition: opacity 0.3s ease;
+        }
+        .tile-container:has(.row.active) .job-link:not(:has(.row.active)), .tile-container:has(.row.active) .project-link:not(:has(.row.active)) {
+            display: none;
         }
         .job-skills {
             text-align: left;
@@ -296,11 +298,11 @@
             font-size: 13px;
             
         }
-        .skill-badge[category="Développement"]{
+        .skill-badge[data-category="Développement"]{
             background-color: rgba(94, 231, 212, 0.15);
             color: #5ee7d4;
         }
-        .skill-badge[category="Outils"]{
+        .skill-badge[data-category="Outils"]{
             background-color: rgba(254, 209, 140, 0.15);
             color: #FED18C;
         }
@@ -460,15 +462,19 @@
 
                 const skillRows = document.querySelectorAll('.skill-row, .skill-simple .skill-badge');
                 const skillBadges = document.querySelectorAll('.skill-badge');
-                
+                const tiles = document.querySelectorAll('.tile-container .row');
+
                 skillRows.forEach(skillRow => {
                     skillRow.addEventListener('click', function() {
                         const isActive = this.classList.contains('active');
+                        const skillBadge = this.querySelector('.skill-badge');
+                        const skillCategory = skillBadge.dataset.category;
+                        const skillName = skillBadge.dataset.name;
                         
                         if (!isActive) {
                             this.classList.add('active');
                             skillBadges.forEach(skillBadge => {
-                                if (skillBadge.dataset.skillBadge === this.querySelector('.skill-badge').dataset.skillBadge) {
+                                if (skillBadge.dataset.category === skillCategory && skillBadge.dataset.name === skillName) {
                                     skillBadge.classList.add('active');
                                 }
                             });
@@ -477,13 +483,40 @@
                         } else {
                             this.classList.remove('active');
                             skillBadges.forEach(skillBadge => {
-                                if (skillBadge.dataset.skillBadge === this.querySelector('.skill-badge').dataset.skillBadge) {
+                                if (skillBadge.dataset.category === skillCategory && skillBadge.dataset.name === skillName) {
                                     skillBadge.classList.remove('active');
                                 }
                             });
                             this.querySelector('.skill-level-gauge').classList.remove('active');
                             this.querySelector('.skill-level').classList.remove('active');
                         }
+                        
+                        // Activation des tuiles job/experience avec une compétence sélectionnée
+                        const skillRowsActive = Array.from(document.querySelectorAll('.skill-row.active'));
+                        const skillsActive = skillRowsActive.map(skillRowActive => skillRowActive.querySelector('.skill-badge'));
+                        
+                        tiles.forEach(tile => {
+                            let tileActive = false;
+                            console.log(tile);
+                            skills = tile.querySelectorAll('.skill-badge');
+                            skills.forEach(skill => {
+                                console.log(skill.dataset.category, skill.dataset.name);
+                                skillsActive.forEach(skillActive => {
+                                    const skillCategory = skillActive.dataset.category;
+                                    const skillName = skillActive.dataset.name;
+                                    console.log(skillCategory, skillName);
+                                    if (skill.dataset.category === skillCategory && skill.dataset.name === skillName) {
+                                        tileActive = true;
+                                    }
+                                });
+                            });
+                            console.log(tileActive);
+                            if (tileActive) {
+                                tile.classList.add('active');
+                            } else {
+                                tile.classList.remove('active');
+                            }
+                        });
                     });
                 });
 
@@ -603,7 +636,7 @@
                     <div class="skill-category">
                         <div class="skill-simple">
                             {% for skill in category.list %}
-                                <div class="skill-badge" category="{{ skill.category }}" data-skill-badge="{{ skill.name }}">{{ skill.name }}</div>
+                                <div class="skill-badge" data-category="{{ skill.category }}" data-name="{{ skill.name }}">{{ skill.name }}</div>
                             {% endfor %}
                         </div>
                         <div class="skill-detailed">
@@ -612,11 +645,11 @@
                                 {% for skill in category.list %}
                                     <div class="skill-row">
                                         <div class="left-col-item">
-                                            <div class="skill-badge" category="{{ skill.category }}" data-skill-badge="{{ skill.name }}">{{ skill.name }}</div>
+                                            <div class="skill-badge" data-category="{{ skill.category }}" data-name="{{ skill.name }}">{{ skill.name }}</div>
                                         </div>
                                         <div class="right-col-item">
-                                            <div class="skill-level-gauge" category="{{ skill.category }}" style="width: {{ skill.level|mul:10 }}%"></div>
-                                            <span class="skill-level" category="{{ skill.category }}" style="left: {{ skill.level|mul:5 }}%;">{{ skill.level }}</span>
+                                            <div class="skill-level-gauge" data-category="{{ skill.category }}" style="width: {{ skill.level|mul:10 }}%"></div>
+                                            <span class="skill-level" data-category="{{ skill.category }}" style="left: {{ skill.level|mul:5 }}%;">{{ skill.level }}</span>
                                         </div>
                                     </div>
                                 {% endfor %}
@@ -653,7 +686,7 @@
                                         {% if exp.skills.all %}
                                             <div class="job-skills">
                                                 {% for skill in exp.skills.all %}
-                                                    <span class="skill-badge" category="{{ skill.category }}">{{ skill.name }}</span>
+                                                    <span class="skill-badge" data-category="{{ skill.category }}" data-name="{{ skill.name }}">{{ skill.name }}</span>
                                                 {% endfor %}
                                             </div>
                                         {% endif %}
@@ -679,7 +712,7 @@
                                         {% if project.skills.all %}
                                             <div class="job-skills">
                                                 {% for skill in project.skills.all %}
-                                                    <span class="skill-badge" category="{{ skill.category }}">{{ skill.name }}</span>
+                                                    <span class="skill-badge" data-category="{{ skill.category }}" data-name="{{ skill.name }}">{{ skill.name }}</span>
                                                 {% endfor %}
                                             </div>
                                         {% endif %}
