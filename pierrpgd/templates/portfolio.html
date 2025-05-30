@@ -53,7 +53,7 @@
 
         nav {
             position: fixed;
-            width: 36rem;
+            width: 28rem;
         }
         #name a {
             font-size: 3.3rem;
@@ -89,95 +89,128 @@
             padding: 0;
         }
 
+        #skills {
+            margin-top: 5vh;
+            width: 80%;
+        }
+
         .skill-category {
-            cursor: default;
-        }
-        
-        .table-container {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: flex-start;
-            width: 100%;
-        }
-        .skill-category:hover .table-container,
-        .skill-category:focus-within .table-container {
-            display: table;
-        }
-        .skill-category:hover .skill-row,
-        .skill-category:focus-within .skill-row {
-            display: table-row;
-        }
-        .skill-category:hover .left-col-item,
-        .skill-category:focus-within .left-col-item,
-        .skill-category:hover .right-col-item,
-        .skill-category:focus-within .right-col-item {
-            display: table-cell;
-            vertical-align: middle;
-        }
-        .skill-category:hover .left-col-item,
-        .skill-category:focus-within .left-col-item {
-            width: 30%;
-        }
-        .skill-category:hover .right-col-item,
-        .skill-category:focus-within .right-col-item {
-            width: 70%;
+            margin-top: 2vh;
         }
 
-        .skill-row:hover .skill-level-gauge:not(.active),
-        .skill-row:hover .skill-name:not(.active) {
-            background: rgba(94, 231, 212, 0.15);
-            font-weight: bold;
-        }
-
-        .skill-row.active .skill-level-gauge {
-            background-color: rgba(94, 231, 212, 0.3);
-        }
-        
-        .skill-row.active .skill-level {
-            font-size: 0.9rem;
-        }
-        
-        .skill-name {
+        .skill-badge {
             text-align: center;
             background: transparent;
             color: #5ee7d4;
             border: 1px solid #5ee7d4;
             border-radius: 1rem;
-            cursor: pointer;
-            padding: 0.1rem 0.7rem;
             margin: 0.2rem;
+            margin-left: 0;
+            opacity: 1;
+            font-size: 12px;
+            
+        }
+        .skill-badge.active {
+            border: 1px solid;
+        }
+        .skill-badge.active[category="Développement"]{
+            border-color: #5ee7d4;
+        }
+        .skill-badge.active[category="Outils"]{
+            border-color: #FED18C;
+        }
+
+        .skill-simple {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            width: 100%;
+        }
+        .skill-simple.not-visible .skill-badge {
+            opacity: 0;
+        }
+
+        .skill-detailed {
+            max-height: 0;
+            overflow: hidden;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            width: 100%;
+        }
+        .skill-detailed.visible {
+            max-height: 500px;
+        }
+        .skill-detailed.visible .skill-row,
+        .skill-detailed.visible .category-title {
+            opacity: 1;
+        }
+
+        .category-title {
+            text-align: center;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 6px 0px;
+            border-radius: 60px;
+            display: inline-block;
+            white-space: nowrap;
+            width: auto;
+            opacity: 0;
+        }
+
+        .table-container {
+            display: table;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .skill-row {
+            display: table-row;
+            opacity: 0;
+        }
+        .skill-row:hover .skill-badge {
+            font-size: 14px;
+        }
+
+        .left-col-item {
+            display: table-cell;
+            vertical-align: middle;
+            width: 40%;
         }
 
         .right-col-item {
-            display: none;
-            position: relative;
-        }
-
-        .skill-name.active {
-            background-color: rgba(94, 231, 212, 0.3);
-            font-weight: bold;
-            border-width: 2px;
+            display: table-cell;
+            vertical-align: middle;
+            width: 60%;
         }
         
         .skill-level-gauge {
-            position: absolute;
-            top: 50%;
-            transform: translate(0%, -50%);
-            height: 50%;
-            border: 1px solid #5ee7d4;
+            display: inline-block;
+            vertical-align: middle;
             border-radius: 12px;
-            cursor: pointer;
+        }
+        .skill-level-gauge[category="Développement"] {
+            border: 1px solid #5ee7d4;
+        }
+        .skill-level-gauge[category="Outils"] {
+            border: 1px solid #FED18C;
         }
         
         .skill-level {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            display: inline-block;
+            vertical-align: middle;
             font-size: 0.8rem;
-            color: #5ee7d4;
             font-weight: bold;
             pointer-events: none;
+        }
+        .skill-level[category="Développement"] {
+            color: #5ee7d4;
+        }
+        .skill-level[category="Outils"] {
+            color: #FED18C;
         }
 
         /* Style du contenu principal */
@@ -252,12 +285,16 @@
         .skill-badge {
             display: inline-block;
             position: relative;
-            margin-top: 10px;
-            margin-right: 2px;
             padding: 6px 12px;
             border-radius: 60px;
-            font-size: 13px;
             font-weight: 600;
+            border: transparent;
+        }
+        .job-skills .skill-badge {
+            margin-top: 10px;
+            margin-right: 2px;
+            font-size: 13px;
+            
         }
         .skill-badge[category="Développement"]{
             background-color: rgba(94, 231, 212, 0.15);
@@ -357,6 +394,10 @@
                 display: none;
             }
 
+            .skill-simple .skill-badge {
+                cursor: pointer;
+            }
+
             /* Style du contenu principal */
 
             .main-content {
@@ -416,32 +457,132 @@
                 window.addEventListener('resize', () => {
                     isMobile = window.matchMedia('(max-width: 1200px)').matches;
                 });
+
+                const skillRows = document.querySelectorAll('.skill-row, .skill-simple .skill-badge');
+                const skillBadges = document.querySelectorAll('.skill-badge');
+                
+                skillRows.forEach(skillRow => {
+                    skillRow.addEventListener('click', function() {
+                        const isActive = this.classList.contains('active');
+                        
+                        if (!isActive) {
+                            this.classList.add('active');
+                            skillBadges.forEach(skillBadge => {
+                                if (skillBadge.dataset.skillBadge === this.querySelector('.skill-badge').dataset.skillBadge) {
+                                    skillBadge.classList.add('active');
+                                }
+                            });
+                            this.querySelector('.skill-level-gauge').classList.add('active');
+                            this.querySelector('.skill-level').classList.add('active');
+                        } else {
+                            this.classList.remove('active');
+                            skillBadges.forEach(skillBadge => {
+                                if (skillBadge.dataset.skillBadge === this.querySelector('.skill-badge').dataset.skillBadge) {
+                                    skillBadge.classList.remove('active');
+                                }
+                            });
+                            this.querySelector('.skill-level-gauge').classList.remove('active');
+                            this.querySelector('.skill-level').classList.remove('active');
+                        }
+                    });
+                });
+
+                if (!isMobile) {
+
+                    // Animation des compétences
+                    const skillCategories = document.querySelectorAll('.skill-category');
+                    const baseDuration = 0.25; // en secondes
+                    const delayStep = 0.03; // en secondes
+
+                    let transitionsEnCours = 0;
+                    const elements = document.querySelectorAll('.skill-simple, .skill-detailed, .skill-badge, .category-title, .skill-row');
+
+                    function attendreValeurAsync(variableGetter, valeurCible, interval = 50, timeout = 1000) {
+                        return new Promise((resolve, reject) => {
+                            const start = Date.now();
+                            const timer = setInterval(() => {
+                                if (variableGetter() === valeurCible || Date.now() - start > timeout) {
+                                    clearInterval(timer);
+                                    resolve();
+                                }
+                            }, interval);
+                        });
+                    }
+
+                    skillCategories.forEach(category => {
+
+                        const skillSimple = category.querySelector('.skill-simple');
+                        const skillDetailed = category.querySelector('.skill-detailed');
+                        const itemsSimple = skillSimple.querySelectorAll('.skill-badge');
+                        const itemsDetailed = skillDetailed.querySelectorAll('.category-title, .skill-row');
+                        const totalDuration = ((itemsDetailed.length - 1) * delayStep + baseDuration) * 1000; // en millisecondes
+
+                        setInterval(() => {
+                            if (skillDetailed.classList.contains('visible')) {
+                                skillSimple.style.display = 'none';
+                            }
+                        }, 100);
+
+                        category.style.minHeight = skillSimple.offsetHeight + 'px';
+
+                        // Apparition progressive
+                        function fadeIn(items) {
+                            items.forEach((item, index) => {
+                                item.style.transition = `opacity ${baseDuration}s cubic-bezier(.7,0,.6,1) ${index * delayStep}s`;
+                            });
+                            void skillDetailed.offsetWidth;
+                            void skillSimple.offsetWidth;
+                        }
+
+                        // Disparition progressive
+                        function fadeOut(items) {
+                            [...items].reverse().forEach((item, index) => {
+                                item.style.transition = `opacity ${baseDuration}s cubic-bezier(.7,0,.6,1) ${index * delayStep}s`;
+                            });
+                            void skillDetailed.offsetWidth;
+                            void skillSimple.offsetWidth;
+                        }
+
+                        async function openSkills() {
+                            await attendreValeurAsync(() => transitionsEnCours, 0, 50, 1000);
+                            transitionsEnCours++;
+                                await fadeOut(itemsSimple);
+                                skillSimple.classList.add('not-visible');
+                                await new Promise(resolve => setTimeout(resolve, totalDuration));
+
+                                skillSimple.style.display = 'none';
+
+                                skillDetailed.style.transition = `max-height ${(totalDuration / 1000)*0.9}s ease-in-out`;
+                                await fadeIn(itemsDetailed);
+                                skillDetailed.classList.add('visible');
+                            transitionsEnCours--;
+                        }
+
+                        async function closeSkills() {
+                            await attendreValeurAsync(() => transitionsEnCours, 0, 50, 1000);
+                            transitionsEnCours++;
+                            skillDetailed.style.transition = `max-height ${(totalDuration / 1000)*1.1}s ease-in-out`;
+                            await fadeOut(itemsDetailed);
+                            skillDetailed.classList.remove('visible');
+                            await new Promise(resolve => setTimeout(resolve, totalDuration));
+
+                            skillSimple.style.display = '';
+
+                            await fadeIn(itemsSimple);
+                            skillSimple.classList.remove('not-visible');
+                            transitionsEnCours--;
+                        }
+
+                        // Gestion des événements
+                        category.addEventListener('mouseenter', openSkills);
+                        category.addEventListener('mouseleave', closeSkills);
+                        category.addEventListener('focusin', openSkills);
+                        category.addEventListener('focusout', closeSkills);
+                    });
+                }
             }
         });
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            const skillRows = document.querySelectorAll('.skill-row');
-            
-            skillRows.forEach(skillRow => {
-                skillRow.addEventListener('click', function() {
-                    const isActive = this.classList.contains('active');
-                    
-                    if (!isActive) {
-                        this.classList.add('active');
-                        this.querySelector('.skill-name').classList.add('active');
-                        this.querySelector('.skill-level-gauge').classList.add('active');
-                        this.querySelector('.skill-level').classList.add('active');
-                    } else {
-                        this.classList.remove('active');
-                        this.querySelector('.skill-name').classList.remove('active');
-                        this.querySelector('.skill-level-gauge').classList.remove('active');
-                        this.querySelector('.skill-level').classList.remove('active');
-                    }
-                });
-            });
-        });
 
-        
     </script>
 </head>
 <body>
@@ -460,19 +601,26 @@
                     {% regroup skills by category as skill_categories %}
                     {% for category in skill_categories %}
                     <div class="skill-category">
-                        <h3 class="category-title">{{ category.grouper }}</h3>
-                        <div class="table-container">
+                        <div class="skill-simple">
                             {% for skill in category.list %}
-                            <div class="skill-row">
-                                <div class="left-col-item">
-                                    <div class="skill-name">{{ skill.name }}</div>
-                                </div>
-                                <div class="right-col-item">
-                                    <div class="skill-level-gauge" style="width: {{ skill.level|mul:10 }}%"></div>
-                                    <span class="skill-level" style="left: {{ skill.level|mul:5 }}%;">{{ skill.level }}</span>
-                                </div>
-                            </div>
+                                <div class="skill-badge" category="{{ skill.category }}" data-skill-badge="{{ skill.name }}">{{ skill.name }}</div>
                             {% endfor %}
+                        </div>
+                        <div class="skill-detailed">
+                            <h3 class="category-title">{{ category.grouper }}</h3>
+                            <div class="table-container">
+                                {% for skill in category.list %}
+                                    <div class="skill-row">
+                                        <div class="left-col-item">
+                                            <div class="skill-badge" category="{{ skill.category }}" data-skill-badge="{{ skill.name }}">{{ skill.name }}</div>
+                                        </div>
+                                        <div class="right-col-item">
+                                            <div class="skill-level-gauge" category="{{ skill.category }}" style="width: {{ skill.level|mul:10 }}%"></div>
+                                            <span class="skill-level" category="{{ skill.category }}" style="left: {{ skill.level|mul:5 }}%;">{{ skill.level }}</span>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
                     {% endfor %}
