@@ -58,7 +58,9 @@
         nav {
             position: fixed;
             width: 28rem;
+            max-height: 80vh;
         }
+        
         #name a {
             font-size: 3.3rem;
             font-weight: 700;
@@ -94,6 +96,11 @@
         #skills {
             margin-top: 5vh;
             width: 80%;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+        #skills::-webkit-scrollbar {
+            display: none;
         }
 
         .skill-category {
@@ -403,6 +410,9 @@
         }
     </style>
     <script>
+        // const linearDegrad = 'linear-gradient(where, rgba(0,0,0,1) value%, rgba(0,0,0,0) 100%)';
+        const linearDegrad = 'linear-gradient(where, transparent 0, black 40px, black value%, transparent 100%)';
+
         document.addEventListener('DOMContentLoaded', () => {
             const main = document.querySelector('body');
             const overlay = document.querySelector('.glow-overlay');
@@ -544,15 +554,16 @@
                         async function openSkills() {
                             await attendreValeurAsync(() => transitionsEnCours, 0, 50, 1000);
                             transitionsEnCours++;
-                                await fadeOut(itemsSimple);
-                                skillSimple.classList.add('not-visible');
-                                await new Promise(resolve => setTimeout(resolve, totalDuration));
+                            await fadeOut(itemsSimple);
+                            skillSimple.classList.add('not-visible');
+                            await new Promise(resolve => setTimeout(resolve, totalDuration));
 
-                                skillSimple.style.display = 'none';
+                            skillSimple.style.display = 'none';
 
-                                skillDetailed.style.transition = `max-height ${(totalDuration / 1000)*0.9}s ease-in-out`;
-                                await fadeIn(itemsDetailed);
-                                skillDetailed.classList.add('visible');
+                            skillDetailed.style.transition = `max-height ${(totalDuration / 1000)*0.9}s ease-in-out`;
+                            await fadeIn(itemsDetailed);
+                            skillDetailed.classList.add('visible');
+                            updateSkillsHeight();
                             transitionsEnCours--;
                         }
 
@@ -568,6 +579,7 @@
 
                             await fadeIn(itemsSimple);
                             skillSimple.classList.remove('not-visible');
+                            updateSkillsHeight();
                             transitionsEnCours--;
                         }
 
@@ -579,8 +591,63 @@
                     });
                 }
             }
+            const skills = document.querySelector('#skills');
+            skills.addEventListener('scroll', function() {
+                updateSkillsDegrad();
+            });
         });
 
+        function updateSkillsDegrad() {
+            const skills = document.querySelector('#skills');
+            const atBottom = skills.scrollTop + skills.clientHeight >= skills.scrollHeight - 1;
+            const position = parseInt((skills.scrollTop+skills.clientHeight)/skills.scrollHeight * 100);
+            const mask = `${linearDegrad.replace('where', 'to bottom').replace('value', position+5)},
+            ${linearDegrad.replace('where', 'to top').replace('value', 140-position)}`;
+            console.log(mask);
+            skills.style.maskImage = mask;
+            skills.style.webkitMaskImage = mask;
+        }
+
+        function updateSkillsHeight() {
+            const layout = document.querySelector('.layout');
+            const menu = document.querySelector('#menu');
+            const skills = document.querySelector('#skills');
+            
+            if (menu && skills) {
+                // Récupère la marge-bottom de layout
+                const layoutStyle = window.getComputedStyle(layout);
+                const layoutPaddingBottom = parseInt(layoutStyle.paddingBottom) || 0;
+
+                // Recupère la position Y de skills
+                const skillsPositionY = skills.getBoundingClientRect().top;
+
+                // Récupère la résolution de l'écran
+                const screenResolution = window.innerHeight;
+
+                // Calcul la hauteur max de skills
+                const maxSkillsHeight = (screenResolution - skillsPositionY) - parseInt(layoutPaddingBottom);
+
+                // Applique la hauteur max à skills
+                skills.style.maxHeight = `${maxSkillsHeight}px`;
+
+                // Boucle effectuée toutes les 25ms pendant 1 seconde
+                for (let i = 0; i < 40; i++) {
+                    setTimeout(() => {
+                        // Vérifie si le contenu dépasse
+                        const isOverflowing = skills.scrollHeight > skills.clientHeight;
+
+                        // Applique ou retire le dégradé
+                        if (isOverflowing) {
+                            updateSkillsDegrad();
+                            i = 20;
+                        } else {
+                            skills.style.maskImage = '';
+                            skills.style.webkitMaskImage = '';
+                        }
+                    }, i * 25);
+                }
+            }
+        }
     </script>
 </head>
 <body>
@@ -588,22 +655,24 @@
     <div class="container-flex">
         <div class="layout">
             <nav id="col-1">
-                <h1 id="name"><a href="." class="c-white">{{ profile.name }}</a></h1>
-                <p id="title" class="c-white">{{ profile.title }}</p>
-                <ul>
-                    {% if about|length > 0 %}
-                        <li class="nav-item"><a href="#about">About</a></li>
-                    {% endif %}
-                    {% if experience|length > 0 %}
-                        <li class="nav-item"><a href="#experience">Experience</a></li>
-                    {% endif %}
-                    {% if education|length > 0 %}
-                        <li class="nav-item"><a href="#education">Education</a></li>
-                    {% endif %}
-                    {% if projects|length > 0 %}
-                        <li class="nav-item"><a href="#projects">Projects</a></li>
-                    {% endif %}
-                </ul>
+                <div id="menu">
+                    <h1 id="name"><a href="." class="c-white">{{ profile.name }}</a></h1>
+                    <p id="title" class="c-white">{{ profile.title }}</p>
+                    <ul>
+                        {% if about|length > 0 %}
+                            <li class="nav-item"><a href="#about">About</a></li>
+                        {% endif %}
+                        {% if experience|length > 0 %}
+                            <li class="nav-item"><a href="#experience">Experience</a></li>
+                        {% endif %}
+                        {% if education|length > 0 %}
+                            <li class="nav-item"><a href="#education">Education</a></li>
+                        {% endif %}
+                        {% if projects|length > 0 %}
+                            <li class="nav-item"><a href="#projects">Projects</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
                 <div id="skills">
                     {% regroup skills by category as skill_categories %}
                     {% for category in skill_categories %}
