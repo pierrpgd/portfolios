@@ -105,6 +105,7 @@
             "location": "Test Location",
             "position": "Test Position",
             "description": "Test Description",
+            "details": "Test Details",
             "url": "https://testurl.com",
             "skills": [1, 2]
         }
@@ -119,6 +120,7 @@
             "location": "Test Location 2",
             "position": "Test Position 2",
             "description": "Test Description 2",
+            "details": "Test Details 2",
             "url": "https://testurl2.com",
             "skills": [1]
         }
@@ -221,6 +223,7 @@
             "location": "Second Location",
             "position": "Second Position",
             "description": "Second Description",
+            "details": "Second Details",
             "url": "https://testurl3.com",
             "skills": [2, 3]
         }

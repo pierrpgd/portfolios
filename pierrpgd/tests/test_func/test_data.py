@@ -23,6 +23,7 @@ class BaseTest(LiveServerTestCase):
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         cls.browser = webdriver.Chrome(options=options)
+        cls.browser.set_window_size(1200, 800)
 
     @classmethod
     def tearDownClass(cls):
@@ -430,15 +431,17 @@ class PopupTest(BaseTest):
         company = modal_content.find_element(By.CSS_SELECTOR, '[data-field="company"]').text
         position = modal_content.find_element(By.CSS_SELECTOR, '[data-field="position"]').text
         location = modal_content.find_element(By.CSS_SELECTOR, '[data-field="location"]').text
-        description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
         experience_url = modal_content.find_element(By.CSS_SELECTOR, '[data-field="url"]').text
         skills_elements = modal_content.find_elements(By.CLASS_NAME, 'skill-badge')
         skills = [skill.text for skill in skills_elements]
+        description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
+        details = modal_content.find_element(By.CSS_SELECTOR, '[data-field="details"]').text
 
         self.assertEqual(dates, '2023-2024')
         self.assertEqual(position, 'Test Position')
         self.assertEqual(company, 'Test Company')
         self.assertEqual(description, 'Test Description')
+        self.assertEqual(details, 'Test Details')
         self.assertEqual(location, 'Test Location')
         self.assertEqual(experience_url, 'https://testurl.com')
         self.assertEqual(skills, ['Test Skill', 'Second Skill'])
@@ -484,6 +487,7 @@ class PopupTest(BaseTest):
         position = modal_content.find_element(By.CSS_SELECTOR, '[data-field="position"]').text
         location = modal_content.find_element(By.CSS_SELECTOR, '[data-field="location"]').text
         description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
+        details = modal_content.find_element(By.CSS_SELECTOR, '[data-field="details"]').text
         experience_url = modal_content.find_element(By.CSS_SELECTOR, '[data-field="url"]').text
         skills = modal_content.find_element(By.ID, 'skills-name').text
 
@@ -491,6 +495,7 @@ class PopupTest(BaseTest):
         self.assertEqual(position, 'Test Position 2')
         self.assertEqual(company, 'Test Company 2')
         self.assertEqual(description, 'Test Description 2')
+        self.assertEqual(details, 'Test Details 2')
         self.assertEqual(location, 'Test Location 2')
         self.assertEqual(experience_url, 'https://testurl2.com')
         self.assertEqual(skills, 'Test Skill')
@@ -1002,6 +1007,7 @@ class ModifyAndSaveTest(BaseTest):
             position="Nouveau poste",
             location="Nouveau lieu",
             description="Nouvelle description",
+            details="Nouveau détail",
             url="https://nouvelleurl.com"
         )
         
@@ -1065,6 +1071,13 @@ class ModifyAndSaveTest(BaseTest):
         action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
         action.send_keys(new_content.description).perform()
 
+        # Modifier les détails
+        details_field = modal.find_element(By.CSS_SELECTOR, 'div.editable-content[data-field="details"]')
+        details_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content.details).perform()
+
         # Modifier l'URL
         experience_url_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="url"]')
         experience_url_field.click()
@@ -1088,6 +1101,7 @@ class ModifyAndSaveTest(BaseTest):
         self.assertEqual(experience_obj.position, new_content.position)
         self.assertEqual(experience_obj.location, new_content.location)
         self.assertEqual(experience_obj.description, new_content.description)
+        self.assertEqual(experience_obj.details, new_content.details)
         self.assertEqual(experience_obj.url, new_content.url)
         
         # Vérifier que le tableau est mis à jour
@@ -2322,6 +2336,7 @@ class AddElementTest(BaseTest):
             position="Nouveau poste",
             location="Nouveau lieu",
             description="Nouvelle description",
+            details="Nouveau détail",
             url="https://nouvelleurl.com"
         )
         
@@ -2401,6 +2416,10 @@ class AddElementTest(BaseTest):
         # Remplir le champ description
         description_field = modal.find_element(By.CSS_SELECTOR, "[data-field='description']")
         description_field.send_keys(new_content.description)
+
+        # Remplir le champ details
+        details_field = modal.find_element(By.CSS_SELECTOR, "[data-field='details']")
+        details_field.send_keys(new_content.details)
 
         # Remplir le champ dates
         dates_field = modal.find_element(By.CSS_SELECTOR, "[data-field='dates']")

@@ -100,6 +100,7 @@ def load_data(request):
                             'company': exp.company if exp.company else '',
                             'location': exp.location if exp.location else '',
                             'description': exp.description if exp.description else '',
+                            'details': exp.details if exp.details else '',
                             'url': exp.url if exp.url else '',
                             'skills': [skill.id for skill in exp.skills.all()]
                         } for exp in experiences
@@ -198,6 +199,7 @@ def save_data(request):
                         company=content.get('company', ''),
                         location=content.get('location', ''),
                         description=content.get('description', ''),
+                        details=content.get('details', ''),
                         url=content.get('url', ''),
                         profile=profile
                     )
@@ -209,6 +211,7 @@ def save_data(request):
                     obj.company = content.get('company', obj.company)
                     obj.location = content.get('location', obj.location)
                     obj.description = content.get('description', obj.description)
+                    obj.details = content.get('details', obj.details)
                     obj.url = content.get('url', obj.url)
                     skills = content.get('skills', [])
                 if skills != []:

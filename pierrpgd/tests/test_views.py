@@ -391,6 +391,7 @@ class LoadDataViewTest(BaseTest):
         self.assertEqual(data['experience'][0]['dates'], self.experiences[0].dates)
         self.assertEqual(data['experience'][0]['position'], self.experiences[0].position)
         self.assertEqual(data['experience'][0]['description'], self.experiences[0].description)
+        self.assertEqual(data['experience'][0]['details'], self.experiences[0].details)
         self.assertEqual(data['experience'][0]['location'], self.experiences[0].location)
         self.assertEqual(data['experience'][0]['url'], self.experiences[0].url)
         self.assertEqual(data['experience'][0]['skills'], [self.skills[0].id, self.skills[1].id])
@@ -405,6 +406,7 @@ class LoadDataViewTest(BaseTest):
             'location': 'Endroit mis à jour',
             'position': 'Poste mis à jour',
             'description': 'Description mise à jour',
+            'details': 'Details mise à jour',
             'url': 'https://testurl2.com'
         }
         
@@ -426,6 +428,7 @@ class LoadDataViewTest(BaseTest):
         self.assertEqual(data['experience'][0]['location'], 'Endroit mis à jour')
         self.assertEqual(data['experience'][0]['position'], 'Poste mis à jour')
         self.assertEqual(data['experience'][0]['description'], 'Description mise à jour')
+        self.assertEqual(data['experience'][0]['details'], 'Details mise à jour')
         self.assertEqual(data['experience'][0]['dates'], '2024-2025')
         self.assertEqual(data['experience'][0]['url'], 'https://testurl2.com')
         self.assertEqual(data['experience'][0]['skills'], [self.skills[0].id, self.skills[1].id])
@@ -775,6 +778,7 @@ class SaveDataTest(BaseTest):
             'location': 'Endroit de test',
             'position': 'Poste de test',
             'description': 'Description de test',
+            'details': 'Details de test',
             'url': 'https://testurl4.com',
             'skills': [self.skills[0].id, self.skills[2].id],
             'profile': self.profile.identifiant
@@ -803,6 +807,7 @@ class SaveDataTest(BaseTest):
             location=data['location'],
             position=data['position'],
             description=data['description'],
+            details=data['details'],
             url=data['url']
         )
         self.assertIsNotNone(exp)
@@ -817,6 +822,7 @@ class SaveDataTest(BaseTest):
             'location': 'Endroit mis à jour',
             'position': 'Poste mis à jour',
             'description': 'Description mise à jour',
+            'details': 'Details mise à jour',
             'url': 'https://testurl5.com',
             'skills': [self.skills[0].id, self.skills[2].id],
             'id': self.experiences[0].id
@@ -844,6 +850,7 @@ class SaveDataTest(BaseTest):
         self.assertEqual(updated_experience.location, updated_data['location'])
         self.assertEqual(updated_experience.position, updated_data['position'])
         self.assertEqual(updated_experience.description, updated_data['description'])
+        self.assertEqual(updated_experience.details, updated_data['details'])
         self.assertEqual(updated_experience.url, updated_data['url'])
         self.assertEqual([skill.id for skill in updated_experience.skills.all()], updated_data['skills'])
 

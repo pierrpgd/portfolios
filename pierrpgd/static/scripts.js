@@ -84,6 +84,7 @@ function addExperienceSection() {
     dummyRow.setAttribute('data-position', '');
     dummyRow.setAttribute('data-location', '');
     dummyRow.setAttribute('data-description', '');
+    dummyRow.setAttribute('data-details', '');
     dummyRow.setAttribute('data-url', '');
     dummyRow.setAttribute('data-skills', '');
     
@@ -343,6 +344,7 @@ function showPopup(row, modalId, contentId) {
     let experiencePosition = '';
     let experienceLocation = '';
     let experienceDescription = '';
+    let experienceDetails = '';
     let experienceUrl = '';
     let experienceSkills = '';
     let educationDates = '';
@@ -375,6 +377,7 @@ function showPopup(row, modalId, contentId) {
         experiencePosition = row.getAttribute('data-position');
         experienceLocation = row.getAttribute('data-location');
         experienceDescription = row.getAttribute('data-description');
+        experienceDetails = row.getAttribute('data-details');
         experienceUrl = row.getAttribute('data-url');
         experienceSkills = row.getAttribute('data-skills');
     } else if (modalId === 'educationModal') {
@@ -468,6 +471,8 @@ function showPopup(row, modalId, contentId) {
                         </div>
                         <span class="modal-content-info-title">Description : </span>
                         <div contenteditable="true" class="editable-content" data-field="description">${experienceDescription}</div>
+                        <span class="modal-content-info-title">Détails : </span>
+                        <div contenteditable="true" class="editable-content" data-field="details">${experienceDetails}</div>
                     </div>
                 ` : modalId === 'educationModal' ? `
                     <div class="modal-content-info">
@@ -919,7 +924,7 @@ function updateProfileData(data) {
 
         if (expTable) {
             expTable.innerHTML = data.experience.map(exp => `
-                <tr class="experience-row" data-id="${exp.id}" data-description="${exp.description}" data-dates="${exp.dates}" data-position="${exp.position}" data-company="${exp.company}" data-location="${exp.location}" data-url="${exp.url}" data-skills="${exp.skills}">
+                <tr class="experience-row" data-id="${exp.id}" data-description="${exp.description}" data-details="${exp.details}" data-dates="${exp.dates}" data-position="${exp.position}" data-company="${exp.company}" data-location="${exp.location}" data-url="${exp.url}" data-skills="${exp.skills}">
                     <td>${exp.dates}</td>
                     <td>${exp.position}</td>
                     <td>${exp.company}</td>
@@ -1161,7 +1166,7 @@ function loadProfileData(profileIdentifiant) {
                                 </thead>
                                 <tbody>
                                     ${data.experience.map(exp => `
-                                        <tr class="experience-row" data-id="${exp.id}" data-description="${exp.description}" data-dates="${exp.dates}" data-position="${exp.position}" data-company="${exp.company}" data-location="${exp.location}" data-url="${exp.url}" data-skills="${exp.skills}">
+                                        <tr class="experience-row" data-id="${exp.id}" data-description="${exp.description}" data-details="${exp.details}" data-dates="${exp.dates}" data-position="${exp.position}" data-company="${exp.company}" data-location="${exp.location}" data-url="${exp.url}" data-skills="${exp.skills}">
                                             <td>${exp.dates}</td>
                                             <td>${exp.position}</td>
                                             <td>${exp.company}</td>

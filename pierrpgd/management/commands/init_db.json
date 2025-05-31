@@ -34,7 +34,8 @@
       "position": "Ingénieur logiciel MES",
       "company": "Alpha 3i",
       "location": "Jacksonville FL, USA",
-      "description": "Conception, développement et intégration de modules MES au sein de systèmes ERP pour des acteurs industriels de secteurs variés (aéronautique, santé, automobile).<br>- Référent technique pour les clients USA / LATAM<br>- Gestion de projet en mode Agile Scrum<br>- Développement modules MES en mode TDD<br>- Support technique aux équipes de vente USA",
+      "description": "Conception, développement et intégration de modules MES au sein de systèmes ERP pour des acteurs industriels de secteurs variés (aéronautique, santé, automobile).",
+      "details": "- Référent technique pour les clients USA / LATAM<br>- Gestion de projet en mode Agile Scrum<br>- Développement modules MES en mode TDD<br>- Support technique aux équipes de vente USA",
       "url": "https://www.alpha3i.com/",
       "skills": ["Python", "Windev/Webdev", "SQL", "ERP/MES", "Git"]
     },
@@ -43,7 +44,8 @@
       "position": "Chef de projet informatique junior",
       "company": "PAPREC France",
       "location": "Lyon, FRA",
-      "description": "Déploiement d'une plateforme IoT pour l'activité Collecte et Transports de déchets.<br>- Intégration des données GPS issues de systèmes embarqués (MQTT, PostgreSQL)<br>- Gestion de l’interopérabilité entre les équipements du fournisseur et les services internes (Python, API REST)<br>- Visualisation des données GPS via des applications web SIG sécurisées (ArcGIS, solutions tiers)",
+      "description": "Déploiement d'une plateforme IoT pour l'activité Collecte et Transports de déchets.",
+      "details": "- Intégration des données GPS issues de systèmes embarqués (MQTT, PostgreSQL)<br>- Gestion de l’interopérabilité entre les équipements du fournisseur et les services internes (Python, API REST)<br>- Visualisation des données GPS via des applications web SIG sécurisées (ArcGIS, solutions tiers)",
       "url": "https://www.paprec.fr/",
       "skills": ["Python", "SQL", "REST API", "MQTT", "ArcGIS"]
     },
@@ -52,7 +54,8 @@
       "position": "Assistant chef de projet informatique (alternance)",
       "company": "PAPREC France",
       "location": "Lyon, FRA",
-      "description": "Développement d’une application web d’optimisation de circuit pour l’activité Collecte et Transports de déchets.<br>- Gestion de prestataire, écriture des spécifications<br>- Traitement, analyse de données et modélisation",
+      "description": "Développement d’une application web d’optimisation de circuit pour l’activité Collecte et Transports de déchets.",
+      "details": "- Gestion de prestataire, écriture des spécifications<br>- Traitement, analyse de données et modélisation",
       "url": "https://www.paprec.fr/",
       "skills": ["Python", "R", "ArcGIS"]
     },
@@ -62,6 +65,7 @@
       "company": "KTH Royal Institute of Technology",
       "location": "Stockholm, SWE",
       "description": "Développement d’un logiciel de supervision des tests avec LabVIEV pour le Department of Energy Technology du KTH Institute, Stockholm.",
+      "details": "",
       "url": "https://www.kth.se/en",
       "skills": ["LabVIEW"]
     }

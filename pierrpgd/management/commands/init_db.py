@@ -67,6 +67,7 @@ class Command(BaseCommand):
                     company=exp_data["company"],
                     location=exp_data["location"],
                     description=exp_data["description"],
+                    details=exp_data["details"],
                     url=exp_data["url"]
                 )
                 skill_ids = [Skill.objects.get(name=skill_name).id for skill_name in exp_data["skills"]]
