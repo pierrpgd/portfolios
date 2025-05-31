@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import resolve, reverse
 from django.http import HttpRequest
 from pierrpgd.views import portfolio, data_display
-from pierrpgd.models import Profile, About, Experience, Project, Skill, ProfileSkill
+from pierrpgd.models import Profile, About, Experience, Education,Project, Skill, ProfileSkill
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -15,6 +15,7 @@ class BaseTest(TestCase):
         cls.profile = Profile.objects.get(identifiant='test-profile')
         cls.abouts = About.objects.filter(profile=cls.profile)
         cls.experiences = Experience.objects.filter(profile=cls.profile)
+        cls.educations = Education.objects.filter(profile=cls.profile)
         cls.projects = Project.objects.filter(profile=cls.profile)
         cls.skills = Skill.objects.all()
         cls.profile_skills = ProfileSkill.objects.filter(profile=cls.profile)
@@ -64,7 +65,7 @@ class PortfolioViewTest(BaseTest):
         skills_section = self.soup.find(id="skills")
         self.assertIsNotNone(skills_section)
 
-        skills_names = skills_section.find_all(class_="skill-name")
+        skills_names = skills_section.find_all(class_="skill-badge")
         skills_values = skills_section.find_all(class_="skill-level")
         self.assertIn(self.profile_skills[0].skill.name, [skill_name.text for skill_name in skills_names])
         self.assertIn(str(self.profile_skills[0].level), [skill_value.text for skill_value in skills_values])
@@ -80,13 +81,33 @@ class PortfolioViewTest(BaseTest):
 
         rows = experience_section.find_all('div', class_='row')
         
-        self.assertEqual(self.experiences[0].dates, rows[0].find('div', class_='job-dates').text.strip())
-        self.assertEqual(self.experiences[0].position, rows[0].find('div', class_='job-title').text.strip())
-        self.assertEqual(self.experiences[0].location, rows[0].find('div', class_='job-subtitle').find('span', class_='location').text.strip())
-        self.assertEqual(self.experiences[0].company, rows[0].find('div', class_='job-subtitle').find('span', class_='company').text.strip())
-        self.assertEqual(self.experiences[0].description, rows[0].find('div', class_='job-description').text.strip())
+        self.assertEqual(self.experiences[0].dates, rows[0].find('div', class_='tile-dates').text.strip())
+        self.assertEqual(self.experiences[0].position, rows[0].find('div', class_='tile-title').text.strip())
+        self.assertEqual(self.experiences[0].location, rows[0].find('div', class_='tile-subtitle').find('span', class_='location').text.strip())
+        self.assertEqual(self.experiences[0].company, rows[0].find('div', class_='tile-subtitle').find('span', class_='company').text.strip())
+        self.assertEqual(self.experiences[0].description, rows[0].find('div', class_='tile-description').text.strip())
 
         skills = [skill.name for skill in self.experiences[0].skills.all()]
+        self.assertEqual(skills, [exp.text for exp in rows[0].find_all('span', class_='skill-badge')])
+
+    def test_education_display(self):
+        """Teste l'affichage des éducations"""
+        education_section = self.soup.find(id="education")
+        self.assertIsNotNone(education_section)
+
+        exp_url = education_section.find('a')
+        self.assertIsNotNone(exp_url)
+        self.assertEqual(exp_url['href'], self.educations[0].url)
+
+        rows = education_section.find_all('div', class_='row')
+        
+        self.assertEqual(self.educations[0].dates, rows[0].find('div', class_='tile-dates').text.strip())
+        self.assertEqual(self.educations[0].title, rows[0].find('div', class_='tile-title').text.strip())
+        self.assertEqual(self.educations[0].location, rows[0].find('div', class_='tile-subtitle').find('span', class_='location').text.strip())
+        self.assertEqual(self.educations[0].institution, rows[0].find('div', class_='tile-subtitle').find('span', class_='institution').text.strip())
+        self.assertEqual(self.educations[0].description, rows[0].find('div', class_='tile-description').text.strip())
+
+        skills = [skill.name for skill in self.educations[0].skills.all()]
         self.assertEqual(skills, [exp.text for exp in rows[0].find_all('span', class_='skill-badge')])
 
     def test_projects_display(self):
@@ -99,8 +120,8 @@ class PortfolioViewTest(BaseTest):
         
         rows = projects_section.find_all('div', class_='row')
         
-        self.assertEqual(self.projects[0].title, rows[0].find('div', class_='project-title').text.strip())
-        self.assertEqual(self.projects[0].description, rows[0].find('div', class_='project-description').text.strip())
+        self.assertEqual(self.projects[0].title, rows[0].find('div', class_='tile-title').text.strip())
+        self.assertEqual(self.projects[0].description, rows[0].find('div', class_='tile-description').text.strip())
         
         skills = [skill.name for skill in self.projects[0].skills.all()]
         self.assertEqual(skills, [skill.text for skill in rows[0].find_all('span', class_='skill-badge')])
@@ -428,6 +449,84 @@ class LoadDataViewTest(BaseTest):
         self.assertIn('experience', data)
         self.assertEqual(len(data['experience']), self.experiences.count())
 
+    def test_create_education(self):
+        """Teste la création d'une éducation"""
+
+        # Vérifier que l'objet a été créé
+        self.assertTrue(Education.objects.filter(title=self.educations[0].title).exists())
+        
+        # Vérifier que l'éducation apparaît dans l'interface
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
+        
+        data = self.response.json()
+        self.assertIn('education', data)
+        self.assertEqual(len(data['education']), self.educations.count())
+        self.assertEqual(data['education'][0]['title'], self.educations[0].title)
+        self.assertEqual(data['education'][0]['dates'], self.educations[0].dates)
+        self.assertEqual(data['education'][0]['institution'], self.educations[0].institution)
+        self.assertEqual(data['education'][0]['field'], self.educations[0].field)
+        self.assertEqual(data['education'][0]['description'], self.educations[0].description)
+        self.assertEqual(data['education'][0]['location'], self.educations[0].location)
+        self.assertEqual(data['education'][0]['url'], self.educations[0].url)
+        self.assertEqual(data['education'][0]['skills'], [self.skills[0].id, self.skills[1].id])
+
+    def test_update_education(self):
+        """Teste la mise à jour d'une éducation"""
+        
+        # Données pour la mise à jour
+        updated_data = {
+            'dates': '2024-2025',
+            'title': 'Nouveau titre',
+            'institution': 'Nouvelle institution',
+            'field': 'Nouveau domaine',
+            'location': 'Endroit mis à jour',
+            'description': 'Description mise à jour',
+            'url': 'https://testurl2.com'
+        }
+        
+        # Mettre à jour l'expérience
+        Education.objects.filter(id=self.educations[0].id).update(**updated_data)
+        self.educations[0].refresh_from_db()
+        
+        # Vérifier que les modifications ont été sauvegardées
+        self.assertEqual(self.educations[0].title, 'Nouveau titre')
+        
+        # Vérifier que les changements apparaissent dans l'interface via load_data
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
+        
+        data = self.response.json()
+        self.assertIn('education', data)
+        self.assertEqual(len(data['education']), self.educations.count())
+        self.assertEqual(data['education'][0]['title'], 'Nouveau titre')
+        self.assertEqual(data['education'][0]['institution'], 'Nouvelle institution')
+        self.assertEqual(data['education'][0]['field'], 'Nouveau domaine')
+        self.assertEqual(data['education'][0]['location'], 'Endroit mis à jour')
+        self.assertEqual(data['education'][0]['description'], 'Description mise à jour')
+        self.assertEqual(data['education'][0]['dates'], '2024-2025')
+        self.assertEqual(data['education'][0]['url'], 'https://testurl2.com')
+        self.assertEqual(data['education'][0]['skills'], [self.skills[0].id, self.skills[1].id])
+
+    def test_delete_education(self):
+        """Teste la suppression d'une éducation"""
+
+        id_education = self.educations[0].id
+        
+        # Supprimer l'éducation
+        self.educations[0].delete()
+        
+        # Vérifier que l'objet a été supprimé
+        self.assertFalse(Education.objects.filter(id=id_education).exists())
+        
+        # Vérifier que l'éducation ne s'affiche plus
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
+        
+        data = self.response.json()
+        self.assertIn('education', data)
+        self.assertEqual(len(data['education']), self.educations.count())
+
     def test_create_project(self):
         """Teste la création d'un projet"""
 
@@ -748,6 +847,87 @@ class SaveDataTest(BaseTest):
         self.assertEqual(updated_experience.url, updated_data['url'])
         self.assertEqual([skill.id for skill in updated_experience.skills.all()], updated_data['skills'])
 
+    def test_create_education(self):
+        """Teste la création d'un élément Education via l'API"""
+        # Données pour la création
+        data = {
+            'dates': '2024-2025',
+            'title': 'Titre de test',
+            'institution': 'Institution de test',
+            'field': 'Domaine de test',
+            'description': 'Description de test',
+            'url': 'https://testurl4.com',
+            'skills': [self.skills[0].id, self.skills[2].id],
+            'profile': self.profile.identifiant
+        }
+        
+        # Effectuer la création via l'API
+        response = self.client.post(
+            reverse('save_data'),
+            {
+                'modalId': 'educationModal',
+                'isNew': True,
+                'data': data
+            },
+            content_type='application/json'
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        
+        # Vérifier que le profil a été créé
+        self.assertEqual(result['success'], True)
+        edu = Education.objects.get(
+            dates=data['dates'], 
+            title=data['title'], 
+            institution=data['institution'],
+            field=data['field'],
+            description=data['description'],
+            url=data['url']
+        )
+        self.assertIsNotNone(edu)
+        self.assertEqual([skill.id for skill in edu.skills.all()], data['skills'])
+
+    def test_update_education(self):
+        """Teste la mise à jour d'un élément Education via l'API"""
+        # Données pour la mise à jour
+        updated_data = {
+            'dates': '2024-2025',
+            'title': 'Titre mise à jour',
+            'institution': 'Institution mise à jour',
+            'field': 'Domaine mise à jour',
+            'description': 'Description mise à jour',
+            'url': 'https://testurl5.com',
+            'skills': [self.skills[0].id, self.skills[2].id],
+            'id': self.experiences[0].id
+        }
+        
+        # Effectuer la mise à jour via l'API
+        response = self.client.post(
+            reverse('save_data'),
+            {
+                'modalId': 'educationModal',
+                'isNew': False,
+                'data': updated_data
+            },
+            content_type='application/json'
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        
+        # Vérifier que les modifications ont été sauvegardées
+        updated_education = Education.objects.get(id=self.educations[0].id)
+        self.assertEqual(updated_education.title, updated_data['title'])
+        self.assertEqual(updated_education.dates, updated_data['dates'])
+        self.assertEqual(updated_education.institution, updated_data['institution'])
+        self.assertEqual(updated_education.field, updated_data['field'])
+        self.assertEqual(updated_education.description, updated_data['description'])
+        self.assertEqual(updated_education.url, updated_data['url'])
+        self.assertEqual([skill.id for skill in updated_education.skills.all()], updated_data['skills'])
+
     def test_create_project(self):
         """Teste la création d'un élément Project via l'API"""
         # Données pour la création
@@ -995,6 +1175,24 @@ class DeleteDataTest(BaseTest):
         # Vérifier que le profil a été supprimé
         self.assertEqual(result['success'], True)
         self.assertFalse(Experience.objects.filter(id=experience_id).exists())
+
+    def test_delete_education(self):
+        """Teste la suppression d'une éducation"""
+
+        education_id = self.educations[0].id
+
+        # Effectuer la suppression
+        response = self.client.delete(
+            reverse('delete_education', args=[education_id])
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        
+        # Vérifier que le profil a été supprimé
+        self.assertEqual(result['success'], True)
+        self.assertFalse(Education.objects.filter(id=education_id).exists())
 
     def test_delete_project(self):
         """Teste la suppression d'un projet"""

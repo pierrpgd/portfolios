@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse, Http404
-from .models import Profile, About, Experience, Project, Skill, ProfileSkill
+from .models import Profile, About, Experience, Education, Project, Skill, ProfileSkill
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
@@ -12,11 +12,12 @@ def portfolio(request, identifiant):
             profile = Profile.objects.get(identifiant=identifiant)
             about = profile.about.all()
             experience = profile.experience.all().prefetch_related('skills')
+            education = profile.education.all().prefetch_related('skills')
             projects = profile.projects.all().prefetch_related('skills')
             profile_skills = ProfileSkill.objects.filter(profile=profile).order_by('skill__category', '-level')
 
             skills_data = []
-                
+            
             for ps in profile_skills:
                 skills_data.append({
                     'id': ps.skill.id,
@@ -32,6 +33,7 @@ def portfolio(request, identifiant):
             'profile': profile,
             'about': about,
             'experience': experience,
+            'education': education,
             'projects': projects,
             'skills': skills_data,
         }
@@ -58,6 +60,7 @@ def load_data(request):
                 profile = Profile.objects.get(identifiant=identifiant)
                 abouts = profile.about.all()
                 experiences = profile.experience.all()
+                educations = profile.education.all()
                 projects = profile.projects.all()
                 profile_skills = ProfileSkill.objects.filter(profile=profile)
                 
@@ -71,7 +74,7 @@ def load_data(request):
                         'name': ps.skill.name,
                         'level': ps.level
                     })
-                                
+                
                 data = {
                     'profile': {
                         'name': profile.name if profile.name else '',
@@ -100,6 +103,20 @@ def load_data(request):
                             'url': exp.url if exp.url else '',
                             'skills': [skill.id for skill in exp.skills.all()]
                         } for exp in experiences
+                    ],
+                    'education': [
+                        {
+                            'id': edu.id,
+                            'order': edu.order,
+                            'dates': edu.dates if edu.dates else '',
+                            'institution': edu.institution if edu.institution else '',
+                            'location': edu.location if edu.location else '',
+                            'title': edu.title if edu.title else '',
+                            'field': edu.field if edu.field else '',
+                            'description': edu.description if edu.description else '',
+                            'url': edu.url if edu.url else '',
+                            'skills': [skill.id for skill in edu.skills.all()]
+                        } for edu in educations
                     ],
                     'projects': [
                         {
@@ -198,6 +215,34 @@ def save_data(request):
                     obj.skills.clear()
                     for skill_id in skills:
                         obj.skills.add(skill_id)
+            elif modalId == 'educationModal':
+                type = 'education'
+                if isNew:
+                    obj = Education.objects.create(
+                        dates=content.get('dates', ''),
+                        title=content.get('title', ''),
+                        institution=content.get('institution', ''),
+                        location=content.get('location', ''),
+                        field=content.get('field', ''),
+                        description=content.get('description', ''),
+                        url=content.get('url', ''),
+                        profile=profile
+                    )
+                    skills = content.get('skills', [])
+                else:
+                    obj = Education.objects.get(id=content.get('id'))
+                    obj.dates = content.get('dates', obj.dates)
+                    obj.title = content.get('title', obj.title)
+                    obj.institution = content.get('institution', obj.institution)
+                    obj.location = content.get('location', obj.location)
+                    obj.field = content.get('field', obj.field)
+                    obj.description = content.get('description', obj.description)
+                    obj.url = content.get('url', obj.url)
+                    skills = content.get('skills', [])
+                if skills != []:
+                    obj.skills.clear()
+                    for skill_id in skills:
+                        obj.skills.add(skill_id)
             elif modalId == 'projectModal':
                 type = 'project'
                 if isNew:
@@ -285,6 +330,15 @@ def delete_experience(request, experience_id):
         return JsonResponse({'success': True})
     except Experience.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Experience not found'}, status=404)
+
+@require_http_methods(["DELETE"])
+def delete_education(request, education_id):
+    try:
+        education = Education.objects.get(id=education_id)
+        education.delete()
+        return JsonResponse({'success': True})
+    except Education.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Education not found'}, status=404)
 
 @require_http_methods(["DELETE"])
 def delete_project(request, project_id):

@@ -99,6 +99,30 @@ function addExperienceSection() {
 }
 
 // Fonction pour ajouter une nouvelle section À propos
+function addEducationSection() {
+    // Créer un élément row factice avec des attributs vides
+    const dummyRow = document.createElement('div');
+    dummyRow.setAttribute('data-dates', '');
+    dummyRow.setAttribute('data-institution', '');
+    dummyRow.setAttribute('data-field', '');
+    dummyRow.setAttribute('data-title', '');
+    dummyRow.setAttribute('data-location', '');
+    dummyRow.setAttribute('data-description', '');
+    dummyRow.setAttribute('data-url', '');
+    dummyRow.setAttribute('data-skills', '');
+    
+    // Ouvrir la popup avec le contenu vide
+    showPopup(dummyRow, 'educationModal', 'educationModalContent');
+    
+    // Rendre tous les champs éditables
+    const modal = document.getElementById('educationModal');
+    modal.querySelectorAll('.editable-content').forEach(el => {
+        el.contentEditable = true;
+        el.focus();
+    });
+}
+
+// Fonction pour ajouter une nouvelle section À propos
 function addProjectSection() {
     // Créer un élément row factice avec des attributs vides
     const dummyRow = document.createElement('div');
@@ -272,7 +296,7 @@ async function updateSkillsDisplay(modalId) {
     }
 
     const skillsField = document.querySelector(`#${modalId} [data-field="skills"]`);
-    if (!skillsField) {
+    if (skillsField.textContent === '') {
         return;
     }
 
@@ -292,8 +316,12 @@ async function updateSkillsDisplay(modalId) {
         if (skills.length > 0) {
             skillsNameField.innerHTML = skills.map(skillId => {
                 const skill = skillsData.find(s => s.id == skillId);
+                if (!skill) {
+                    console.error(`Skill with ID ${skillId} not found`);
+                    return '';
+                }
                 return `<span class="skill-badge">${skill.name}<button class="deleteSkill" data-skill-id="${skill.id}">×</button></span>`;
-            }).join('');
+            }).filter(html => html !== '').join('');
         }
     }
 }
@@ -317,6 +345,14 @@ function showPopup(row, modalId, contentId) {
     let experienceDescription = '';
     let experienceUrl = '';
     let experienceSkills = '';
+    let educationDates = '';
+    let educationInstitution = '';
+    let educationField = '';
+    let educationTitle = '';
+    let educationLocation = '';
+    let educationDescription = '';
+    let educationUrl = '';
+    let educationSkills = '';
     let projectTitle = '';
     let projectDescription = '';
     let projectImageUrl = '';
@@ -341,6 +377,15 @@ function showPopup(row, modalId, contentId) {
         experienceDescription = row.getAttribute('data-description');
         experienceUrl = row.getAttribute('data-url');
         experienceSkills = row.getAttribute('data-skills');
+    } else if (modalId === 'educationModal') {
+        educationDates = row.getAttribute('data-dates');
+        educationInstitution = row.getAttribute('data-institution');
+        educationField = row.getAttribute('data-field');
+        educationTitle = row.getAttribute('data-title');
+        educationLocation = row.getAttribute('data-location');
+        educationDescription = row.getAttribute('data-description');
+        educationUrl = row.getAttribute('data-url');
+        educationSkills = row.getAttribute('data-skills');
     } else if (modalId === 'projectModal') {
         projectTitle = row.getAttribute('data-title');
         projectDescription = row.getAttribute('data-description');
@@ -352,6 +397,7 @@ function showPopup(row, modalId, contentId) {
     const title = modalId === 'profileModal' ? 'Profil' : 
                     modalId === 'aboutModal' ? 'À propos' : 
                     modalId === 'experienceModal' ? 'Expérience' : 
+                    modalId === 'educationModal' ? 'Éducation' : 
                     modalId === 'projectModal' ? 'Projet' : 
                     modalId === 'skillModal' ? 'Compétence' : '';
     
@@ -423,6 +469,37 @@ function showPopup(row, modalId, contentId) {
                         <span class="modal-content-info-title">Description : </span>
                         <div contenteditable="true" class="editable-content" data-field="description">${experienceDescription}</div>
                     </div>
+                ` : modalId === 'educationModal' ? `
+                    <div class="modal-content-info">
+                        <div class="editable-field">
+                            <span class="modal-content-info-title">Période : </span> <span contenteditable="true" class="editable-content" data-field="dates">${educationDates}</span>
+                        </div>
+                        <div class="editable-field">
+                            <span class="modal-content-info-title">Diplôme : </span> <span contenteditable="true" class="editable-content" data-field="title">${educationTitle}</span>
+                        </div>
+                        <div class="editable-field">
+                            <span class="modal-content-info-title">Institution : </span> <span contenteditable="true" class="editable-content" data-field="institution">${educationInstitution}</span>
+                        </div>
+                        <div class="editable-field">
+                            <span class="modal-content-info-title">Domaine : </span> <span contenteditable="true" class="editable-content" data-field="field">${educationField}</span>
+                        </div>
+                        <div class="editable-field">
+                            <span class="modal-content-info-title">Localisation : </span> <span contenteditable="true" class="editable-content" data-field="location">${educationLocation}</span>
+                        </div>
+                        <div class="editable-field">
+                            <span class="modal-content-info-title">URL : </span> <span contenteditable="true" class="editable-content" data-field="url">${educationUrl}</span>
+                        </div>
+                        <div class="editable-field d-flex align-items-center">
+                            <span class="modal-content-info-title">Compétences : </span>
+                            <span data-field="skills" style="display: none">${educationSkills}</span>
+                            <div id="skills-name"></div>
+                            <button id="educationSkillsButton" class="btn btn-sm btn-outline-primary rounded-circle ms-2" style="width: 25px; height: 25px; padding: 0" onclick="addSkillToItem('${modalId}')">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <span class="modal-content-info-title">Description : </span>
+                        <div contenteditable="true" class="editable-content" data-field="description">${educationDescription}</div>
+                    </div>
                 ` : modalId === 'projectModal' ? `
                     <div class="modal-content-info">
                         <div class="editable-field">
@@ -457,7 +534,7 @@ function showPopup(row, modalId, contentId) {
         document.body.appendChild(modal);
     }
 
-    if (modalId === 'experienceModal' || modalId === 'projectModal') {
+    if (modalId === 'experienceModal' || modalId === 'educationModal' || modalId === 'projectModal') {
         updateSkillsDisplay(modalId);
     }
 
@@ -707,7 +784,7 @@ function updateProfileData(data) {
             document.querySelectorAll('.table tbody tr').forEach(row => {
                 row.addEventListener('click', function(e) {
                 // Ne pas traiter si le clic provient d'un bouton de suppression
-                    if (e.target.closest('.btn-danger, .delete-profile, .delete-about, .delete-experience, .delete-project')) {
+                    if (e.target.closest('.btn-danger, .delete-profile, .delete-about, .delete-experience, .delete-education, .delete-project')) {
                         return;
                     }
 
@@ -862,6 +939,63 @@ function updateProfileData(data) {
             document.querySelectorAll('.experience-row').forEach(row => {
                 row.addEventListener('dblclick', function() {
                     showPopup(row, 'experienceModal', 'experienceModalContent');
+                });
+            });
+        }
+    }
+
+    // Mise à jour de la section Education
+    if (data.education && data.education.length > 0) {
+        let eduTable = document.querySelector('#education-table tbody');
+
+        if (!eduTable) {
+            eduTable = document.querySelector('#education-table-container');
+
+            eduTable.innerHTML = `
+                <table id="education-table" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Période</th>
+                            <th>Diplôme</th>
+                            <th>Institution</th>
+                            <th>Domaine</th>
+                            <th>Localisation</th>
+                            <th>Description</th>
+                            <th>URL</th>
+                            <th class="text-end"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            `;
+        }
+
+        eduTable = document.querySelector('#education-table tbody');
+
+        if (eduTable) {
+            eduTable.innerHTML = data.education.map(edu => `
+                <tr class="education-row" data-id="${edu.id}" data-description="${edu.description}" data-dates="${edu.dates}" data-position="${edu.position}" data-field="${edu.field}" data-institution="${edu.institution}" data-location="${edu.location}" data-url="${edu.url}" data-skills="${edu.skills}">
+                    <td>${edu.dates}</td>
+                    <td>${edu.title}</td>
+                    <td>${edu.institution}</td>
+                    <td>${edu.field}</td>
+                    <td>${edu.location}</td>
+                    <td>${edu.description}</td>
+                    <td>${edu.url}</td>
+                    <td class="text-end">
+                        <button class="btn btn-danger btn-sm delete-education" data-id="${edu.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                    <input type="hidden" class="education-id" value="${edu.id}">
+                </tr>
+            `).join('');
+
+            // Réattacher les événements
+            document.querySelectorAll('.education-row').forEach(row => {
+                row.addEventListener('dblclick', function() {
+                    showPopup(row, 'educationModal', 'educationModalContent');
                 });
             });
         }
@@ -1052,6 +1186,54 @@ function loadProfileData(profileIdentifiant) {
 
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
+                        <h2>Éducation</h2>
+                        <button id="addEducationSectionButton" class="btn btn-primary btn-sm" onclick="addEducationSection()">
+                            <i class="fas fa-plus"></i> Ajouter une éducation
+                        </button>
+                    </div>
+                    <div id="education-table-container" class="card-body">
+                        ${data.education.length > 0 ? `
+                            <table id="education-table" class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Période</th>
+                                        <th>Titre</th>
+                                        <th>Institution</th>
+                                        <th>Domaine</th>
+                                        <th>Localisation</th>
+                                        <th>Description</th>
+                                        <th>URL</th>
+                                        <th class="text-end"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.education.map(edu => `
+                                        <tr class="education-row" data-id="${edu.id}" data-description="${edu.description}" data-dates="${edu.dates}" data-title="${edu.title}" data-field="${edu.field}" data-institution="${edu.institution}" data-location="${edu.location}" data-url="${edu.url}" data-skills="${edu.skills}">
+                                            <td>${edu.dates}</td>
+                                            <td>${edu.title}</td>
+                                            <td>${edu.institution}</td>
+                                            <td>${edu.field}</td>
+                                            <td>${edu.location}</td>
+                                            <td>${edu.description}</td>
+                                            <td>${edu.url}</td>
+                                            <td class="text-end">
+                                                <button class="btn btn-danger btn-sm delete-education" data-id="${edu.id}">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                            <input type="hidden" class="education-id" value="${edu.id}">
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        ` : `
+                            <p>Aucune éducation trouvée</p>
+                        `}
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
                         <h2>Projets</h2>
                         <button id="addProjectSectionButton" class="btn btn-primary btn-sm" onclick="addProjectSection()">
                             <i class="fas fa-plus"></i> Ajouter un projet
@@ -1117,6 +1299,13 @@ function loadProfileData(profileIdentifiant) {
                 });
             });
 
+            // Ajouter les gestionnaires d'événements pour les lignes Education
+            document.querySelectorAll('.education-row').forEach(row => {
+                row.addEventListener('dblclick', function() {
+                    showPopup(row, 'educationModal', 'educationModalContent');
+                });
+            });
+
             // Ajouter les gestionnaires d'événements pour les lignes Projects
             document.querySelectorAll('.project-row').forEach(row => {
                 row.addEventListener('dblclick', function() {
@@ -1174,7 +1363,7 @@ $(function() {
         // Simple clic pour sélectionner le profil
         row.addEventListener('click', function(e) {
             // Ne pas traiter si le clic provient d'un bouton de suppression
-            if (e.target.closest('.btn-danger, .delete-profile, .delete-about, .delete-experience, .delete-project, .delete-skill')) {
+            if (e.target.closest('.btn-danger, .delete-profile, .delete-about, .delete-experience, .delete-education, .delete-project, .delete-skill')) {
                 return;
             }
 
@@ -1263,7 +1452,7 @@ $(function() {
     });
 
     // Clic sur le bouton de suppression
-    $(document).on('click', '.delete-profile, .delete-about, .delete-experience, .delete-project, .delete-skill', function() {
+    $(document).on('click', '.delete-profile, .delete-about, .delete-experience, .delete-education, .delete-project, .delete-skill', function() {
         const btn = $(this);
         currentDeleteId = btn.data('id');
         
@@ -1273,6 +1462,8 @@ $(function() {
             currentDeleteType = 'about';
         } else if (btn.hasClass('delete-experience')) {
             currentDeleteType = 'experience';
+        } else if (btn.hasClass('delete-education')) {
+            currentDeleteType = 'education';
         } else if (btn.hasClass('delete-project')) {
             currentDeleteType = 'project';
         } else {

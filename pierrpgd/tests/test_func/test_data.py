@@ -5,7 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException
-from pierrpgd.models import Profile, About, Experience, Project, Skill, ProfileSkill
+from pierrpgd.models import Profile, About, Experience, Education, Project, Skill, ProfileSkill
 from selenium.webdriver.common.keys import Keys
 from django.test import Client
 from django.conf import settings
@@ -63,6 +63,7 @@ class BaseTest(LiveServerTestCase):
         self.profile = Profile.objects.get(identifiant='test-profile')
         self.abouts = About.objects.filter(profile=self.profile).order_by('order')
         self.experiences = Experience.objects.filter(profile=self.profile).order_by('order')
+        self.educations = Education.objects.filter(profile=self.profile).order_by('order')
         self.projects = Project.objects.filter(profile=self.profile).order_by('order')
         self.skills = Skill.objects.filter(profile=self.profile).order_by('id')
 
@@ -509,6 +510,124 @@ class PopupTest(BaseTest):
         try:
             WebDriverWait(self.browser, 10).until(
                 EC.invisibility_of_element_located((By.ID, 'experienceModal'))
+            )
+        except:
+            # La modal a été supprimée, donc elle n'est plus dans le DOM
+            pass
+
+    def test_double_click_education(self):
+        """Teste le comportement du double clic sur une ligne du tableau Education"""
+        
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre que les données soient chargées
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@id='profile-data']//h2[text()='Éducation']"))
+        )
+        
+        # Trouver la ligne du tableau Éducation
+        education_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'education-table')]//td[contains(text(), '{self.educations[0].description}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(education_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'educationModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'educationModal')
+        self.assertTrue(modal.is_displayed())
+        
+        # Vérifier le contenu de la popup
+        modal_content = self.browser.find_element(By.CSS_SELECTOR, '#educationModal .modal-content')
+
+        dates = modal_content.find_element(By.CSS_SELECTOR, '[data-field="dates"]').text
+        title = modal_content.find_element(By.CSS_SELECTOR, '[data-field="title"]').text
+        institution = modal_content.find_element(By.CSS_SELECTOR, '[data-field="institution"]').text
+        field = modal_content.find_element(By.CSS_SELECTOR, '[data-field="field"]').text
+        location = modal_content.find_element(By.CSS_SELECTOR, '[data-field="location"]').text
+        description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
+        education_url = modal_content.find_element(By.CSS_SELECTOR, '[data-field="url"]').text
+        skills_elements = modal_content.find_elements(By.CLASS_NAME, 'skill-badge')
+        skills = [skill.text for skill in skills_elements]
+
+        self.assertEqual(dates, '2016-2019')
+        self.assertEqual(title, 'Test Title')
+        self.assertEqual(field, 'Test Field')
+        self.assertEqual(institution, 'Test Institution')
+        self.assertEqual(description, 'Test Description')
+        self.assertEqual(location, 'Test Location')
+        self.assertEqual(education_url, 'https://testurl.com')
+        self.assertEqual(skills, ['Test Skill', 'Second Skill'])
+        
+        # Fermer la popup
+        close_button = self.browser.find_element(By.CSS_SELECTOR, '#educationModal .modal-header button.close')
+        self.browser.execute_script("arguments[0].click();", close_button)
+        
+        # Attendre que la popup soit masquée
+        try:
+            WebDriverWait(self.browser, 10).until(
+                EC.invisibility_of_element_located((By.ID, 'educationModal'))
+            )
+        except:
+            # La modal a été supprimée, donc elle n'est plus dans le DOM
+            pass
+        
+        # Vérifier que la modal n'est plus présente dans le DOM
+        with self.assertRaises(NoSuchElementException):
+            self.browser.find_element(By.ID, 'educationModal')
+        
+        # Trouver la ligne du tableau Éducation pour la deuxième expérience
+        education_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'education-table')]//td[contains(text(), '{self.educations[1].description}')]/..")
+
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(education_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'educationModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'educationModal')
+        self.assertTrue(modal.is_displayed())
+
+        # Vérifier le contenu de la popup
+        modal_content = self.browser.find_element(By.CSS_SELECTOR, '#educationModal .modal-content')
+
+        dates = modal_content.find_element(By.CSS_SELECTOR, '[data-field="dates"]').text
+        title = modal_content.find_element(By.CSS_SELECTOR, '[data-field="title"]').text
+        institution = modal_content.find_element(By.CSS_SELECTOR, '[data-field="institution"]').text
+        field = modal_content.find_element(By.CSS_SELECTOR, '[data-field="field"]').text
+        location = modal_content.find_element(By.CSS_SELECTOR, '[data-field="location"]').text
+        description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
+        education_url = modal_content.find_element(By.CSS_SELECTOR, '[data-field="url"]').text
+        skills_elements = modal_content.find_elements(By.CLASS_NAME, 'skill-badge')
+        skills = [skill.text for skill in skills_elements]
+
+        self.assertEqual(dates, '2015-2016')
+        self.assertEqual(title, 'Test Title 2')
+        self.assertEqual(institution, 'Test Institution 2')
+        self.assertEqual(field, 'Test Field 2')
+        self.assertEqual(location, 'Test Location 2')
+        self.assertEqual(description, 'Test Description 2')
+        self.assertEqual(education_url, 'https://testurl2.com')
+        self.assertEqual(skills, ['Test Skill'])
+        
+        # Fermer la popup
+        close_button = self.browser.find_element(By.CSS_SELECTOR, '#educationModal .modal-header button.close')
+        self.browser.execute_script("arguments[0].click();", close_button)
+        
+        # Attendre que la popup soit masquée
+        try:
+            WebDriverWait(self.browser, 10).until(
+                EC.invisibility_of_element_located((By.ID, 'educationModal'))
             )
         except:
             # La modal a été supprimée, donc elle n'est plus dans le DOM
@@ -1208,6 +1327,351 @@ class ModifyAndSaveTest(BaseTest):
         skills_name = skills_field.find_elements(By.CLASS_NAME, "skill-badge")
         self.assertFalse(any(new_skill.name in skill_name.text for skill_name in skills_name), "La compétence est toujours dans la liste")
 
+    def test_modify_and_save_education(self):
+        """Teste la modification et la sauvegarde d'un élément Education"""
+
+        # Créer un nouveau contenu pour l'expérience
+        new_content = Education(
+            profile=self.profile,
+            dates="2024-2025",
+            title="Nouveau titre",
+            institution="Nouvelle institution",
+            field="Nouveau domaine",
+            location="Nouveau lieu",
+            description="Nouvelle description",
+            url="https://nouvelleurl.com"
+        )
+
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.ID, "education-table"))
+        )
+        
+        # Trouver la ligne du tableau Education
+        education_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'education-table')]//td[contains(text(), '{self.educations[0].title}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(education_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'educationModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'educationModal')
+        self.assertTrue(modal.is_displayed())
+
+        # Modifier les dates
+        dates_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="dates"]')
+        dates_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content.dates).perform()
+
+        # Modifier le titre
+        title_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="title"]')
+        title_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content.title).perform()
+
+        # Modifier l'institution
+        institution_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="institution"]')
+        institution_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content.institution).perform()
+
+        # Modifier le domaine
+        field_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="field"]')
+        field_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content.field).perform()
+
+        # Modifier le lieu
+        location_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="location"]')
+        location_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content.location).perform()
+
+        # Modifier la description
+        description_field = modal.find_element(By.CSS_SELECTOR, 'div.editable-content[data-field="description"]')
+        description_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content.description).perform()
+
+        # Modifier l'URL
+        experience_url_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="url"]')
+        experience_url_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content.url).perform()
+        
+        # Enregistrer et vérifier
+        save_button = modal.find_element(By.CSS_SELECTOR, '.btn-primary')
+        self.browser.execute_script("arguments[0].click();", save_button)
+        
+        # Vérifier que la modal commence à se fermer
+        WebDriverWait(self.browser, 10).until(
+            EC.invisibility_of_element_located((By.ID, 'educationModal'))
+        )
+        
+        # Vérifier côté serveur que la modification est enregistrée
+        education_obj = Education.objects.get(id=self.educations[0].id)
+        self.assertEqual(education_obj.dates, new_content.dates)
+        self.assertEqual(education_obj.title, new_content.title)
+        self.assertEqual(education_obj.institution, new_content.institution)
+        self.assertEqual(education_obj.field, new_content.field)
+        self.assertEqual(education_obj.location, new_content.location)
+        self.assertEqual(education_obj.description, new_content.description)
+        self.assertEqual(education_obj.url, new_content.url)
+        
+        # Vérifier que le tableau est mis à jour
+        updated_row = WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, 
+                f"//div[@id='profile-data']//table[@id='education-table']//td[contains(., '{new_content.description}')]"))
+        )
+        self.assertTrue(updated_row.is_displayed())
+
+    def test_modify_and_save_education_skills(self):
+        """
+        Teste la modification et le sauvegarde des compétences d'une éducation via l'interface
+        1. Ouvre la page data_display
+        2. Double clique sur une éducation
+        3. Ajoute une compétence
+        4. Valide et vérifie l'affichage
+        """
+
+        new_skill = Skill(
+            category='New special category',
+            name='New special name'
+        )
+
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.ID, "education-table"))
+        )
+
+        # Ajout de la nouvelle compétence au profil
+        add_button = self.browser.find_element(By.ID, "addSkillSectionButton")
+        self.browser.execute_script("arguments[0].scrollIntoView(true);", add_button)
+        
+        # Attendre que l'élément soit cliquable
+        WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.ID, "addSkillSectionButton"))
+        )
+        
+        # Cliquer via JavaScript pour éviter les problèmes d'interception
+        self.browser.execute_script("arguments[0].click();", add_button)
+        
+        # Attendre que la modal soit visible
+        modal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "skillModal"))
+        )
+        
+        # Remplir le champ catégorie
+        category_field = modal.find_element(By.CSS_SELECTOR, "[data-field='category']")
+        category_field.send_keys(new_skill.category)
+
+        # Remplir le champ nom
+        name_field = modal.find_element(By.CSS_SELECTOR, "[data-field='name']")
+        name_field.send_keys(new_skill.name)
+        
+        # Cliquer sur valider
+        validate_button = modal.find_element(By.ID, "skillModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+        
+        # Vérifier l'affichage dans le tableau
+        WebDriverWait(self.browser, 20).until(
+            EC.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, "#skill-table tbody"), 
+                new_skill.category
+            )
+        )
+
+        # Vérifier l'affichage dans le tableau
+        WebDriverWait(self.browser, 20).until(
+            EC.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, "#skill-table tbody"), 
+                new_skill.name
+            )
+        )
+        
+        time.sleep(0.5)
+        
+        # Trouver la ligne du tableau Education
+        education_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'education-table')]//td[contains(text(), '{self.educations[0].title}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(education_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'educationModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'educationModal')
+        self.assertTrue(modal.is_displayed())
+        
+        # Ouvrir la popup de création de compétence
+        skills_field = modal.find_element(By.ID, "educationSkillsButton")
+        self.browser.execute_script("arguments[0].click();", skills_field)
+
+        # Attendre que la modal soit visible
+        skillModal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "skillModal"))
+        )
+
+        # Attendre que la liste déroulante soit présente
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "[data-field='category']"))
+        )
+        
+        # Sélection de la catégorie
+        category_select = Select(skillModal.find_element(By.CSS_SELECTOR, "[data-field='category']"))
+        category_select.select_by_visible_text(new_skill.category)
+        
+        # Attendre que les options de compétences soient chargées
+        WebDriverWait(self.browser, 5).until(
+            lambda d: len(Select(d.find_element(By.CSS_SELECTOR, "[data-field='name']")).options) > 1
+        )
+        
+        # Sélection de la compétence
+        skill_select = Select(skillModal.find_element(By.CSS_SELECTOR, "[data-field='name']"))
+        skill_select.select_by_visible_text(new_skill.name)
+
+        # Cliquer sur valider
+        validate_button = skillModal.find_element(By.ID, "skillModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+
+        max_attempts = 50  # 50 * 0.2s = 10s max
+        attempts = 0
+        while attempts < max_attempts:
+            attempts += 1
+            try:
+                new_skill = Skill.objects.get(category=new_skill.category, name=new_skill.name)
+                if new_skill:
+                    break
+            except:
+                time.sleep(0.2)
+            if attempts >= max_attempts:
+                self.fail("Timeout waiting for skill creation")
+
+        # Vérifier l'affichage de la nouvelle compétence
+        WebDriverWait(self.browser, 10).until(
+            EC.text_to_be_present_in_element(
+                (By.ID, "skills-name"), 
+                new_skill.name
+            )
+        )
+
+        skill_name = self.browser.find_element(By.ID, "skills-name")
+        self.assertIn(new_skill.name, skill_name.text)
+
+        # Cliquer sur valider
+        validate_button = modal.find_element(By.ID, "educationModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+
+        time.sleep(0.5)
+
+        # Vérification en base de données
+        education = Education.objects.get(id=self.educations[0].id)
+        self.assertIn(new_skill.name, [skill.name for skill in education.skills.all()])
+
+        ## Supprimer la compétence
+
+        # Trouver la ligne du tableau Education
+        project_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'education-table')]//td[contains(text(), '{self.educations[0].description}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(project_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'educationModal'))
+        )
+        
+        # Trouver le champ compétence
+        modal = self.browser.find_element(By.ID, "educationModal")
+        skills_field = modal.find_element(By.ID, "skills-name")
+        skills_name = skills_field.find_elements(By.CLASS_NAME, "skill-badge")
+        self.assertTrue(any(new_skill.name in skill_name.text for skill_name in skills_name), "La compétence n'est pas dans la liste")
+
+        skill_to_delete = None
+        for skill_name in skills_name:
+            if skill_name.text == new_skill.name:
+                skill_to_delete = skill_name
+                break
+        
+        if skill_to_delete:
+            # Cliquer sur supprimer
+            delete_button = skill_to_delete.find_element(By.CLASS_NAME, "deleteSkill")
+            self.browser.execute_script("arguments[0].click();", delete_button)
+
+        # Après avoir cliqué sur le bouton delete, rafraîchir la référence aux éléments
+        skills_field = modal.find_element(By.ID, "skills-name")
+        skills_name = skills_field.find_elements(By.CLASS_NAME, "skill-badge")
+
+        # Vérifier la suppression de la compétence
+        self.assertFalse(any(new_skill.name in skill_name.text for skill_name in skills_name), "La compétence n'a pas été supprimée")
+
+        # Cliquer sur valider
+        validate_button = modal.find_element(By.ID, "educationModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#education-table tbody"))
+        )
+
+        # Vérifier l'affichage dans le tableau
+        WebDriverWait(self.browser, 20).until(
+            EC.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, "#education-table tbody"), 
+                str(self.educations[0].skills.all().count())
+            )
+        )
+
+        time.sleep(0.5)
+
+        # Vérification en base de données
+        education = Education.objects.get(id=self.educations[0].id)
+        self.assertNotIn(new_skill.name, [skill.name for skill in education.skills.all()])
+
+        # Trouver la ligne du tableau Education
+        education_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'education-table')]//td[contains(text(), '{self.educations[0].description}')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(education_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'educationModal'))
+        )
+
+        # Trouver le champ compétence
+        modal = self.browser.find_element(By.ID, 'educationModal')
+        skills_field = modal.find_element(By.ID, "educationSkillsButton")
+        skills_name = skills_field.find_elements(By.CLASS_NAME, "skill-badge")
+        self.assertFalse(any(new_skill.name in skill_name.text for skill_name in skills_name), "La compétence est toujours dans la liste")
+
     def test_modify_and_save_project(self):
         """Teste la modification et la sauvegarde d'un élément Project"""
 
@@ -1419,6 +1883,11 @@ class ModifyAndSaveTest(BaseTest):
                 time.sleep(0.2)
             if attempts >= max_attempts:
                 self.fail("Timeout waiting for skill creation")
+
+        # Vérifier l'affichage des compétences
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.ID, "skills-name"))
+        )
 
         # Vérifier l'affichage de la nouvelle compétence
         WebDriverWait(self.browser, 10).until(
@@ -2044,6 +2513,225 @@ class AddElementTest(BaseTest):
         profil = Profile.objects.get(identifiant=self.profile.identifiant)
         self.assertIn(new_skill, profil.skills.all())
 
+    def test_add_education_section(self):
+        """
+        Teste l'ajout d'une section Éducation via l'interface
+        1. Ouvre la page data_display
+        2. Clique sur 'Ajouter une section'
+        3. Remplit le champ 'Contenu'
+        4. Valide et vérifie l'affichage
+        """
+
+        # Créer un nouveau contenu pour l'expérience
+        new_skill = Skill.objects.create(
+            category='New Category',
+            name='New Skill'
+        )
+        new_content = Education(
+            profile=self.profile,
+            dates="2024-2025",
+            title="Nouveau titre",
+            institution="Nouvelle institution",
+            field="Nouveau domaine",
+            location="Nouveau lieu",
+            description="Nouvelle description",
+            url="https://nouvelleurl.com"
+        )
+        
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.ID, "skill-table"))
+        )
+
+        # Ajout de la nouvelle compétence au profil
+        add_button = self.browser.find_element(By.ID, "addSkillSectionButton")
+        self.browser.execute_script("arguments[0].scrollIntoView(true);", add_button)
+        
+        # Attendre que l'élément soit cliquable
+        WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.ID, "addSkillSectionButton"))
+        )
+        
+        # Cliquer via JavaScript pour éviter les problèmes d'interception
+        self.browser.execute_script("arguments[0].click();", add_button)
+        
+        # Attendre que la modal soit visible
+        modal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "skillModal"))
+        )
+        
+        # Remplir le champ catégorie
+        category_field = modal.find_element(By.CSS_SELECTOR, "[data-field='category']")
+        category_field.send_keys(new_skill.category)
+
+        # Remplir le champ nom
+        name_field = modal.find_element(By.CSS_SELECTOR, "[data-field='name']")
+        name_field.send_keys(new_skill.name)
+        
+        # Cliquer sur valider
+        validate_button = modal.find_element(By.ID, "skillModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+        
+        # Vérifier l'affichage dans le tableau
+        WebDriverWait(self.browser, 20).until(
+            EC.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, "#skill-table tbody"), 
+                new_skill.category
+            )
+        )
+
+        # Vérifier l'affichage dans le tableau
+        WebDriverWait(self.browser, 20).until(
+            EC.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, "#skill-table tbody"), 
+                new_skill.name
+            )
+        )
+        
+        time.sleep(0.5)
+        
+        # Scroll vers l'élément
+        add_button = self.browser.find_element(By.ID, "addEducationSectionButton")
+        self.browser.execute_script("arguments[0].scrollIntoView(true);", add_button)
+        
+        # Attendre que l'élément soit cliquable
+        WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.ID, "addEducationSectionButton"))
+        )
+        
+        # Cliquer via JavaScript pour éviter les problèmes d'interception
+        self.browser.execute_script("arguments[0].click();", add_button)
+        
+        # Attendre que la modal soit visible
+        modal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "educationModal"))
+        )
+
+        # Remplir les dates
+        dates_field = modal.find_element(By.CSS_SELECTOR, "[data-field='dates']")
+        dates_field.send_keys(new_content.dates)
+
+        # Remplir le titre
+        title_field = modal.find_element(By.CSS_SELECTOR, "[data-field='title']")
+        title_field.send_keys(new_content.title)
+
+        # Remplir l'institution
+        institution_field = modal.find_element(By.CSS_SELECTOR, "[data-field='institution']")
+        institution_field.send_keys(new_content.institution)
+
+        # Remplir le domaine
+        field_field = modal.find_element(By.CSS_SELECTOR, "[data-field='field']")
+        field_field.send_keys(new_content.field)
+
+        # Remplir le lieu
+        location_field = modal.find_element(By.CSS_SELECTOR, "[data-field='location']")
+        location_field.send_keys(new_content.location)
+
+        # Remplir la description
+        description_field = modal.find_element(By.CSS_SELECTOR, "[data-field='description']")
+        description_field.send_keys(new_content.description)
+
+        # Remplir l'URL
+        experience_url_field = modal.find_element(By.CSS_SELECTOR, "[data-field='url']")
+        experience_url_field.send_keys(new_content.url)
+
+        # Ouvrir la popup de création de compétence
+        skills_field = modal.find_element(By.ID, "educationSkillsButton")
+        self.browser.execute_script("arguments[0].click();", skills_field)
+
+        # Attendre que la modal soit visible
+        skillModal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "skillModal"))
+        )
+
+        # Sélection de la catégorie
+        category_select = Select(skillModal.find_element(By.CSS_SELECTOR, "[data-field='category']"))
+        category_select.select_by_visible_text(new_skill.category)
+        
+        # Attendre que les options de compétences soient chargées
+        WebDriverWait(self.browser, 5).until(
+            lambda d: len(Select(d.find_element(By.CSS_SELECTOR, "[data-field='name']")).options) > 1
+        )
+        
+        # Sélection de la compétence
+        skill_select = Select(skillModal.find_element(By.CSS_SELECTOR, "[data-field='name']"))
+        skill_select.select_by_visible_text(new_skill.name)
+
+        # Cliquer sur valider
+        validate_button = skillModal.find_element(By.ID, "skillModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+
+        # Vérifier l'affichage de la nouvelle compétence
+        WebDriverWait(self.browser, 20).until(
+            EC.presence_of_element_located((By.ID, "skills-name"))
+        )
+
+        # Vérifier l'affichage de la nouvelle compétence
+        WebDriverWait(self.browser, 20).until(
+            EC.text_to_be_present_in_element(
+                (By.ID, "skills-name"), 
+                str(new_skill.name)
+            )
+        )
+        
+        # Cliquer sur valider
+        validate_button = modal.find_element(By.ID, "educationModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+        
+        # Vérifier l'affichage dans le tableau
+        WebDriverWait(self.browser, 20).until(
+            EC.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, "#education-table tbody"), 
+                new_content.description
+            )
+        )
+
+        # Vérifier l'affichage dans le tableau
+        WebDriverWait(self.browser, 20).until(
+            EC.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, "#education-table tbody"), 
+                new_content.description
+            )
+        )
+        
+        time.sleep(0.5)
+
+        # Vérification finale
+        rows = self.browser.find_elements(By.CSS_SELECTOR, "#education-table tbody tr")
+        new_row = None
+        for row in rows:
+            if row.find_elements(By.CSS_SELECTOR, "td")[5].text == new_content.description:
+                new_row = row
+                break
+        if new_row:
+            self.assertEqual(new_content.dates, new_row.find_elements(By.CSS_SELECTOR, "td")[0].text)
+            self.assertEqual(new_content.title, new_row.find_elements(By.CSS_SELECTOR, "td")[1].text)
+            self.assertEqual(new_content.institution, new_row.find_elements(By.CSS_SELECTOR, "td")[2].text)
+            self.assertEqual(new_content.field, new_row.find_elements(By.CSS_SELECTOR, "td")[3].text)
+            self.assertEqual(new_content.location, new_row.find_elements(By.CSS_SELECTOR, "td")[4].text)
+            self.assertEqual(new_content.description, new_row.find_elements(By.CSS_SELECTOR, "td")[5].text)
+            self.assertEqual(new_content.url, new_row.find_elements(By.CSS_SELECTOR, "td")[6].text)
+        else:
+            self.fail("New row not found")
+
+        education = Education.objects.get(profile=new_content.profile,
+            dates=new_content.dates,
+            title=new_content.title,
+            institution=new_content.institution,
+            field=new_content.field,
+            location=new_content.location,
+            description=new_content.description,
+            url=new_content.url)
+        self.assertEqual(education.skills.all().count(), 1)
+
+        # Vérifier que la compétence est liée au profil
+        profil = Profile.objects.get(identifiant=self.profile.identifiant)
+        self.assertIn(new_skill, profil.skills.all())
+
     def test_add_project_section(self):
         """
         Teste l'ajout d'une section Projets via l'interface
@@ -2389,6 +3077,43 @@ class DeleteElementTest(BaseTest):
         experience_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'experience-table')]//td[contains(text(), '{self.experiences[0].description}')]/..")
         self.assertTrue(experience_row.is_displayed(), "La ligne de l'experience est visible")
 
+    def test_delete_education_and_cancel(self):
+        """Vérifie que le clic sur supprimer affiche la modal de confirmation et le bouton d'annulation fonctionne"""
+        # Sélectionner le profil
+        profile_row = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/.."))
+        )
+        self.browser.execute_script("arguments[0].click();", profile_row)
+
+        # Attendre et cliquer sur le bouton de suppression
+        delete_button = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'education-table')]//td[contains(text(), '{self.educations[0].description}')]/..//button[contains(@class, 'delete-education')]"))
+        )
+        self.browser.execute_script("arguments[0].click();", delete_button)
+
+        # Vérifier l'affichage de la modal
+        WebDriverWait(self.browser, 5).until(
+            EC.visibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas apparue après le clic"
+        )
+        
+        # Vérifier que le bouton d'annulation est présent
+        cancel_button = self.browser.find_element(By.ID, "cancelDeleteButton")
+        self.assertTrue(cancel_button.is_displayed(), "Le bouton d'annulation n'est pas visible")
+
+        # Cliquer sur le bouton d'annulation
+        self.browser.execute_script("arguments[0].click();", cancel_button)
+
+        # Vérifier que la modal est fermée
+        WebDriverWait(self.browser, 5).until(
+            EC.invisibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas fermée après le clic"
+        )
+
+        #Vérifier que la ligne n'est pas supprimée
+        education_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'education-table')]//td[contains(text(), '{self.educations[0].description}')]/..")
+        self.assertTrue(education_row.is_displayed(), "La ligne de l'éducation est visible")
+
     def test_delete_project_and_cancel(self):
         """Vérifie que le clic sur supprimer affiche la modal de confirmation et le bouton d'annulation fonctionne"""
 
@@ -2707,6 +3432,50 @@ class DeleteElementTest(BaseTest):
         try:
             experience_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'experience-table')]//td[contains(text(), '{experience_description}')]/..")
             self.assertFalse(experience_row.is_displayed(), "La ligne de l'experience est visible")
+        except NoSuchElementException:
+            pass  # La ligne a bien été supprimée
+
+    def test_delete_education_and_confirm(self):
+        """Vérifie que le clic sur supprimer affiche la modal de confirmation et le bouton de confirmation fonctionne"""
+        
+        # Sélectionner le profil
+        profile_row = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/.."))
+        )
+        self.browser.execute_script("arguments[0].click();", profile_row)
+
+        # Cliquer sur le bouton de suppression de la section education de test
+        delete_button = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'education-table')]//td[contains(text(), '{self.educations[1].description}')]/..//button[contains(@class, 'delete-education')]"))
+        )
+        self.browser.execute_script("arguments[0].click();", delete_button)
+
+        # Vérifier que la popup est apparue
+        WebDriverWait(self.browser, 5).until(
+            EC.visibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas apparue après le clic"
+        )
+
+        education_id = self.educations[1].id
+        education_description = self.educations[1].description
+
+        # Cliquer sur le bouton de confirmation
+        confirm_button = self.browser.find_element(By.ID, "confirmDeleteButton")
+        self.browser.execute_script("arguments[0].click();", confirm_button)
+
+        # Vérifier que la modal est fermée
+        WebDriverWait(self.browser, 5).until(
+            EC.invisibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas fermée après le clic"
+        )
+        
+        # Vérifier que l'éducation est supprimée
+        self.assertFalse(Education.objects.filter(id=education_id).exists(), "L'éducation n'a pas été supprimée")
+        
+        # Vérifier que la ligne est supprimée
+        try:
+            education_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'education-table')]//td[contains(text(), '{education_description}')]/..")
+            self.assertFalse(education_row.is_displayed(), "La ligne de l'éducation est visible")
         except NoSuchElementException:
             pass  # La ligne a bien été supprimée
 

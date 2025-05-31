@@ -124,6 +124,36 @@
         }
     },
     {
+        "model": "pierrpgd.education",
+        "pk": 1,
+        "fields": {
+            "profile": 1,
+            "dates": "2016-2019",
+            "institution": "Test Institution",
+            "location": "Test Location",
+            "title": "Test Title",
+            "field": "Test Field",
+            "description": "Test Description",
+            "url": "https://testurl.com",
+            "skills": [1, 2]
+        }
+    },
+    {
+        "model": "pierrpgd.education",
+        "pk": 2,
+        "fields": {
+            "profile": 1,
+            "dates": "2015-2016",
+            "institution": "Test Institution 2",
+            "location": "Test Location 2",
+            "title": "Test Title 2",
+            "field": "Test Field 2",
+            "description": "Test Description 2",
+            "url": "https://testurl2.com",
+            "skills": [1]
+        }
+    },
+    {
         "model": "pierrpgd.project",
         "pk": 1,
         "fields": {

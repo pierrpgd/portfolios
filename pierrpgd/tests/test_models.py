@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
-from pierrpgd.models import Profile, About, Experience, Project, Skill
+from pierrpgd.models import Profile, About, Experience, Education, Project, Skill
 
 class BaseTest(TestCase):
     fixtures = ['test_fixtures.json']
@@ -12,6 +12,7 @@ class BaseTest(TestCase):
         cls.profile = Profile.objects.get(identifiant='test-profile')
         cls.abouts = About.objects.filter(profile=cls.profile)
         cls.experiences = Experience.objects.filter(profile=cls.profile)
+        cls.educations = Education.objects.filter(profile=cls.profile)
         cls.projects = Project.objects.filter(profile=cls.profile)
         cls.skills = Skill.objects.all()
 
@@ -145,6 +146,58 @@ class ExperienceModelTest(BaseTest):
         self.profile.delete()
         with self.assertRaises(Experience.DoesNotExist):
             Experience.objects.get(profile=profile_id)
+
+class EducationModelTest(BaseTest):
+
+    def test_education_creation(self):
+        """Test la création d'une éducation"""
+        self.assertEqual(self.educations[0].dates, '2016-2019')
+        self.assertEqual(self.educations[0].title, 'Test Title')
+        self.assertEqual(self.educations[0].institution, 'Test Institution')
+        self.assertEqual(self.educations[0].field, 'Test Field')
+        self.assertEqual(self.educations[0].description, 'Test Description')
+        self.assertEqual(self.educations[0].order, 0)
+        self.assertEqual(self.educations[0].url, 'https://testurl.com')
+        self.assertEqual(self.educations[0].skills.count(), 2)
+        skills = list(self.educations[0].skills.all())
+        self.assertIn(self.skills[0], skills)
+        self.assertIn(self.skills[1], skills)
+        
+        self.assertEqual(self.educations[1].dates, '2015-2016')
+        self.assertEqual(self.educations[1].title, 'Test Title 2')
+        self.assertEqual(self.educations[1].institution, 'Test Institution 2')
+        self.assertEqual(self.educations[1].field, 'Test Field 2')
+        self.assertEqual(self.educations[1].description, 'Test Description 2')
+        self.assertEqual(self.educations[1].order, 1)
+        self.assertEqual(self.educations[1].url, 'https://testurl2.com')
+        self.assertEqual(self.educations[1].skills.count(), 1)
+        skills = list(self.educations[1].skills.all())
+        self.assertIn(self.skills[0], skills)
+
+    def test_education_string_representation(self):
+        """Test la représentation en chaîne de caractères"""
+        expected_str = f"{self.educations[0].title} at {self.educations[0].institution}"
+        self.assertEqual(str(self.educations[0]), expected_str)
+
+    def test_education_ordering(self):
+        """Test le tri des educations"""
+        educations = Education.objects.filter(profile=self.profile)
+        self.assertEqual(educations[0], self.educations[0])
+        self.assertEqual(educations[1], self.educations[1])
+
+    def test_education_deletion(self):
+        """Test la suppression d'une éducation"""
+        education_id = self.educations[0].id
+        self.educations[0].delete()
+        with self.assertRaises(Education.DoesNotExist):
+            Education.objects.get(id=education_id)
+
+    def test_education_cascade_deletion(self):
+        """Test la suppression en cascade quand un Profile est supprimé"""
+        profile_id = self.profile.id
+        self.profile.delete()
+        with self.assertRaises(Education.DoesNotExist):
+            Education.objects.get(profile=profile_id)
 
 class ProjectModelTest(BaseTest):
 

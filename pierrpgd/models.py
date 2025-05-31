@@ -56,6 +56,24 @@ class Experience(models.Model):
     def __str__(self):
         return f"{self.position} at {self.company}"
 
+class Education(models.Model):
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='education')
+    dates = models.CharField(max_length=50)
+    institution = models.CharField(max_length=100)
+    location = models.CharField(max_length=100)
+    title = models.CharField(max_length=150)
+    field = models.CharField(max_length=150)
+    description = models.TextField()
+    order = models.IntegerField(default=0)
+    url = models.URLField(blank=True, null=True)
+    skills = models.ManyToManyField('Skill', blank=True)
+
+    class Meta:
+        ordering = ['order']  # Ordonne par ordre décroissant
+
+    def __str__(self):
+        return f"{self.title} at {self.institution}"
+
 class Project(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='projects')
     title = models.CharField(max_length=200)

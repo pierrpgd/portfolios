@@ -1,13 +1,7 @@
 from django.test import LiveServerTestCase
-from django.urls import reverse
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
-from pierrpgd.models import Profile, About, Experience, Project
-from selenium.webdriver.common.keys import Keys
+from pierrpgd.models import Profile, About, Experience, Education, Project
 
 class BaseTest(LiveServerTestCase):
     fixtures = ['test_fixtures.json']
@@ -41,6 +35,7 @@ class BaseTest(LiveServerTestCase):
         self.profile = Profile.objects.get(identifiant='test-profile')
         self.abouts = About.objects.filter(profile=self.profile).order_by('order')
         self.experiences = Experience.objects.filter(profile=self.profile).order_by('order')
+        self.educations = Education.objects.filter(profile=self.profile).order_by('order')
         self.projects = Project.objects.filter(profile=self.profile).order_by('order')
 
 class PortfolioPageTest(BaseTest):
@@ -86,32 +81,36 @@ class PortfolioPageTest(BaseTest):
         title = self.browser.find_element(By.ID, "title")
         self.assertEqual(title.text, self.profile.title, "Profile title doesn't appear on the portfolio.")
 
-    def test_project_data_is_visible(self):
-        project_section = self.browser.find_element(By.ID, 'projects')
-
-        project_containers = project_section.find_elements(By.CLASS_NAME, 'project-container')
-        self.assertEqual(project_containers[0].find_element(By.CLASS_NAME, 'project-title').text, self.projects[0].title, "Project title doesn't appear on the portfolio.")
-        self.assertEqual(project_containers[0].find_element(By.CLASS_NAME, 'project-description').text, self.projects[0].description, "Project description doesn't appear on the portfolio.")
-        self.assertEqual(project_containers[0].find_element(By.TAG_NAME, 'img').get_attribute('src').replace(self.live_server_url, ''), self.projects[0].image_url, "Project image doesn't appear on the portfolio.")
-
     def test_experience_data_is_visible(self):
         experience_section = self.browser.find_element(By.ID, 'experience')
 
-        experience_containers = experience_section.find_elements(By.CLASS_NAME, 'job-link')
-        self.assertEqual(experience_containers[0].find_element(By.CLASS_NAME, 'job-title').text, self.experiences[0].position, "Experience title doesn't appear on the portfolio.")
-        self.assertEqual(experience_containers[0].find_element(By.CLASS_NAME, 'job-description').text, self.experiences[0].description, "Experience description doesn't appear on the portfolio.")
+        experience_containers = experience_section.find_elements(By.CLASS_NAME, 'tile-link')
+        self.assertEqual(experience_containers[0].find_element(By.CLASS_NAME, 'tile-title').text, self.experiences[0].position, "Experience title doesn't appear on the portfolio.")
+        self.assertEqual(experience_containers[0].find_element(By.CLASS_NAME, 'tile-description').text, self.experiences[0].description, "Experience description doesn't appear on the portfolio.")
         self.assertEqual(experience_containers[0].find_element(By.CLASS_NAME, 'company').text, self.experiences[0].company, "Experience company doesn't appear on the portfolio.")
         self.assertEqual(experience_containers[0].find_element(By.CLASS_NAME, 'location').text, self.experiences[0].location, "Experience location doesn't appear on the portfolio.")
 
         expected_url = self.experiences[0].url if self.experiences[0].url.endswith('/') else f"{self.experiences[0].url}/"
         self.assertEqual(experience_containers[0].get_attribute('href'), expected_url, "Experience URL doesn't appear on the portfolio.")
 
+    def test_education_data_is_visible(self):
+        education_section = self.browser.find_element(By.ID, 'education')
+
+        education_containers = education_section.find_elements(By.CLASS_NAME, 'tile-link')
+        self.assertEqual(education_containers[0].find_element(By.CLASS_NAME, 'tile-title').text, self.educations[0].title, "Education title doesn't appear on the portfolio.")
+        self.assertEqual(education_containers[0].find_element(By.CLASS_NAME, 'tile-description').text, self.educations[0].description, "Education description doesn't appear on the portfolio.")
+        self.assertEqual(education_containers[0].find_element(By.CLASS_NAME, 'institution').text, self.educations[0].institution, "Education institution doesn't appear on the portfolio.")
+        self.assertEqual(education_containers[0].find_element(By.CLASS_NAME, 'location').text, self.educations[0].location, "Education location doesn't appear on the portfolio.")
+
+        expected_url = self.educations[0].url if self.educations[0].url.endswith('/') else f"{self.educations[0].url}/"
+        self.assertEqual(education_containers[0].get_attribute('href'), expected_url, "Education URL doesn't appear on the portfolio.")
+
     def test_project_data_is_visible(self):
         project_section = self.browser.find_element(By.ID, 'projects')
 
-        project_containers = project_section.find_elements(By.CLASS_NAME, 'project-link')
-        self.assertEqual(project_containers[0].find_element(By.CLASS_NAME, 'project-title').text, self.projects[0].title, "Project title doesn't appear on the portfolio.")
-        self.assertEqual(project_containers[0].find_element(By.CLASS_NAME, 'project-description').text, self.projects[0].description, "Project description doesn't appear on the portfolio.")
+        project_containers = project_section.find_elements(By.CLASS_NAME, 'tile-link')
+        self.assertEqual(project_containers[0].find_element(By.CLASS_NAME, 'tile-title').text, self.projects[0].title, "Project title doesn't appear on the portfolio.")
+        self.assertEqual(project_containers[0].find_element(By.CLASS_NAME, 'tile-description').text, self.projects[0].description, "Project description doesn't appear on the portfolio.")
         self.assertEqual(project_containers[0].find_element(By.TAG_NAME, 'img').get_attribute('src').replace(self.live_server_url, ''), self.projects[0].image_url, "Project image doesn't appear on the portfolio.")
 
         expected_url = self.projects[0].url if self.projects[0].url.endswith('/') else f"{self.projects[0].url}/"

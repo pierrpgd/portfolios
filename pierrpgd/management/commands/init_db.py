@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 import json
-from pierrpgd.models import Profile, About, Experience, Project, Skill, ProfileSkill
+from pierrpgd.models import Profile, About, Experience, Education, Project, Skill, ProfileSkill
 import os
 
 class Command(BaseCommand):
@@ -19,6 +19,7 @@ class Command(BaseCommand):
             Profile.objects.all().delete()
             About.objects.all().delete()
             Experience.objects.all().delete()
+            Education.objects.all().delete()
             Project.objects.all().delete()
             Skill.objects.all().delete()
 
@@ -71,6 +72,23 @@ class Command(BaseCommand):
                 skill_ids = [Skill.objects.get(name=skill_name).id for skill_name in exp_data["skills"]]
                 exp.skills.add(*skill_ids)
                 self.stdout.write(f"Expérience créée (ID: {exp.id})")
+
+            # Création des éducations
+            self.stdout.write("Création des éducations...")
+            for edu_data in data["educations"]:
+                edu = Education.objects.create(
+                    profile=profile,
+                    dates=edu_data["dates"],
+                    title=edu_data["title"],
+                    institution=edu_data["institution"],
+                    field=edu_data["field"],
+                    location=edu_data["location"],
+                    description=edu_data["description"],
+                    url=edu_data["url"]
+                )
+                skill_ids = [Skill.objects.get(name=skill_name).id for skill_name in edu_data["skills"]]
+                edu.skills.add(*skill_ids)
+                self.stdout.write(f"Éducation créée (ID: {edu.id})")
 
             # Création des projets
             self.stdout.write("Création des projets...")

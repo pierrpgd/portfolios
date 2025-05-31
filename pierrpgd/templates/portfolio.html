@@ -13,6 +13,10 @@
 
         /* Style global */
 
+        .c-white {
+            color: white;
+        }
+
         body, a {
             opacity: 0.9;
             color: #919dc5;
@@ -59,12 +63,10 @@
             font-size: 3.3rem;
             font-weight: 700;
             letter-spacing: -0.03em;
-            color: white;
         }
         #title {
             font-size: 1.6rem;
             font-weight: 500;
-            color: white;
         }
         nav ul {
             list-style: none;
@@ -99,24 +101,28 @@
         }
 
         .skill-badge {
+            display: inline-block;
+            position: relative;
             text-align: center;
-            color: #5ee7d4;
-            border: 1px solid #5ee7d4;
-            border-radius: 1rem;
+            padding: 6px 12px;
+            font-weight: 600;
+            border: transparent;
+            border-radius: 2rem;
             margin: 0.2rem;
             margin-left: 0;
             opacity: 1;
             font-size: 12px;
-            
+        }
+        .skill-badge[data-category="Développement"]{
+            background-color: rgba(94, 231, 212, 0.15);
+            color: #5ee7d4;
+        }
+        .skill-badge[data-category="Outils"]{
+            background-color: rgba(254, 209, 140, 0.15);
+            color: #FED18C;
         }
         .skill-badge.active {
             border: 1px solid;
-        }
-        .skill-badge.active[category="Développement"]{
-            border-color: #5ee7d4;
-        }
-        .skill-badge.active[category="Outils"]{
-            border-color: #FED18C;
         }
 
         .skill-simple {
@@ -147,7 +153,6 @@
 
         .category-title {
             text-align: center;
-            color: white;
             font-size: 16px;
             font-weight: 600;
             padding: 6px 0px;
@@ -226,10 +231,11 @@
             display: none;
         }
 
-        /* Style des sections */
+        /* Style de toutes les sections */
 
         section {
-            padding-bottom: 8vh;
+            padding-top: 1.8rem;
+            padding-bottom: 4rem;
         }
         section h2 {
             display: none;
@@ -241,23 +247,22 @@
         #about {
             padding-left: 0.5rem;
             padding-right: 0.5rem;
-            padding-top: 1.8rem;
         }
         strong {
             color: white;
         }
 
-        /* Style des sections expérience et projets */
+        /* Style des sections expérience, éducation et projets */
 
-        .job-dates, .project-image {
+        .tile-container .left-col {
             width: 33.333333%;
             flex: 0 0 auto;
         }
-        .job-details, .project-content {
+        .tile-container .right-col {
             width: 66.666666%;
             flex: 0 0 auto;
         }
-        .job-link, .project-link {
+        .tile-container a {
             text-decoration: none;
             color: inherit;
             display: block;
@@ -266,87 +271,47 @@
             border-radius: 5px;
             transition: background-color 0.3s ease;
         }
-        .job-link:hover, .project-link:hover {
+        .tile-container a:hover {
             background-color: rgba(255, 255, 255, 0.1);
             box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
             color: inherit;
         }
-        .job-link:hover .job-title, .project-link:hover .project-title {
+
+        .tile-container a:hover .tile-title {
             color: #5ee7d4;
         }
-        .tile-container:hover .job-link:not(:hover), .tile-container:hover .project-link:not(:hover) {
+        .tile-container:hover a:not(:hover) {
             opacity: 0.6;
             transition: opacity 0.3s ease;
         }
-        .tile-container:has(.row.active) .job-link:not(:has(.row.active)), .tile-container:has(.row.active) .project-link:not(:has(.row.active)) {
+        .tile-container:has(.row.active) a:not(:has(.row.active)) {
             display: none;
         }
-        .job-skills {
+        .tile-skills {
             text-align: left;
         }
-        .skill-badge {
-            display: inline-block;
-            position: relative;
-            padding: 6px 12px;
-            border-radius: 60px;
-            font-weight: 600;
-            border: transparent;
-        }
-        .job-skills .skill-badge {
+        
+        .tile-container .tile-skills .skill-badge {
             margin-top: 10px;
             margin-right: 2px;
             font-size: 13px;
             
         }
-        .skill-badge[data-category="Développement"]{
-            background-color: rgba(94, 231, 212, 0.15);
-            color: #5ee7d4;
-        }
-        .skill-badge[data-category="Outils"]{
-            background-color: rgba(254, 209, 140, 0.15);
-            color: #FED18C;
-        }
+        
 
-        /* Style de la section expérience */
-
-        .job-dates {
+        .tile-container .tile-dates {
             padding-top: 0.5rem;
         }
-        .job-title {
-            color: white;
+        .tile-container .tile-title {
             font-size: 24px;
             font-weight: 500;
         }
-        .job-subtitle {
+        .tile-container .tile-subtitle {
             font-size: 14px;
             margin-bottom: 10px;
         }
-        .job-subtitle .company {
-            color: white;
-        }
-        .job-description {
+        .tile-container .tile-description {
             font-size: 16px;
-        }
-
-        /* Style de la section projets */
-
-        .project-title {
-            color: white;
-            font-size: 24px;
-            font-weight: 500;
-            margin-bottom: 0;
-        }
-        .project-container {
-            display: flex;
-            gap: 2rem;
-            margin-bottom: 2rem;
-            align-items: flex-start;
-        }
-        .project-image {
-            flex: 0 0;
-        }
-        .project-content {
-            flex: 1;
         }
 
         /* Lumos */
@@ -623,12 +588,21 @@
     <div class="container-flex">
         <div class="layout">
             <nav id="col-1">
-                <h1 id="name"><a href=".">{{ profile.name }}</a></h1>
-                <p id="title">{{ profile.title }}</p>
+                <h1 id="name"><a href="." class="c-white">{{ profile.name }}</a></h1>
+                <p id="title" class="c-white">{{ profile.title }}</p>
                 <ul>
-                    <li class="nav-item"><a href="#about">About</a></li>
-                    <li class="nav-item"><a href="#experience">Experience</a></li>
-                    <li class="nav-item"><a href="#projects">Projects</a></li>
+                    {% if about|length > 0 %}
+                        <li class="nav-item"><a href="#about">About</a></li>
+                    {% endif %}
+                    {% if experience|length > 0 %}
+                        <li class="nav-item"><a href="#experience">Experience</a></li>
+                    {% endif %}
+                    {% if education|length > 0 %}
+                        <li class="nav-item"><a href="#education">Education</a></li>
+                    {% endif %}
+                    {% if projects|length > 0 %}
+                        <li class="nav-item"><a href="#projects">Projects</a></li>
+                    {% endif %}
                 </ul>
                 <div id="skills">
                     {% regroup skills by category as skill_categories %}
@@ -640,7 +614,7 @@
                             {% endfor %}
                         </div>
                         <div class="skill-detailed">
-                            <h3 class="category-title">{{ category.grouper }}</h3>
+                            <h3 class="category-title c-white">{{ category.grouper }}</h3>
                             <div class="table-container">
                                 {% for skill in category.list %}
                                     <div class="skill-row">
@@ -661,66 +635,98 @@
             </nav>
 
             <div id="col-2" class="main-content">
-                <section id="about">
-                    <h2>About</h2>
-                    {% for paragraphe in about %}
-                        <p>{{ paragraphe.content|safe }}</p>
-                    {% endfor %}
-                </section>
-
+                {% if about|length > 0 %}
+                    <section id="about">
+                        <h2>About</h2>
+                        {% for paragraphe in about %}
+                            <p>{{ paragraphe.content|safe }}</p>
+                        {% endfor %}
+                    </section>
+                {% endif %}
                 <div class="tile-container">
-                    <section id="experience">
-                        <h2>Experience</h2>
-                        {% for exp in experience %}
-                            <a {% if exp.url %} href="{{ exp.url }}" {% endif %} target="_blank" class="job-link">
-                                <div class="row">
-                                    <div class="job-dates">{{ exp.dates }}</div>
-                                    <div class="job-details">
-                                        <div class="job-title">{{ exp.position }}</div>
-                                        <div class="job-subtitle">
-                                            <span class="company">{{ exp.company }}</span>
-                                            <span> - </span>
-                                            <span class="location">{{ exp.location }}</span>
+                    {% if experience|length > 0 %}
+                        <section id="experience">
+                            <h2>Experience</h2>
+                            {% for exp in experience %}
+                                <a {% if exp.url %} href="{{ exp.url }}" {% endif %} target="_blank" class="tile-link">
+                                    <div class="row">
+                                        <div class="left-col tile-dates">{{ exp.dates }}</div>
+                                        <div class="right-col tile-details">
+                                            <div class="tile-title c-white">{{ exp.position }}</div>
+                                            <div class="tile-subtitle">
+                                                <span class="company c-white">{{ exp.company }}</span>
+                                                <span> - </span>
+                                                <span class="location">{{ exp.location }}</span>
+                                            </div>
+                                            <div class="tile-description">{{ exp.description|safe }}</div>
+                                            {% if exp.skills.all %}
+                                                <div class="tile-skills">
+                                                    {% for skill in exp.skills.all %}
+                                                        <span class="skill-badge" data-category="{{ skill.category }}" data-name="{{ skill.name }}">{{ skill.name }}</span>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
                                         </div>
-                                        <div class="job-description">{{ exp.description|safe }}</div>
-                                        {% if exp.skills.all %}
-                                            <div class="job-skills">
-                                                {% for skill in exp.skills.all %}
-                                                    <span class="skill-badge" data-category="{{ skill.category }}" data-name="{{ skill.name }}">{{ skill.name }}</span>
-                                                {% endfor %}
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </section>
+                    {% endif %}
+                    {% if education|length > 0 %}
+                        <section id="education">
+                            <h2>Éducation</h2>
+                            {% for edu in education %}
+                                <a {% if edu.url %} href="{{ edu.url }}" {% endif %} target="_blank" class="tile-link">
+                                    <div class="row">
+                                        <div class="left-col tile-dates">{{ edu.dates }}</div>
+                                        <div class="right-col tile-details">
+                                            <div class="tile-title c-white">{{ edu.title }}</div>
+                                            <div class="tile-subtitle">
+                                                <span class="institution c-white">{{ edu.institution }}</span>
+                                                <span> - </span>
+                                                <span class="location">{{ edu.location }}</span>
+                                            </div>
+                                            <div class="tile-description">{{ edu.description|safe }}</div>
+                                            {% if edu.skills.all %}
+                                                <div class="tile-skills">
+                                                    {% for skill in edu.skills.all %}
+                                                        <span class="skill-badge" data-category="{{ skill.category }}" data-name="{{ skill.name }}">{{ skill.name }}</span>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </section>
+                    {% endif %}
+                    {% if projects|length > 0 %}
+                        <section id="projects">
+                            <h2>Projects</h2>
+                            {% for project in projects %}
+                                <a {% if project.url %} href="{{ project.url }}" {% endif %} target="_blank" class="tile-link">
+                                    <div class="row">
+                                        {% if project.image_url %}
+                                            <div class="left-col project-image">
+                                                <img src="{{ project.image_url }}" alt="{{ project.title }}" style="max-width: 185px; max-height: 185px;">
                                             </div>
                                         {% endif %}
-                                    </div>
-                                </div>
-                            </a>
-                        {% endfor %}
-                    </section>
-
-                    <section id="projects">
-                        <h2>Projects</h2>
-                        {% for project in projects %}
-                            <a {% if project.url %} href="{{ project.url }}" {% endif %} target="_blank" class="project-link">
-                                <div class="row">
-                                    {% if project.image_url %}
-                                        <div class="project-image">
-                                            <img src="{{ project.image_url }}" alt="{{ project.title }}" style="max-width: 185px; max-height: 185px;">
+                                        <div class="right-col">
+                                            <div class="tile-title c-white">{{ project.title }}</div>
+                                            <div class="tile-description">{{ project.description }}</div>
+                                            {% if project.skills.all %}
+                                                <div class="tile-skills">
+                                                    {% for skill in project.skills.all %}
+                                                        <span class="skill-badge" data-category="{{ skill.category }}" data-name="{{ skill.name }}">{{ skill.name }}</span>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
                                         </div>
-                                    {% endif %}
-                                    <div class="project-content">
-                                        <div class="project-title">{{ project.title }}</div>
-                                        <div class="project-description">{{ project.description }}</div>
-                                        {% if project.skills.all %}
-                                            <div class="job-skills">
-                                                {% for skill in project.skills.all %}
-                                                    <span class="skill-badge" data-category="{{ skill.category }}" data-name="{{ skill.name }}">{{ skill.name }}</span>
-                                                {% endfor %}
-                                            </div>
-                                        {% endif %}
                                     </div>
-                                </div>
-                            </a>
-                        {% endfor %}
-                    </section>
+                                </a>
+                            {% endfor %}
+                        </section>
+                    {% endif %}
                 </div>
             </div>
         </div>
