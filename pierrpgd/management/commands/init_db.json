@@ -98,6 +98,7 @@
     {
       "title":"Django Portfolio Generator",
       "description":"Une solution de création de portfolio basée sur python, Django, JS et Bootstrap CSS.",
+      "details":"Profitez-en pour crér votre propre portfolio !",
       "image_url":"/static/portfolio-example.png",
       "url":"https://github.com/pierrpgd/portfolios",
       "skills": ["Python", "Django", "JavaScript", "HTML/CSS", "Bootstrap", "jQuery", "Git"]

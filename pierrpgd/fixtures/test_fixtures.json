@@ -164,6 +164,7 @@
             "profile": 1,
             "title": "Test Project",
             "description": "Test Project Description",
+            "details": "Test Project Details",
             "image_url": "/static/portfolio-example.png",
             "url": "https://testurl3.com",
             "skills": [2, 3]
@@ -176,6 +177,7 @@
             "profile": 1,
             "title": "Second Project",
             "description": "Second Project Description",
+            "details": "Second Project Details",
             "url": "https://testurl4.com",
             "skills": [2]
         }
@@ -237,6 +239,7 @@
             "profile": 2,
             "title": "Second Profile Project",
             "description": "Project Description for Second Profile",
+            "details": "Project Details for Second Profile",
             "url": "https://testurl5.com",
             "skills": [3]
         }

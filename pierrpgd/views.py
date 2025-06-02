@@ -127,6 +127,7 @@ def load_data(request):
                             'title': project.title if project.title else '',
                             'image_url': project.image_url if project.image_url else '',
                             'description': project.description if project.description else '',
+                            'details': project.details if project.details else '',
                             'url': project.url if project.url else '',
                             'skills': [skill.id for skill in project.skills.all()]
                         } for project in projects
@@ -255,6 +256,7 @@ def save_data(request):
                     obj = Project.objects.create(
                         title=content.get('title', ''),
                         description=content.get('description', ''),
+                        details=content.get('details', ''),
                         image_url=content.get('image_url', ''),
                         url=content.get('url', ''),
                         profile=profile
@@ -264,6 +266,7 @@ def save_data(request):
                     obj = Project.objects.get(id=content.get('id'))
                     obj.title = content.get('title', obj.title)
                     obj.description = content.get('description', obj.description)
+                    obj.details = content.get('details', obj.details)
                     obj.image_url = content.get('image_url', obj.image_url)
                     obj.url = content.get('url', obj.url)
                     skills = content.get('skills', [])

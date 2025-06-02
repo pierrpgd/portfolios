@@ -548,6 +548,7 @@ class LoadDataViewTest(BaseTest):
         self.assertEqual(len(data['projects']), self.projects.count())
         self.assertEqual(data['projects'][0]['title'], self.projects[0].title)
         self.assertEqual(data['projects'][0]['description'], self.projects[0].description)
+        self.assertEqual(data['projects'][0]['details'], self.projects[0].details)
         self.assertEqual(data['projects'][0]['image_url'], self.projects[0].image_url)
         self.assertEqual(data['projects'][0]['url'], self.projects[0].url)
         self.assertEqual(data['projects'][0]['skills'], [self.skills[1].id, self.skills[2].id])
@@ -559,6 +560,7 @@ class LoadDataViewTest(BaseTest):
         updated_data = {
             'title': 'Titre mis à jour',
             'description': 'Description mise à jour',
+            'details': 'Details mis à jour',
             'image_url': 'image_url',
             'url': 'url',
         }
@@ -579,6 +581,7 @@ class LoadDataViewTest(BaseTest):
         self.assertEqual(len(data['projects']), self.projects.count())
         self.assertEqual(data['projects'][0]['title'], 'Titre mis à jour')
         self.assertEqual(data['projects'][0]['description'], 'Description mise à jour')
+        self.assertEqual(data['projects'][0]['details'], 'Details mis à jour')
         self.assertEqual(data['projects'][0]['image_url'], 'image_url')
         self.assertEqual(data['projects'][0]['url'], 'url')
         self.assertEqual(data['projects'][0]['skills'], [self.skills[1].id, self.skills[2].id])
@@ -948,6 +951,7 @@ class SaveDataTest(BaseTest):
         data = {
             'title': 'Titre de test save_data',
             'description': 'Description de test save_data',
+            'details': 'Details de test save_data',
             'image_url': 'image_url',
             'url': 'url',
             'skills': [self.skills[1].id, self.skills[2].id],
@@ -975,6 +979,7 @@ class SaveDataTest(BaseTest):
         project = Project.objects.get(
             title=data['title'], 
             description=data['description'],
+            details=data['details'],
             image_url=data['image_url'],
             url=data['url']
         )
@@ -987,6 +992,7 @@ class SaveDataTest(BaseTest):
         updated_data = {
             'title': 'Titre mis à jour',
             'description': 'Description mise à jour',
+            'details': 'Details mis à jour',
             'image_url': 'image_url',
             'url': 'url',
             'skills': [self.skills[0].id, self.skills[2].id],
@@ -1012,6 +1018,7 @@ class SaveDataTest(BaseTest):
         updated_project = Project.objects.get(id=self.projects[0].id)
         self.assertEqual(updated_project.title, updated_data['title'])
         self.assertEqual(updated_project.description, updated_data['description'])
+        self.assertEqual(updated_project.details, updated_data['details'])
         self.assertEqual(updated_project.image_url, updated_data['image_url'])
         self.assertEqual(updated_project.url, updated_data['url'])
         self.assertEqual([skill.id for skill in updated_project.skills.all()], updated_data['skills'])

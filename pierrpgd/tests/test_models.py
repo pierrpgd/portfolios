@@ -209,6 +209,7 @@ class ProjectModelTest(BaseTest):
         """Test la création d'un projet"""
         self.assertEqual(self.projects[0].title, 'Test Project')
         self.assertEqual(self.projects[0].description, 'Test Project Description')
+        self.assertEqual(self.projects[0].details, 'Test Project Details')
         self.assertEqual(self.projects[0].image_url, '/static/portfolio-example.png')
         self.assertEqual(self.projects[0].order, 0)
         self.assertEqual(self.projects[0].url, 'https://testurl3.com')
@@ -219,6 +220,7 @@ class ProjectModelTest(BaseTest):
 
         self.assertEqual(self.projects[1].title, 'Second Project')
         self.assertEqual(self.projects[1].description, 'Second Project Description')
+        self.assertEqual(self.projects[1].details, 'Second Project Details')
         self.assertEqual(self.projects[1].order, 1)
         self.assertEqual(self.projects[1].url, 'https://testurl4.com')
         self.assertEqual(self.projects[1].skills.count(), 1)

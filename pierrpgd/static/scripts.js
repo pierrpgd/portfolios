@@ -130,6 +130,7 @@ function addProjectSection() {
     const dummyRow = document.createElement('div');
     dummyRow.setAttribute('data-title', '');
     dummyRow.setAttribute('data-description', '');
+    dummyRow.setAttribute('data-details', '');
     dummyRow.setAttribute('data-image-url', '');
     dummyRow.setAttribute('data-url', '');
     dummyRow.setAttribute('data-skills', '');
@@ -359,6 +360,7 @@ function showPopup(row, modalId, contentId) {
     let educationSkills = '';
     let projectTitle = '';
     let projectDescription = '';
+    let projectDetails = '';
     let projectImageUrl = '';
     let projectUrl = '';
     let projectSkills = '';
@@ -395,6 +397,7 @@ function showPopup(row, modalId, contentId) {
     } else if (modalId === 'projectModal') {
         projectTitle = row.getAttribute('data-title');
         projectDescription = row.getAttribute('data-description');
+        projectDetails = row.getAttribute('data-details');
         projectImageUrl = row.getAttribute('data-image-url');
         projectUrl = row.getAttribute('data-url');
         projectSkills = row.getAttribute('data-skills');
@@ -531,6 +534,8 @@ function showPopup(row, modalId, contentId) {
                         </div>
                         <span class="modal-content-info-title">Description : </span>
                         <div contenteditable="true" class="editable-content" data-field="description">${projectDescription}</div>
+                        <span class="modal-content-info-title">Détails : </span>
+                        <div contenteditable="true" class="editable-content" data-field="details">${projectDetails}</div>
                     </div>
                 ` : `<span class="modal-content-info-title">Contenu : </span>
                     <div contenteditable="true" class="editable-content" data-field="content">${aboutContent}</div>`}
@@ -1040,7 +1045,7 @@ function updateProfileData(data) {
         if (projectsTable) {
             projectsTable.innerHTML = data.projects.map(project => `
                 <tr class="project-row" data-id="${project.id}" 
-                    data-title="${project.title}" data-content="${project.description}" data-image-url="${project.image_url}" data-url="${project.url}" data-skills="${project.skills}">
+                    data-title="${project.title}" data-description="${project.description}" data-details="${project.details}" data-image-url="${project.image_url}" data-url="${project.url}" data-skills="${project.skills}">
                     <td>${project.title}</td>
                     <td>${project.description}</td>
                     <td>${project.image_url}</td>
@@ -1263,7 +1268,7 @@ function loadProfileData(profileIdentifiant) {
                                 </thead>
                                 <tbody>
                                     ${data.projects.map(project => `
-                                        <tr class="project-row" data-id="${project.id}" data-title="${project.title}" data-description="${project.description}" data-image-url="${project.image_url}" data-url="${project.url}" data-skills="${project.skills}">
+                                        <tr class="project-row" data-id="${project.id}" data-title="${project.title}" data-description="${project.description}" data-details="${project.details}" data-image-url="${project.image_url}" data-url="${project.url}" data-skills="${project.skills}">
                                             <td>${project.title}</td>
                                             <td>${project.description}</td>
                                             <td>${project.image_url}</td>

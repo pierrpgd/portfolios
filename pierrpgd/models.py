@@ -80,6 +80,7 @@ class Project(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='projects')
     title = models.CharField(max_length=200)
     description = models.TextField()
+    details = models.TextField(default='')
     order = models.IntegerField(default=0)
     image_url = models.URLField(blank=True, null=True)
     url = models.URLField(blank=True, null=True)

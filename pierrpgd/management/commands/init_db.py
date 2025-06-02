@@ -99,6 +99,7 @@ class Command(BaseCommand):
                     profile=profile,
                     title=project_data["title"],
                     description=project_data["description"],
+                    details=project_data["details"],
                     image_url=project_data["image_url"],
                     url=project_data["url"]
                 )

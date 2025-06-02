@@ -677,12 +677,15 @@ class PopupTest(BaseTest):
         url = modal_content.find_element(By.CSS_SELECTOR, '[data-field="url"]').text
         skills_elements = modal_content.find_elements(By.CLASS_NAME, 'skill-badge')
         skills = [skill.text for skill in skills_elements]
+        description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
+        details = modal_content.find_element(By.CSS_SELECTOR, '[data-field="details"]').text
 
         self.assertEqual(title, 'Test Project')
         self.assertEqual(description, 'Test Project Description')
         self.assertEqual(image_url, '/static/portfolio-example.png')
         self.assertEqual(url, 'https://testurl3.com')
         self.assertEqual(skills, ['Second Skill', 'Third Skill'])
+        self.assertEqual(details, 'Test Project Details')
     
         # Vérifier le titre du projet
         title = self.browser.find_element(By.CSS_SELECTOR, '#projectModal .modal-content-info')
@@ -1704,6 +1707,7 @@ class ModifyAndSaveTest(BaseTest):
             profile=self.profile,
             title='New Project',
             description='New Project Description',
+            details='New Project Details',
             image_url='/static/portfolio-example.png',
             url='https://newurl.com'
         )
@@ -1747,6 +1751,13 @@ class ModifyAndSaveTest(BaseTest):
         action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
         action.send_keys(new_content.description).perform()
 
+        # Modifier les details
+        details_field = modal.find_element(By.CSS_SELECTOR, 'div.editable-content[data-field="details"]')
+        details_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content.details).perform()
+
         # Modifier l'image
         image_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="image_url"]')
         image_field.click()
@@ -1774,6 +1785,7 @@ class ModifyAndSaveTest(BaseTest):
         project_obj = Project.objects.get(id=self.projects[0].id)
         self.assertEqual(project_obj.title, new_content.title)
         self.assertEqual(project_obj.description, new_content.description)
+        self.assertEqual(project_obj.details, new_content.details)
         self.assertEqual(project_obj.image_url, new_content.image_url)
         self.assertEqual(project_obj.url, new_content.url)
         
@@ -2784,6 +2796,7 @@ class AddElementTest(BaseTest):
             profile=self.profile,
             title='New Project',
             description='New Project Description',
+            details='New Project Details',
             image_url='/static/portfolio-example.png',
             url='https://newurl.com'
         )
@@ -2871,6 +2884,10 @@ class AddElementTest(BaseTest):
         description_field = modal.find_element(By.CSS_SELECTOR, "[data-field='description']")
         description_field.send_keys(new_content.description)
         
+        # Remplir le champ details
+        details_field = modal.find_element(By.CSS_SELECTOR, "[data-field='details']")
+        details_field.send_keys(new_content.details)
+        
         # Remplir le champ image_url
         image_url_field = modal.find_element(By.CSS_SELECTOR, "[data-field='image_url']")
         image_url_field.send_keys(new_content.image_url)
@@ -2954,6 +2971,7 @@ class AddElementTest(BaseTest):
         project = Project.objects.get(profile=new_content.profile,
             title=new_content.title,
             description=new_content.description,
+            details=new_content.details,
             image_url=new_content.image_url,
             url=new_content.url)
         self.assertEqual(project.skills.all().count(), 1)
