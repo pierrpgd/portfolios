@@ -104,6 +104,7 @@ class PortfolioPageTest(BaseTest):
         self.assertEqual(education_containers[0].find_element(By.CLASS_NAME, 'tile-description').text, self.educations[0].description, "Education description doesn't appear on the portfolio.")
         self.assertEqual(education_containers[0].find_element(By.CLASS_NAME, 'institution').text, self.educations[0].institution, "Education institution doesn't appear on the portfolio.")
         self.assertEqual(education_containers[0].find_element(By.CLASS_NAME, 'location').text, self.educations[0].location, "Education location doesn't appear on the portfolio.")
+        self.assertEqual(education_containers[0].find_element(By.CLASS_NAME, 'tile-details').get_attribute('innerHTML'), self.educations[0].details, "Education details doesn't appear on the portfolio.")
 
         expected_url = self.educations[0].url if self.educations[0].url.endswith('/') else f"{self.educations[0].url}/"
         self.assertEqual(education_containers[0].get_attribute('href'), expected_url, "Education URL doesn't appear on the portfolio.")

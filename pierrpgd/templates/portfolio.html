@@ -788,6 +788,13 @@
                                                 <span class="location">{{ edu.location }}</span>
                                             </div>
                                             <div class="tile-description">{{ edu.description|safe }}</div>
+                                            {% if edu.details %}
+                                                <div class="tile-details-title c-white">
+                                                    <img class="arrow" src="{% static 'right-arrow.png' %}" alt="Détails" width="16" height="16">
+                                                    <span>Détails</span>
+                                                </div>
+                                                <div class="tile-details">{{ edu.details|safe }}</div>
+                                            {% endif %}
                                             {% if edu.skills.all %}
                                                 <div class="tile-skills">
                                                     {% for skill in edu.skills.all %}
