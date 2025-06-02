@@ -65,6 +65,7 @@ class Education(models.Model):
     title = models.CharField(max_length=150)
     field = models.CharField(max_length=150)
     description = models.TextField()
+    details = models.TextField(default='')
     order = models.IntegerField(default=0)
     url = models.URLField(blank=True, null=True)
     skills = models.ManyToManyField('Skill', blank=True)

@@ -109,6 +109,7 @@ function addEducationSection() {
     dummyRow.setAttribute('data-title', '');
     dummyRow.setAttribute('data-location', '');
     dummyRow.setAttribute('data-description', '');
+    dummyRow.setAttribute('data-details', '');
     dummyRow.setAttribute('data-url', '');
     dummyRow.setAttribute('data-skills', '');
     
@@ -353,6 +354,7 @@ function showPopup(row, modalId, contentId) {
     let educationTitle = '';
     let educationLocation = '';
     let educationDescription = '';
+    let educationDetails = '';
     let educationUrl = '';
     let educationSkills = '';
     let projectTitle = '';
@@ -387,6 +389,7 @@ function showPopup(row, modalId, contentId) {
         educationTitle = row.getAttribute('data-title');
         educationLocation = row.getAttribute('data-location');
         educationDescription = row.getAttribute('data-description');
+        educationDetails = row.getAttribute('data-details');
         educationUrl = row.getAttribute('data-url');
         educationSkills = row.getAttribute('data-skills');
     } else if (modalId === 'projectModal') {
@@ -504,6 +507,8 @@ function showPopup(row, modalId, contentId) {
                         </div>
                         <span class="modal-content-info-title">Description : </span>
                         <div contenteditable="true" class="editable-content" data-field="description">${educationDescription}</div>
+                        <span class="modal-content-info-title">Détails : </span>
+                        <div contenteditable="true" class="editable-content" data-field="details">${educationDetails}</div>
                     </div>
                 ` : modalId === 'projectModal' ? `
                     <div class="modal-content-info">
@@ -980,7 +985,7 @@ function updateProfileData(data) {
 
         if (eduTable) {
             eduTable.innerHTML = data.education.map(edu => `
-                <tr class="education-row" data-id="${edu.id}" data-description="${edu.description}" data-dates="${edu.dates}" data-position="${edu.position}" data-field="${edu.field}" data-institution="${edu.institution}" data-location="${edu.location}" data-url="${edu.url}" data-skills="${edu.skills}">
+                <tr class="education-row" data-id="${edu.id}" data-description="${edu.description}" data-details="${edu.details}" data-dates="${edu.dates}" data-position="${edu.position}" data-field="${edu.field}" data-institution="${edu.institution}" data-location="${edu.location}" data-url="${edu.url}" data-skills="${edu.skills}">
                     <td>${edu.dates}</td>
                     <td>${edu.title}</td>
                     <td>${edu.institution}</td>
@@ -1213,7 +1218,7 @@ function loadProfileData(profileIdentifiant) {
                                 </thead>
                                 <tbody>
                                     ${data.education.map(edu => `
-                                        <tr class="education-row" data-id="${edu.id}" data-description="${edu.description}" data-dates="${edu.dates}" data-title="${edu.title}" data-field="${edu.field}" data-institution="${edu.institution}" data-location="${edu.location}" data-url="${edu.url}" data-skills="${edu.skills}">
+                                        <tr class="education-row" data-id="${edu.id}" data-description="${edu.description}" data-details="${edu.details}" data-dates="${edu.dates}" data-title="${edu.title}" data-field="${edu.field}" data-institution="${edu.institution}" data-location="${edu.location}" data-url="${edu.url}" data-skills="${edu.skills}">
                                             <td>${edu.dates}</td>
                                             <td>${edu.title}</td>
                                             <td>${edu.institution}</td>

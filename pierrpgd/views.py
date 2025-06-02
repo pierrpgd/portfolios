@@ -115,6 +115,7 @@ def load_data(request):
                             'title': edu.title if edu.title else '',
                             'field': edu.field if edu.field else '',
                             'description': edu.description if edu.description else '',
+                            'details': edu.details if edu.details else '',
                             'url': edu.url if edu.url else '',
                             'skills': [skill.id for skill in edu.skills.all()]
                         } for edu in educations
@@ -228,6 +229,7 @@ def save_data(request):
                         location=content.get('location', ''),
                         field=content.get('field', ''),
                         description=content.get('description', ''),
+                        details=content.get('details', ''),
                         url=content.get('url', ''),
                         profile=profile
                     )
@@ -240,6 +242,7 @@ def save_data(request):
                     obj.location = content.get('location', obj.location)
                     obj.field = content.get('field', obj.field)
                     obj.description = content.get('description', obj.description)
+                    obj.details = content.get('details', obj.details)
                     obj.url = content.get('url', obj.url)
                     skills = content.get('skills', [])
                 if skills != []:

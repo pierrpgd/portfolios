@@ -470,6 +470,7 @@ class LoadDataViewTest(BaseTest):
         self.assertEqual(data['education'][0]['institution'], self.educations[0].institution)
         self.assertEqual(data['education'][0]['field'], self.educations[0].field)
         self.assertEqual(data['education'][0]['description'], self.educations[0].description)
+        self.assertEqual(data['education'][0]['details'], self.educations[0].details)
         self.assertEqual(data['education'][0]['location'], self.educations[0].location)
         self.assertEqual(data['education'][0]['url'], self.educations[0].url)
         self.assertEqual(data['education'][0]['skills'], [self.skills[0].id, self.skills[1].id])
@@ -485,6 +486,7 @@ class LoadDataViewTest(BaseTest):
             'field': 'Nouveau domaine',
             'location': 'Endroit mis à jour',
             'description': 'Description mise à jour',
+            'details': 'Détails mis à jour',
             'url': 'https://testurl2.com'
         }
         
@@ -507,6 +509,7 @@ class LoadDataViewTest(BaseTest):
         self.assertEqual(data['education'][0]['field'], 'Nouveau domaine')
         self.assertEqual(data['education'][0]['location'], 'Endroit mis à jour')
         self.assertEqual(data['education'][0]['description'], 'Description mise à jour')
+        self.assertEqual(data['education'][0]['details'], 'Détails mis à jour')
         self.assertEqual(data['education'][0]['dates'], '2024-2025')
         self.assertEqual(data['education'][0]['url'], 'https://testurl2.com')
         self.assertEqual(data['education'][0]['skills'], [self.skills[0].id, self.skills[1].id])
@@ -863,6 +866,7 @@ class SaveDataTest(BaseTest):
             'institution': 'Institution de test',
             'field': 'Domaine de test',
             'description': 'Description de test',
+            'details': 'Détails de test',
             'url': 'https://testurl4.com',
             'skills': [self.skills[0].id, self.skills[2].id],
             'profile': self.profile.identifiant
@@ -891,6 +895,7 @@ class SaveDataTest(BaseTest):
             institution=data['institution'],
             field=data['field'],
             description=data['description'],
+            details=data['details'],
             url=data['url']
         )
         self.assertIsNotNone(edu)
@@ -905,6 +910,7 @@ class SaveDataTest(BaseTest):
             'institution': 'Institution mise à jour',
             'field': 'Domaine mise à jour',
             'description': 'Description mise à jour',
+            'details': 'Détails mise à jour',
             'url': 'https://testurl5.com',
             'skills': [self.skills[0].id, self.skills[2].id],
             'id': self.experiences[0].id
@@ -932,6 +938,7 @@ class SaveDataTest(BaseTest):
         self.assertEqual(updated_education.institution, updated_data['institution'])
         self.assertEqual(updated_education.field, updated_data['field'])
         self.assertEqual(updated_education.description, updated_data['description'])
+        self.assertEqual(updated_education.details, updated_data['details'])
         self.assertEqual(updated_education.url, updated_data['url'])
         self.assertEqual([skill.id for skill in updated_education.skills.all()], updated_data['skills'])
 

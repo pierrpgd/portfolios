@@ -136,6 +136,7 @@
             "title": "Test Title",
             "field": "Test Field",
             "description": "Test Description",
+            "details": "Test Details",
             "url": "https://testurl.com",
             "skills": [1, 2]
         }
@@ -151,6 +152,7 @@
             "title": "Test Title 2",
             "field": "Test Field 2",
             "description": "Test Description 2",
+            "details": "Test Details 2",
             "url": "https://testurl2.com",
             "skills": [1]
         }

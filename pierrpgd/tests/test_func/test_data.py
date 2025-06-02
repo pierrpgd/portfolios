@@ -556,16 +556,18 @@ class PopupTest(BaseTest):
         institution = modal_content.find_element(By.CSS_SELECTOR, '[data-field="institution"]').text
         field = modal_content.find_element(By.CSS_SELECTOR, '[data-field="field"]').text
         location = modal_content.find_element(By.CSS_SELECTOR, '[data-field="location"]').text
-        description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
         education_url = modal_content.find_element(By.CSS_SELECTOR, '[data-field="url"]').text
         skills_elements = modal_content.find_elements(By.CLASS_NAME, 'skill-badge')
         skills = [skill.text for skill in skills_elements]
+        description = modal_content.find_element(By.CSS_SELECTOR, '[data-field="description"]').text
+        details = modal_content.find_element(By.CSS_SELECTOR, '[data-field="details"]').text
 
         self.assertEqual(dates, '2016-2019')
         self.assertEqual(title, 'Test Title')
         self.assertEqual(field, 'Test Field')
         self.assertEqual(institution, 'Test Institution')
         self.assertEqual(description, 'Test Description')
+        self.assertEqual(details, 'Test Details')
         self.assertEqual(location, 'Test Location')
         self.assertEqual(education_url, 'https://testurl.com')
         self.assertEqual(skills, ['Test Skill', 'Second Skill'])
@@ -1353,6 +1355,7 @@ class ModifyAndSaveTest(BaseTest):
             field="Nouveau domaine",
             location="Nouveau lieu",
             description="Nouvelle description",
+            details="Nouveaux détails",
             url="https://nouvelleurl.com"
         )
 
@@ -1423,6 +1426,13 @@ class ModifyAndSaveTest(BaseTest):
         action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
         action.send_keys(new_content.description).perform()
 
+        # Modifier les details
+        details_field = modal.find_element(By.CSS_SELECTOR, 'div.editable-content[data-field="details"]')
+        details_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content.details).perform()
+
         # Modifier l'URL
         experience_url_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="url"]')
         experience_url_field.click()
@@ -1447,6 +1457,7 @@ class ModifyAndSaveTest(BaseTest):
         self.assertEqual(education_obj.field, new_content.field)
         self.assertEqual(education_obj.location, new_content.location)
         self.assertEqual(education_obj.description, new_content.description)
+        self.assertEqual(education_obj.details, new_content.details)
         self.assertEqual(education_obj.url, new_content.url)
         
         # Vérifier que le tableau est mis à jour
@@ -2554,6 +2565,7 @@ class AddElementTest(BaseTest):
             field="Nouveau domaine",
             location="Nouveau lieu",
             description="Nouvelle description",
+            details="Nouveaux détails",
             url="https://nouvelleurl.com"
         )
         
@@ -2653,6 +2665,10 @@ class AddElementTest(BaseTest):
         # Remplir la description
         description_field = modal.find_element(By.CSS_SELECTOR, "[data-field='description']")
         description_field.send_keys(new_content.description)
+
+        # Remplir les details
+        details_field = modal.find_element(By.CSS_SELECTOR, "[data-field='details']")
+        details_field.send_keys(new_content.details)
 
         # Remplir l'URL
         experience_url_field = modal.find_element(By.CSS_SELECTOR, "[data-field='url']")

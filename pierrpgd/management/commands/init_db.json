@@ -77,7 +77,8 @@
       "institution": "EI.CESI",
       "field": "Gestion de projet",
       "location": "Lyon, FRA",
-      "description": "Diplôme d'ingénieur généraliste en alternance, option Gestion de projet.<br>Engagements associatifs:<br>- BDE : Responsable Communication<br>- Club électronique de l'école : projet e-skate<br>- Rugby ENS Lyon : joueur, aide bénévole",
+      "description": "Diplôme d'ingénieur généraliste en alternance, option Gestion de projet.",
+      "details": "Engagements associatifs:<br>- BDE : Responsable Communication<br>- Club électronique de l'école : projet e-skate<br>- Rugby ENS Lyon : joueur, aide bénévole",
       "url": "https://www.cesi.fr/",
       "skills": []
     },
@@ -87,7 +88,8 @@
       "institution": "Université de Franche-Comté",
       "field": "Électronique et Automatisation",
       "location": "Besançon, FRA",
-      "description": "Licence Sc. Ingénieur en alternance, option Électronique et Automatisation.<br>Engagements associatifs:<br>- Club électronique de l'université : projet drône<br>- Rugby Université des sciences : joueur",
+      "description": "Licence Sc. Ingénieur en alternance, option Électronique et Automatisation.",
+      "details": "Engagements associatifs:<br>- Club électronique de l'université : projet drône<br>- Rugby Université des sciences : joueur",
       "url": "https://www.univ-fcomte.fr/",
       "skills": []
     }

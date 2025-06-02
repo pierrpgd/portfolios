@@ -85,6 +85,7 @@ class Command(BaseCommand):
                     field=edu_data["field"],
                     location=edu_data["location"],
                     description=edu_data["description"],
+                    details=edu_data["details"],
                     url=edu_data["url"]
                 )
                 skill_ids = [Skill.objects.get(name=skill_name).id for skill_name in edu_data["skills"]]
