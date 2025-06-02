@@ -116,6 +116,7 @@ class PortfolioPageTest(BaseTest):
         self.assertEqual(project_containers[0].find_element(By.CLASS_NAME, 'tile-title').text, self.projects[0].title, "Project title doesn't appear on the portfolio.")
         self.assertEqual(project_containers[0].find_element(By.CLASS_NAME, 'tile-description').text, self.projects[0].description, "Project description doesn't appear on the portfolio.")
         self.assertEqual(project_containers[0].find_element(By.TAG_NAME, 'img').get_attribute('src').replace(self.live_server_url, ''), self.projects[0].image_url, "Project image doesn't appear on the portfolio.")
+        self.assertEqual(project_containers[0].find_element(By.CLASS_NAME, 'tile-details').get_attribute('innerHTML'), self.projects[0].details, "Project details doesn't appear on the portfolio.")
 
         expected_url = self.projects[0].url if self.projects[0].url.endswith('/') else f"{self.projects[0].url}/"
         self.assertEqual(project_containers[0].get_attribute('href'), expected_url, "Project URL doesn't appear on the portfolio.")
