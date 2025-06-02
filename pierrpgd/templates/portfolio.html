@@ -495,20 +495,16 @@
                         
                         tiles.forEach(tile => {
                             let tileActive = false;
-                            console.log(tile);
-                            skills = tile.querySelectorAll('.skill-badge');
-                            skills.forEach(skill => {
-                                console.log(skill.dataset.category, skill.dataset.name);
+                            const tileSkills = tile.querySelectorAll('.skill-badge');
+                            tileSkills.forEach(skill => {
                                 skillsActive.forEach(skillActive => {
                                     const skillCategory = skillActive.dataset.category;
                                     const skillName = skillActive.dataset.name;
-                                    console.log(skillCategory, skillName);
                                     if (skill.dataset.category === skillCategory && skill.dataset.name === skillName) {
                                         tileActive = true;
                                     }
                                 });
                             });
-                            console.log(tileActive);
                             if (tileActive) {
                                 tile.classList.add('active');
                             } else {
@@ -626,7 +622,6 @@
             const position = parseInt((skills.scrollTop+skills.clientHeight)/skills.scrollHeight * 100);
             const mask = `${linearDegrad.replace('where', 'to bottom').replace('value', position+5)},
             ${linearDegrad.replace('where', 'to top').replace('value', 140-position)}`;
-            console.log(mask);
             skills.style.maskImage = mask;
             skills.style.webkitMaskImage = mask;
         }
