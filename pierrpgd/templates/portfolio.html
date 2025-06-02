@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ profile.name }} | Portfolio</title>
+    {% load static %}
     {% load bootstrap5 %}
     {% bootstrap_css %}
     {% bootstrap_javascript %}
@@ -284,6 +285,12 @@
             color: inherit;
         }
 
+        .tile-container .tile-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 1s cubic-bezier(.7,0,.6,1);
+        }
+
         .tile-container a:hover .tile-title {
             color: #5ee7d4;
         }
@@ -294,8 +301,24 @@
         .tile-container:has(.row.active) a:not(:has(.row.active)) {
             display: none;
         }
+        .tile-container a:hover .tile-details {
+            max-height: 100%;
+        }
         .tile-skills {
             text-align: left;
+        }
+        .tile-details-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .arrow {
+            transition: transform 0.2s;
+            margin-left: 8px;
+        }
+
+        .tile-container a:hover .arrow {
+            transform: rotate(90deg);
         }
         
         .tile-container .tile-skills .skill-badge {
@@ -720,7 +743,7 @@
                                 <a {% if exp.url %} href="{{ exp.url }}" {% endif %} target="_blank" class="tile-link">
                                     <div class="row">
                                         <div class="left-col tile-dates">{{ exp.dates }}</div>
-                                        <div class="right-col tile-details">
+                                        <div class="right-col">
                                             <div class="tile-title c-white">{{ exp.position }}</div>
                                             <div class="tile-subtitle">
                                                 <span class="company c-white">{{ exp.company }}</span>
@@ -728,6 +751,13 @@
                                                 <span class="location">{{ exp.location }}</span>
                                             </div>
                                             <div class="tile-description">{{ exp.description|safe }}</div>
+                                            {% if exp.details %}
+                                                <div class="tile-details-title c-white">
+                                                    <img class="arrow" src="{% static 'right-arrow.png' %}" alt="Détails" width="16" height="16">
+                                                    <span>Détails</span>
+                                                </div>
+                                                <div class="tile-details">{{ exp.details|safe }}</div>
+                                            {% endif %}
                                             {% if exp.skills.all %}
                                                 <div class="tile-skills">
                                                     {% for skill in exp.skills.all %}
@@ -748,7 +778,7 @@
                                 <a {% if edu.url %} href="{{ edu.url }}" {% endif %} target="_blank" class="tile-link">
                                     <div class="row">
                                         <div class="left-col tile-dates">{{ edu.dates }}</div>
-                                        <div class="right-col tile-details">
+                                        <div class="right-col">
                                             <div class="tile-title c-white">{{ edu.title }}</div>
                                             <div class="tile-subtitle">
                                                 <span class="institution c-white">{{ edu.institution }}</span>

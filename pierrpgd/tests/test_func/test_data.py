@@ -91,8 +91,8 @@ class ProfileTest(BaseTest):
         self.assertEqual(profile_identifiant, self.profile.identifiant, "Profile identifiant doesn't match.")
         self.assertEqual(profile_name, self.profile.name, "Profile name doesn't match.")
         self.assertEqual(profile_title, self.profile.title, "Profile title doesn't match.")
-        self.assertEqual(profile_creation_date[:-5], self.profile.created_at.strftime('%B %d, %Y, à %-I:%M'), "Profile creation date doesn't match.")
-        self.assertEqual(profile_modification_date[:-5], self.profile.updated_at.strftime('%B %d, %Y, à %-I:%M'), "Profile modification date doesn't match.")
+        self.assertEqual(profile_creation_date[:-5], self.profile.created_at.strftime('%B %-d, %Y, à %-I:%M'), "Profile creation date doesn't match.")
+        self.assertEqual(profile_modification_date[:-5], self.profile.updated_at.strftime('%B %-d, %Y, à %-I:%M'), "Profile modification date doesn't match.")
 
     def test_profile_selection_toggle_and_data_display_or_hide(self):
         """

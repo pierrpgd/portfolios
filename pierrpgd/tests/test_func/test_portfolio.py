@@ -15,6 +15,7 @@ class BaseTest(LiveServerTestCase):
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         cls.browser = webdriver.Chrome(options=options)
+        cls.browser.set_window_size(1200, 800)
 
     @classmethod
     def tearDownClass(cls):
@@ -90,6 +91,7 @@ class PortfolioPageTest(BaseTest):
         self.assertEqual(experience_containers[0].find_element(By.CLASS_NAME, 'tile-description').text, self.experiences[0].description, "Experience description doesn't appear on the portfolio.")
         self.assertEqual(experience_containers[0].find_element(By.CLASS_NAME, 'company').text, self.experiences[0].company, "Experience company doesn't appear on the portfolio.")
         self.assertEqual(experience_containers[0].find_element(By.CLASS_NAME, 'location').text, self.experiences[0].location, "Experience location doesn't appear on the portfolio.")
+        self.assertEqual(experience_containers[0].find_element(By.CLASS_NAME, 'tile-details').get_attribute('innerHTML'), self.experiences[0].details, "Experience details doesn't appear on the portfolio.")
 
         expected_url = self.experiences[0].url if self.experiences[0].url.endswith('/') else f"{self.experiences[0].url}/"
         self.assertEqual(experience_containers[0].get_attribute('href'), expected_url, "Experience URL doesn't appear on the portfolio.")

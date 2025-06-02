@@ -170,8 +170,8 @@ class DataDisplayViewTest(BaseTest):
         self.assertEqual(profile_identifiant, self.profile.identifiant)
         self.assertEqual(profile_name, self.profile.name)
         self.assertEqual(profile_title, self.profile.title)
-        self.assertEqual(profile_creation_date[:-5], self.profile.created_at.strftime('%B %d, %Y, à %-I:%M'))
-        self.assertEqual(profile_last_update_date[:-5], self.profile.updated_at.strftime('%B %d, %Y, à %-I:%M'))
+        self.assertEqual(profile_creation_date[:-5], self.profile.created_at.strftime('%B %-d, %Y, à %-I:%M'))
+        self.assertEqual(profile_last_update_date[:-5], self.profile.updated_at.strftime('%B %-d, %Y, à %-I:%M'))
 
     def test_profile_deletion(self):
         # Supprimer le profil et vérifier que les données associées sont supprimées
