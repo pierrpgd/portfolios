@@ -61,6 +61,10 @@
             width: 28rem;
             max-height: 80vh;
         }
+
+        #name {
+            text-align: left;
+        }
         
         #name a {
             font-size: 3.3rem;
@@ -121,14 +125,20 @@
             opacity: 1;
             font-size: 12px;
         }
-        .skill-badge[data-category="Développement"]{
-            background-color: rgba(94, 231, 212, 0.15);
-            color: #5ee7d4;
-        }
-        .skill-badge[data-category="Outils"]{
-            background-color: rgba(254, 209, 140, 0.15);
-            color: #FED18C;
-        }
+        {% regroup skills by category as skill_categories %}
+        {% for category in skill_categories %}
+            {% if forloop.counter == 1 %}
+                .skill-badge[data-category="{{ category.grouper }}"]{
+                    background-color: rgba(94, 231, 212, 0.15);
+                    color: #5ee7d4;
+                }
+            {% elif forloop.counter == 2 %}
+                .skill-badge[data-category="{{ category.grouper }}"]{
+                    background-color: rgba(254, 209, 140, 0.15);
+                    color: #FED18C;
+                }
+            {% endif %}
+        {% endfor %}
         .skill-badge.active {
             border: 1px solid;
         }

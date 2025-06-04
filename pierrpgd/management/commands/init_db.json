@@ -1,107 +1,180 @@
-{
-  "skills": [
-    {"category": "Développement", "name": "Python", "level": 7},
-    {"category": "Développement", "name": "JavaScript", "level": 3},
-    {"category": "Développement", "name": "HTML/CSS", "level": 3},
-    {"category": "Développement", "name": "Django", "level": 6},
-    {"category": "Développement", "name": "Windev/Webdev", "level": 7},
-    {"category": "Développement", "name": "SQL", "level": 6},
-    {"category": "Développement", "name": "REST API", "level": 5},
-    {"category": "Développement", "name": "R", "level": 3},
-    {"category": "Développement", "name": "LabVIEW", "level": 4},
-    {"category": "Développement", "name": "Bootstrap", "level": 3},
-    {"category": "Développement", "name": "jQuery", "level": 3},
-    {"category": "Outils", "name": "ERP/MES", "level": 5},
-    {"category": "Outils", "name": "Git", "level": 8},
-    {"category": "Outils", "name": "MQTT", "level": 4},
-    {"category": "Outils", "name": "ArcGIS", "level": 6}
-  ],
-  "profile": {
-    "name": "Pierrick Pagaud",
-    "identifiant": "pierrpgd",
-    "title": "Ingénieur développement logiciel"
-  },
-  "about": [
-    "<strong>Bonjour</strong>, bienvenue sur mon portfolio.",
-    "Ingénieur généraliste de formation, je suis passionné par la création d'application intelligente et robuste, co-construite avec l'utilisateur final a chaque étape du projet. Ce que je préfère dans mon travail : le travail de conception en équipe, où la magie opère quand un problème complexe se débloque par des solutions simples et élégantes.",
-    "Actuellement ingénieur logiciel chez <strong>Betakron</strong>, je pilote la mise en place d'un workflow sur-mesure pour le service Méthodes, facilitant ses interactions avec les services internes, clients, fournisseurs et partenaires de l'entreprise.",
-    "Précédemment, j'ai eu l'occasion de travailler comme ingénieur logiciel dans divers <strong>contextes internationaux</strong> (USA, LATAM, Europe) — du pilotage de projet à la mise en œuvre de solution MES sur-mesure pour des <strong>secteurs industriels</strong> variés tels que l’aéronautique, l’automobile ou la pharmaceutique.",
-    "Sur mon temps libre, je suis joueur et passionné de <strong>rugby</strong>. Quand je ne suis pas sur un terrain, je me plonge dans un <strong>roman d’histoire</strong> ou de fantasy… ou je prépare ma prochaine <strong>escapade en montagne</strong>."
-  ],
-  "experiences": [
-    {
-      "dates": "MAR. 2023 - MAR. 2025",
-      "position": "Ingénieur logiciel MES",
-      "company": "Alpha 3i",
-      "location": "Jacksonville FL, USA",
-      "description": "Conception, développement et intégration de modules MES au sein de systèmes ERP pour des acteurs industriels de secteurs variés (aéronautique, santé, automobile).",
-      "details": "- Référent technique pour les clients USA / LATAM<br>- Gestion de projet en mode Agile Scrum<br>- Développement modules MES en mode TDD<br>- Support technique aux équipes de vente USA",
-      "url": "https://www.alpha3i.com/",
-      "skills": ["Python", "Windev/Webdev", "SQL", "ERP/MES", "Git"]
+[
+  {
+    "skills": [
+      {"category": "Développement", "name": "Python", "level": 7},
+      {"category": "Développement", "name": "JavaScript", "level": 3},
+      {"category": "Développement", "name": "HTML/CSS", "level": 3},
+      {"category": "Développement", "name": "Django", "level": 6},
+      {"category": "Développement", "name": "Windev/Webdev", "level": 7},
+      {"category": "Développement", "name": "SQL", "level": 6},
+      {"category": "Développement", "name": "REST API", "level": 5},
+      {"category": "Développement", "name": "R", "level": 3},
+      {"category": "Développement", "name": "LabVIEW", "level": 4},
+      {"category": "Développement", "name": "Bootstrap", "level": 3},
+      {"category": "Développement", "name": "jQuery", "level": 3},
+      {"category": "Outils", "name": "ERP/MES", "level": 5},
+      {"category": "Outils", "name": "Git", "level": 8},
+      {"category": "Outils", "name": "MQTT", "level": 4},
+      {"category": "Outils", "name": "ArcGIS", "level": 6}
+    ],
+    "profile": {
+      "name": "Pierrick Pagaud",
+      "identifiant": "pierrpgd",
+      "title": "Ingénieur développement logiciel"
     },
-    {
-      "dates": "SEP. 2019 - FEB. 2023",
-      "position": "Chef de projet informatique junior",
-      "company": "PAPREC France",
-      "location": "Lyon, FRA",
-      "description": "Déploiement d'une plateforme IoT pour l'activité Collecte et Transports de déchets.",
-      "details": "- Intégration des données GPS issues de systèmes embarqués (MQTT, PostgreSQL)<br>- Gestion de l’interopérabilité entre les équipements du fournisseur et les services internes (Python, API REST)<br>- Visualisation des données GPS via des applications web SIG sécurisées (ArcGIS, solutions tiers)",
-      "url": "https://www.paprec.fr/",
-      "skills": ["Python", "SQL", "REST API", "MQTT", "ArcGIS"]
+    "about": [
+      "<strong>Bonjour</strong>, bienvenue sur mon portfolio.",
+      "Ingénieur généraliste de formation, je suis passionné par la création d'application intelligente et robuste, co-construite avec l'utilisateur final a chaque étape du projet. Ce que je préfère dans mon travail : le travail de conception en équipe, où la magie opère quand un problème complexe se débloque par des solutions simples et élégantes.",
+      "Actuellement ingénieur logiciel chez <strong>Betakron</strong>, je pilote la mise en place d'un workflow sur-mesure pour le service Méthodes, facilitant ses interactions avec les services internes, clients, fournisseurs et partenaires de l'entreprise.",
+      "Précédemment, j'ai eu l'occasion de travailler comme ingénieur logiciel dans divers <strong>contextes internationaux</strong> (USA, LATAM, Europe) — du pilotage de projet à la mise en œuvre de solution MES sur-mesure pour des <strong>secteurs industriels</strong> variés tels que l’aéronautique, l’automobile ou la pharmaceutique.",
+      "Sur mon temps libre, je suis joueur et passionné de <strong>rugby</strong>. Quand je ne suis pas sur un terrain, je me plonge dans un <strong>roman d’histoire</strong> ou de fantasy… ou je prépare ma prochaine <strong>escapade en montagne</strong>."
+    ],
+    "experiences": [
+      {
+        "dates": "MAR. 2023 - MAR. 2025",
+        "position": "Ingénieur logiciel MES",
+        "company": "Alpha 3i",
+        "location": "Jacksonville FL, USA",
+        "description": "Conception, développement et intégration de modules MES au sein de systèmes ERP pour des acteurs industriels de secteurs variés (aéronautique, santé, automobile).",
+        "details": "- Référent technique pour les clients USA / LATAM<br>- Gestion de projet en mode Agile Scrum<br>- Développement modules MES en mode TDD<br>- Support technique aux équipes de vente USA",
+        "url": "https://www.alpha3i.com/",
+        "skills": ["Python", "Windev/Webdev", "SQL", "ERP/MES", "Git"]
+      },
+      {
+        "dates": "SEP. 2019 - FEB. 2023",
+        "position": "Chef de projet informatique junior",
+        "company": "PAPREC France",
+        "location": "Lyon, FRA",
+        "description": "Déploiement d'une plateforme IoT pour l'activité Collecte et Transports de déchets.",
+        "details": "- Intégration des données GPS issues de systèmes embarqués (MQTT, PostgreSQL)<br>- Gestion de l’interopérabilité entre les équipements du fournisseur et les services internes (Python, API REST)<br>- Visualisation des données GPS via des applications web SIG sécurisées (ArcGIS, solutions tiers)",
+        "url": "https://www.paprec.fr/",
+        "skills": ["Python", "SQL", "REST API", "MQTT", "ArcGIS"]
+      },
+      {
+        "dates": "SEP. 2018 - SEP. 2019",
+        "position": "Assistant chef de projet informatique (alternance)",
+        "company": "PAPREC France",
+        "location": "Lyon, FRA",
+        "description": "Développement d’une application web d’optimisation de circuit pour l’activité Collecte et Transports de déchets.",
+        "details": "- Gestion de prestataire, écriture des spécifications<br>- Traitement, analyse de données et modélisation",
+        "url": "https://www.paprec.fr/",
+        "skills": ["Python", "R", "ArcGIS"]
+      },
+      {
+        "dates": "SEP. 2017 – DEC. 2017",
+        "position": "Développeur LabVIEW (stage)",
+        "company": "KTH Royal Institute of Technology",
+        "location": "Stockholm, SWE",
+        "description": "Développement d’un logiciel de supervision des tests avec LabVIEV pour le Department of Energy Technology du KTH Institute, Stockholm.",
+        "details": "",
+        "url": "https://www.kth.se/en",
+        "skills": ["LabVIEW"]
+      }
+    ],
+    "educations": [
+      {
+        "dates": "SEP. 2016 - SEP. 2019",
+        "title": "Ingénieur généraliste",
+        "institution": "EI.CESI",
+        "field": "Gestion de projet",
+        "location": "Lyon, FRA",
+        "description": "Diplôme d'ingénieur généraliste en alternance, option Gestion de projet.",
+        "details": "Engagements associatifs:<br>- BDE : Responsable Communication<br>- Club électronique de l'école : projet e-skate<br>- Rugby ENS Lyon : joueur, aide bénévole",
+        "url": "https://www.cesi.fr/",
+        "skills": []
+      },
+      {
+        "dates": "SEP. 2015 - SEP. 2016",
+        "title": "Licence Sc. Ingénieur",
+        "institution": "Université de Franche-Comté",
+        "field": "Électronique et Automatisation",
+        "location": "Besançon, FRA",
+        "description": "Licence Sc. Ingénieur en alternance, option Électronique et Automatisation.",
+        "details": "Engagements associatifs:<br>- Club électronique de l'université : projet drône<br>- Rugby Université des sciences : joueur",
+        "url": "https://www.univ-fcomte.fr/",
+        "skills": []
+      }
+    ],
+    "projects": [
+      {
+        "title":"Django Portfolio Generator",
+        "description":"Une solution de création de portfolio basée sur python, Django, JS et Bootstrap CSS.",
+        "details":"Profitez-en pour crér votre propre portfolio !",
+        "image_url":"/static/portfolio-example.png",
+        "url":"https://github.com/pierrpgd/portfolios",
+        "skills": ["Python", "Django", "JavaScript", "HTML/CSS", "Bootstrap", "jQuery", "Git"]
+      }
+    ]
+  },{
+    "skills": [
+      {"category": "Langues", "name": "Espagnol", "level": 10},
+      {"category": "Langues", "name": "Anglais", "level": 8},
+      {"category": "Langues", "name": "Français", "level": 4}
+    ],
+    "profile": {
+      "name": "Eliana Catalina Rodriguez Garcìa",
+      "identifiant": "catalina",
+      "title": "Fille au pair"
     },
-    {
-      "dates": "SEP. 2018 - SEP. 2019",
-      "position": "Assistant chef de projet informatique (alternance)",
-      "company": "PAPREC France",
-      "location": "Lyon, FRA",
-      "description": "Développement d’une application web d’optimisation de circuit pour l’activité Collecte et Transports de déchets.",
-      "details": "- Gestion de prestataire, écriture des spécifications<br>- Traitement, analyse de données et modélisation",
-      "url": "https://www.paprec.fr/",
-      "skills": ["Python", "R", "ArcGIS"]
-    },
-    {
-      "dates": "SEP. 2017 – DEC. 2017",
-      "position": "Développeur LabVIEW (stage)",
-      "company": "KTH Royal Institute of Technology",
-      "location": "Stockholm, SWE",
-      "description": "Développement d’un logiciel de supervision des tests avec LabVIEV pour le Department of Energy Technology du KTH Institute, Stockholm.",
-      "details": "",
-      "url": "https://www.kth.se/en",
-      "skills": ["LabVIEW"]
-    }
-  ],
-  "educations": [
-    {
-      "dates": "SEP. 2016 - SEP. 2019",
-      "title": "Ingénieur généraliste",
-      "institution": "EI.CESI",
-      "field": "Gestion de projet",
-      "location": "Lyon, FRA",
-      "description": "Diplôme d'ingénieur généraliste en alternance, option Gestion de projet.",
-      "details": "Engagements associatifs:<br>- BDE : Responsable Communication<br>- Club électronique de l'école : projet e-skate<br>- Rugby ENS Lyon : joueur, aide bénévole",
-      "url": "https://www.cesi.fr/",
-      "skills": []
-    },
-    {
-      "dates": "SEP. 2015 - SEP. 2016",
-      "title": "Licence Sc. Ingénieur",
-      "institution": "Université de Franche-Comté",
-      "field": "Électronique et Automatisation",
-      "location": "Besançon, FRA",
-      "description": "Licence Sc. Ingénieur en alternance, option Électronique et Automatisation.",
-      "details": "Engagements associatifs:<br>- Club électronique de l'université : projet drône<br>- Rugby Université des sciences : joueur",
-      "url": "https://www.univ-fcomte.fr/",
-      "skills": []
-    }
-  ],
-  "projects": [
-    {
-      "title":"Django Portfolio Generator",
-      "description":"Une solution de création de portfolio basée sur python, Django, JS et Bootstrap CSS.",
-      "details":"Profitez-en pour crér votre propre portfolio !",
-      "image_url":"/static/portfolio-example.png",
-      "url":"https://github.com/pierrpgd/portfolios",
-      "skills": ["Python", "Django", "JavaScript", "HTML/CSS", "Bootstrap", "jQuery", "Git"]
-    }
-  ]
-}
+    "about": [
+      "<strong>Bonjour</strong>, enchantée !",
+      "Je m'appelle Catalina, j'ai 28 ans et je suis origine de Bogota en Colombie.",
+      "Je suis à la recherche d'une famille d'accueil en France pour travailler en tant qu'au pair."
+    ],
+    "experiences": [
+      {
+        "dates": "MAR. 2024 - DEC. 2024",
+        "position": "Fille au pair",
+        "company": "Famille d'accueil",
+        "location": "Jacksonville FL, USA",
+        "description": "Au Pair dans une famille de 2 enfants : un garcon de 3 ans (Bobby) et une fille de 5 ans (Maddie).",
+        "details": "",
+        "url": "",
+        "skills": ["Anglais"]
+      },
+      {
+        "dates": "DEC. 2023 - FEB. 2024",
+        "position": "Fille au pair",
+        "company": "Famille d'accueil",
+        "location": "Denver CO, USA",
+        "description": "",
+        "details": "",
+        "url": "",
+        "skills": ["Anglais"]
+      },
+      {
+        "dates": "DEC. 2022 - DEC. 2023",
+        "position": "Fille au pair",
+        "company": "Famille d'accueil",
+        "location": "Atlanta GA, USA",
+        "description": "Au Pair dans une famille de 2 garcons : un bambin de 3 ans (Remy) et un enfant de 5 ans (Briggs).",
+        "details": "",
+        "url": "",
+        "skills": ["Anglais"]
+      }
+    ],
+    "educations": [
+      {
+        "dates": "SEP. 2017 - SEP. 2020",
+        "title": "Licence en Communication",
+        "institution": "Universidad de la Sabana",
+        "field": "Communication et Journalisme",
+        "location": "Bogota, Colombie",
+        "description": "Licence en Communication et Journalisme à l'université de la Sabana, à coté de Bogota .",
+        "details": "",
+        "url": "https://www.unisabana.edu.co/",
+        "skills": ["Anglais"]
+      }
+    ],
+    "projects": [
+      {
+        "title":"Mon instagram - un peu de poésie",
+        "description":"Je publie des poèmes en espagnol sur ma page instagram : Esto Llamado Vida (\"Cette chose qu’on appelle la vie\").",
+        "details":"",
+        "image_url":"/static/portfolio-example.png",
+        "url":"https://www.instagram.com/esto.llamado.vida/",
+        "skills": ["Espagnol"]
+      }
+    ]
+  }
+]
