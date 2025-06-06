@@ -29,7 +29,7 @@
         body {
             font-family: 'Inter', sans-serif;
             position: relative;
-            background-color: rgb(15, 23, 42);
+            /* background-color: rgba(15, 23, 42, 1); */
             margin: 0;
             width: 100%;
             min-height: 100vh;
@@ -125,20 +125,6 @@
             opacity: 1;
             font-size: 12px;
         }
-        {% regroup skills by category as skill_categories %}
-        {% for category in skill_categories %}
-            {% if forloop.counter == 1 %}
-                .skill-badge[data-category="{{ category.grouper }}"]{
-                    background-color: rgba(94, 231, 212, 0.15);
-                    color: rgb(94, 231, 212);
-                }
-            {% elif forloop.counter == 2 %}
-                .skill-badge[data-category="{{ category.grouper }}"]{
-                    background-color: rgba(254, 209, 140, 0.15);
-                    color: rgb(254, 209, 140);
-                }
-            {% endif %}
-        {% endfor %}
         .skill-badge.active {
             border: 1px solid;
         }
@@ -624,6 +610,35 @@
             skills.addEventListener('scroll', function() {
                 updateSkillsDegrad();
             });
+
+            // Application des couleurs personnalisées
+            const skillCategories = [];
+            let grouperValue = "";
+            let badges = [];
+            let gauges = [];
+
+            {% regroup skills by category as skill_categories %}
+            {% for category in skill_categories %}
+                skillCategories.push("{{ category.grouper }}");
+            {% endfor %}
+
+            {% for color in colors %}
+                {% if forloop.counter == 1 %}
+                    document.body.style.backgroundColor = `rgba({{ color.red }}, {{ color.green }}, {{ color.blue }}, {{ color.transparency }})`;
+                {% elif forloop.counter > 1 %}
+                    grouperValue = skillCategories[{{ forloop.counter }} - 2];
+                    badges = document.querySelectorAll(`.skill-badge[data-category="${grouperValue}"]`);
+                    gauges = document.querySelectorAll(`.skill-level-gauge[data-category="${grouperValue}"]`);
+                    for (let i = 0; i < badges.length; i++) {
+                        badges[i].style.backgroundColor = `rgba({{ color.red }}, {{ color.green }}, {{ color.blue }}, 0.15)`;
+                        badges[i].style.color = `rgba({{ color.red }}, {{ color.green }}, {{ color.blue }}, {{ color.transparency }})`;
+                    }
+                    for (let i = 0; i < gauges.length; i++) {
+                        gauges[i].style.border = `1px solid rgba({{ color.red }}, {{ color.green }}, {{ color.blue }}, {{ color.transparency }})`;
+                    }
+                {% endif %}
+            {% endfor %}
+
         });
 
         function updateSkillsDegrad() {

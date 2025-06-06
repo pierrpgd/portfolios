@@ -15,6 +15,7 @@ def portfolio(request, identifiant):
             education = profile.education.all().prefetch_related('skills')
             projects = profile.projects.all().prefetch_related('skills')
             profile_skills = ProfileSkill.objects.filter(profile=profile).order_by('skill__category', '-level')
+            colors = Color.objects.filter(profile=profile)
 
             skills_data = []
             
@@ -36,6 +37,7 @@ def portfolio(request, identifiant):
             'education': education,
             'projects': projects,
             'skills': skills_data,
+            'colors': colors,
         }
         
         return render(request, 'portfolio.html', context)
