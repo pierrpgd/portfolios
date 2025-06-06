@@ -20,7 +20,7 @@
 
         body, a {
             opacity: 0.9;
-            color: #919dc5;
+            color: rgb(145, 157, 197);
             text-decoration: none;
             margin: 0;
             padding: 0;
@@ -29,7 +29,7 @@
         body {
             font-family: 'Inter', sans-serif;
             position: relative;
-            background-color: #0f172a;
+            background-color: rgb(15, 23, 42);
             margin: 0;
             width: 100%;
             min-height: 100vh;
@@ -130,12 +130,12 @@
             {% if forloop.counter == 1 %}
                 .skill-badge[data-category="{{ category.grouper }}"]{
                     background-color: rgba(94, 231, 212, 0.15);
-                    color: #5ee7d4;
+                    color: rgb(94, 231, 212);
                 }
             {% elif forloop.counter == 2 %}
                 .skill-badge[data-category="{{ category.grouper }}"]{
                     background-color: rgba(254, 209, 140, 0.15);
-                    color: #FED18C;
+                    color: rgb(254, 209, 140);
                 }
             {% endif %}
         {% endfor %}
@@ -420,7 +420,7 @@
                 display: block;
                 margin-top: 1rem;
                 font-size: 24px;
-                color: #ccd6f6;
+                color: rgb(204, 214, 246);
                 padding-top: 1rem;
                 padding-bottom: 1rem;
             }

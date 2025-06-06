@@ -243,5 +243,27 @@
             "url": "https://testurl5.com",
             "skills": [3]
         }
+    },
+    {
+        "model": "pierrpgd.color",
+        "pk": 1,
+        "fields": {
+            "profile": 1,
+            "red": 255,
+            "green": 0,
+            "blue": 0,
+            "transparency": 100
+        }
+    },
+    {
+        "model": "pierrpgd.color",
+        "pk": 2,
+        "fields": {
+            "profile": 1,
+            "red": 0,
+            "green": 255,
+            "blue": 0,
+            "transparency": 100
+        }
     }
 ]

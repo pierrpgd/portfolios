@@ -23,6 +23,17 @@ class Skill(models.Model):
     def __str__(self):
         return f"{self.category} - {self.name}"
 
+class Color(models.Model):
+    order = models.IntegerField(default=0)
+    red = models.IntegerField(default=0)
+    green = models.IntegerField(default=0)
+    blue = models.IntegerField(default=0)
+    transparency = models.IntegerField(default=100)
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    
+    def __str__(self):
+        return f"{self.order} - {self.red} {self.green} {self.blue} {self.transparency}"
+
 class ProfileSkill(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
     skill = models.ForeignKey(Skill, on_delete=models.CASCADE)

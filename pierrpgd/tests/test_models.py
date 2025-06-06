@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
-from pierrpgd.models import Profile, About, Experience, Education, Project, Skill
+from pierrpgd.models import Profile, About, Experience, Education, Project, Skill, Color
 
 class BaseTest(TestCase):
     fixtures = ['test_fixtures.json']
@@ -15,6 +15,7 @@ class BaseTest(TestCase):
         cls.educations = Education.objects.filter(profile=cls.profile)
         cls.projects = Project.objects.filter(profile=cls.profile)
         cls.skills = Skill.objects.all()
+        cls.colors = Color.objects.all()
 
 class ProfileModelTest(BaseTest):
     def test_profile_creation(self):
@@ -58,6 +59,46 @@ class ProfileModelTest(BaseTest):
         self.profile.delete()
         with self.assertRaises(Profile.DoesNotExist):
             Profile.objects.get(id=profile_id)
+
+class ColorModelTest(BaseTest):
+    def test_color_creation(self):
+        """Test la création d'une section About"""
+        self.assertEqual(self.colors[0].red, 255)
+        self.assertEqual(self.colors[0].green, 0)
+        self.assertEqual(self.colors[0].blue, 0)
+        self.assertEqual(self.colors[0].order, 0)
+        self.assertEqual(self.colors[0].transparency, 100)
+
+        self.assertEqual(self.colors[1].red, 0)
+        self.assertEqual(self.colors[1].green, 255)
+        self.assertEqual(self.colors[1].blue, 0)
+        self.assertEqual(self.colors[1].order, 1)
+        self.assertEqual(self.colors[1].transparency, 100)
+
+    def test_color_string_representation(self):
+        """Test la représentation en chaîne de caractères"""
+        expected_str = f"{self.colors[0].order} - {self.colors[0].red} {self.colors[0].green} {self.colors[0].blue} {self.colors[0].transparency}"
+        self.assertEqual(str(self.colors[0]), expected_str)
+
+    def test_color_ordering(self):
+        """Test le tri des sections About"""
+        colors = Color.objects.filter(profile=self.profile)
+        self.assertEqual(colors[0], self.colors[0])
+        self.assertEqual(colors[1], self.colors[1])
+
+    def test_color_deletion(self):
+        """Test la suppression d'une section About"""
+        color_id = self.colors[0].id
+        self.colors[0].delete()
+        with self.assertRaises(Color.DoesNotExist):
+            Color.objects.get(id=color_id)
+
+    def test_color_cascade_deletion(self):
+        """Test la suppression en cascade quand un Profile est supprimé"""
+        profile_id = self.profile.id
+        self.profile.delete()
+        with self.assertRaises(Color.DoesNotExist):
+            Color.objects.get(profile=profile_id)
 
 class AboutModelTest(BaseTest):
     def test_about_creation(self):

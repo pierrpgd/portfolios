@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 import json
-from pierrpgd.models import Profile, About, Experience, Education, Project, Skill, ProfileSkill
+from pierrpgd.models import Profile, About, Experience, Education, Project, Skill, ProfileSkill, Color
 import os
 
 class Command(BaseCommand):
@@ -22,6 +22,7 @@ class Command(BaseCommand):
             Education.objects.all().delete()
             Project.objects.all().delete()
             Skill.objects.all().delete()
+            Color.objects.all().delete()
 
         try:
             # Charger les données depuis le fichier JSON
@@ -43,6 +44,18 @@ class Command(BaseCommand):
                     title=person["profile"]["title"]
                 )
                 self.stdout.write(f"Profil créé avec l'ID: {profile.id}")
+
+                # Création des couleurs
+                self.stdout.write("Création des couleurs...")
+                for color in person["colors"]:
+                    color = Color.objects.create(
+                        profile=profile,
+                        red=color["red"],
+                        green=color["green"],
+                        blue=color["blue"],
+                        transparency=color["transparency"]
+                    )
+                    self.stdout.write(f"Couleur créée (ID: {color.id})")
 
                 # Création des compétences
                 self.stdout.write("Création des compétences...")

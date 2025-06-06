@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse, Http404
-from .models import Profile, About, Experience, Education, Project, Skill, ProfileSkill
+from .models import Profile, About, Experience, Education, Project, Skill, ProfileSkill, Color
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
@@ -63,6 +63,7 @@ def load_data(request):
                 educations = profile.education.all()
                 projects = profile.projects.all()
                 profile_skills = ProfileSkill.objects.filter(profile=profile)
+                colors = Color.objects.filter(profile=profile)
                 
                 # Récupération de toutes les compétences liées au profil
                 skills_data = []
@@ -131,6 +132,16 @@ def load_data(request):
                             'url': project.url if project.url else '',
                             'skills': [skill.id for skill in project.skills.all()]
                         } for project in projects
+                    ],
+                    'colors': [
+                        {
+                            'id': color.id,
+                            'red': color.red,
+                            'green': color.green,
+                            'blue': color.blue,
+                            'transparency': color.transparency,
+                            'profile': color.profile.id
+                        } for color in colors
                     ],
                     'skills': skills_data
                 }
@@ -291,6 +302,22 @@ def save_data(request):
                         obj = Skill.objects.get(category=content.get('category'), name=content.get('name'))
                 profile.skills.add(obj)
                 ProfileSkill.objects.update_or_create(profile=profile, skill=obj, defaults={'level': content.get('level', 5)})
+            elif modalId == 'colorModal':
+                type = 'color'
+                if isNew and not Color.objects.filter(profile=profile, red=content.get('red'), green=content.get('green'), blue=content.get('blue')).exists():
+                    obj = Color.objects.create(
+                        red=content.get('red', 0),
+                        green=content.get('green', 0),
+                        blue=content.get('blue', 0),
+                        transparency=content.get('transparency', 100),
+                        profile=profile
+                    )
+                else:
+                    obj = Color.objects.get(id=content.get('id'))
+                    obj.red = content.get('red', obj.red)
+                    obj.green = content.get('green', obj.green)
+                    obj.blue = content.get('blue', obj.blue)
+                    obj.transparency = content.get('transparency', obj.transparency)
             else:
                 return JsonResponse({'success': False, 'error': 'Type de modal inconnu'}, status=400)
 
@@ -321,6 +348,15 @@ def delete_profile(request, profile_id):
         return JsonResponse({'success': True})
     except Profile.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Profile not found'}, status=404)
+
+@require_http_methods(["DELETE"])
+def delete_color(request, color_id):
+    try:
+        color = Color.objects.get(id=color_id)
+        color.delete()
+        return JsonResponse({'success': True})
+    except Color.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Color not found'}, status=404)
 
 @require_http_methods(["DELETE"])
 def delete_about(request, about_id):

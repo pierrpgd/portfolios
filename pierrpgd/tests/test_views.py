@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import resolve, reverse
 from django.http import HttpRequest
 from pierrpgd.views import portfolio, data_display
-from pierrpgd.models import Profile, About, Experience, Education,Project, Skill, ProfileSkill
+from pierrpgd.models import Profile, About, Experience, Education,Project, Skill, ProfileSkill, Color
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -18,6 +18,7 @@ class BaseTest(TestCase):
         cls.educations = Education.objects.filter(profile=cls.profile)
         cls.projects = Project.objects.filter(profile=cls.profile)
         cls.skills = Skill.objects.all()
+        cls.colors = Color.objects.all()
         cls.profile_skills = ProfileSkill.objects.filter(profile=cls.profile)
 
     @classmethod
@@ -315,6 +316,77 @@ class LoadDataViewTest(BaseTest):
         data = self.response.json()
         self.assertIn('skills', data)
         self.assertEqual(len(data['skills']), 2)
+
+    def test_create_color(self):
+        """Teste la création d'une couleur"""
+        
+        # Vérifier que l'objet a été créé
+        self.assertTrue(Color.objects.filter(red=255, green=0, blue=0, transparency=100, profile=self.profile).exists())
+        
+        # Vérifier que la section apparaît dans l'interface
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
+        
+        # Vérifier que la compétence a été créée
+        data = self.response.json()
+        self.assertIn('colors', data)
+        self.assertEqual(data['colors'][0]['red'], 255)
+        self.assertEqual(data['colors'][0]['green'], 0)
+        self.assertEqual(data['colors'][0]['blue'], 0)
+        self.assertEqual(data['colors'][0]['transparency'], 100)
+
+    def test_update_color(self):
+        """Teste la mise à jour d'une couleur"""
+        
+        # Données pour la mise à jour
+        updated_data = {
+            'red': 255,
+            'green': 0,
+            'blue': 0,
+            'transparency': 50
+        }
+        
+        # Mettre à jour la compétence
+        Color.objects.filter(id=self.colors[0].id).update(**updated_data)
+        self.colors[0].refresh_from_db()
+        
+        # Vérifier que les modifications ont été sauvegardées
+        self.assertEqual(self.colors[0].red, updated_data['red'])
+        self.assertEqual(self.colors[0].green, updated_data['green'])
+        self.assertEqual(self.colors[0].blue, updated_data['blue'])
+        self.assertEqual(self.colors[0].transparency, updated_data['transparency'])
+        
+        # Vérifier que les changements apparaissent dans l'interface via load_data
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
+        
+        # Vérifier que la compétence a été mise à jour
+        data = self.response.json()
+        self.assertIn('colors', data)
+        self.assertEqual(data['colors'][0]['red'], updated_data['red'])
+        self.assertEqual(data['colors'][0]['green'], updated_data['green'])
+        self.assertEqual(data['colors'][0]['blue'], updated_data['blue'])
+        self.assertEqual(data['colors'][0]['transparency'], updated_data['transparency'])
+
+    def test_delete_color(self):
+        """Teste la suppression d'une couleur"""
+
+        id_color = self.colors[0].id
+        
+        # Supprimer la compétence
+        self.colors[0].delete()
+        
+        # Vérifier que l'objet a été supprimé
+        self.assertFalse(Color.objects.filter(id=id_color).exists())
+        
+        # Vérifier que la section ne s'affiche plus
+        self.response = self.client.get(reverse('load_data'), {'identifiant': self.profile.identifiant})
+        self.assertEqual(self.response.status_code, 200)
+        
+        # Vérifier que la compétence a été supprimée
+        data = self.response.json()
+        self.assertIn('colors', data)
+        self.assertEqual(len(data['colors']), 1)
 
     def test_create_about(self):
         """Teste la création d'une section About"""
@@ -1138,6 +1210,70 @@ class SaveDataTest(BaseTest):
         profile_skill = ProfileSkill.objects.get(profile=profile, skill=skill)
         self.assertEqual(profile_skill.level, 6)
 
+    def test_create_color(self):
+        """Teste la création d'une couleur"""
+        
+        # Données pour la création
+        data = {
+            'red': 0,
+            'green': 0,
+            'blue': 255,
+            'profile': self.profile.identifiant,
+            'transparency': 50
+        }
+        
+        # Effectuer la création via l'API
+        response = self.client.post(
+            reverse('save_data'),
+            {
+                'modalId': 'colorModal',
+                'isNew': True,
+                'data': data
+            },
+            content_type='application/json'
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        
+        # Vérifier que la compétence a été créée
+        self.assertEqual(result['success'], True)
+        self.assertTrue(Color.objects.filter(red=data['red'], green=data['green'], blue=data['blue']).exists())
+
+    def test_update_color(self):
+        """Teste la mise à jour d'une couleur"""
+        # Données pour la mise à jour
+        updated_data = {
+            'red': 120,
+            'green': 0,
+            'blue': 0,
+            'transparency': 40,
+            'id': self.colors[0].id,
+            'profile': self.profile.identifiant,
+        }
+        
+        # Effectuer la mise à jour via l'API
+        response = self.client.post(
+            reverse('save_data'),
+            {
+                'modalId': 'colorModal',
+                'isNew': False,
+                'data': updated_data
+            },
+            content_type='application/json'
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        
+        # Vérifier que les modifications ont été sauvegardées
+        updated_color = Color.objects.get(id=self.colors[0].id)
+        self.assertEqual(updated_color.red, updated_data['red'])
+        self.assertEqual(updated_color.green, updated_data['green'])
+        self.assertEqual(updated_color.blue, updated_data['blue'])
+        self.assertEqual(updated_color.transparency, updated_data['transparency'])
+
 class DeleteDataTest(BaseTest):
 
     def test_delete_profile(self):
@@ -1263,3 +1399,21 @@ class DeleteDataTest(BaseTest):
         projects = Project.objects.filter(profile=profile)
         for project in projects:
             self.assertNotIn(skill, project.skills.all())
+
+    def test_delete_color(self):
+        """Teste la suppression d'une Color"""
+
+        color_id = self.colors[0].id
+
+        # Effectuer la suppression
+        response = self.client.delete(
+            reverse('delete_color', args=[color_id])
+        )
+        
+        # Vérifier la réponse de l'API
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        
+        # Vérifier que le profil a été supprimé
+        self.assertEqual(result['success'], True)
+        self.assertFalse(Color.objects.filter(id=color_id).exists())
