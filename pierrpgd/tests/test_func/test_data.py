@@ -5,7 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException
-from pierrpgd.models import Profile, About, Experience, Education, Project, Skill, ProfileSkill
+from pierrpgd.models import Profile, About, Experience, Education, Project, Skill, ProfileSkill, Color
 from selenium.webdriver.common.keys import Keys
 from django.test import Client
 from django.conf import settings
@@ -67,6 +67,7 @@ class BaseTest(LiveServerTestCase):
         self.educations = Education.objects.filter(profile=self.profile).order_by('order')
         self.projects = Project.objects.filter(profile=self.profile).order_by('order')
         self.skills = Skill.objects.filter(profile=self.profile).order_by('id')
+        self.colors = Color.objects.filter(profile=self.profile).order_by('id')
 
 class ProfileTest(BaseTest):
 
@@ -109,6 +110,18 @@ class ProfileTest(BaseTest):
         WebDriverWait(self.browser, 10).until(
             EC.presence_of_element_located((By.XPATH, "//div[@id='profile-data']//h2[text()='À propos']"))
         )
+
+        # Vérifier l'affichage des données Couleurs
+        color_number = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), 'Couleur 1')]")
+        color_red = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), '255')]")
+        color_green = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), '0')]")
+        color_blue = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), '0')]")
+        color_transparency = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), '100%')]")
+        self.assertTrue(color_number.is_displayed())
+        self.assertTrue(color_red.is_displayed())
+        self.assertTrue(color_green.is_displayed())
+        self.assertTrue(color_blue.is_displayed())
+        self.assertTrue(color_transparency.is_displayed())
 
         # Vérifier l'affichage des données Compétences
         skill_name = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'skill-table')]//td[contains(text(), 'Test Skill')]")
@@ -155,6 +168,12 @@ class ProfileTest(BaseTest):
         )
         
         # Vérifier que les données sont masquées
+        color_content = self.browser.find_elements(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), 'Couleur 1')]")
+        self.assertEqual(len(color_content), 0)
+        
+        skill_content = self.browser.find_elements(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'skill-table')]//td[contains(text(), 'Test Skill')]")
+        self.assertEqual(len(skill_content), 0)
+        
         about_content = self.browser.find_elements(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'about-table')]//td[contains(text(), 'Test About Content')]")
         self.assertEqual(len(about_content), 0)
         
@@ -301,6 +320,106 @@ class PopupTest(BaseTest):
             try:
                 WebDriverWait(self.browser, 10).until(
                     EC.invisibility_of_element_located((By.ID, 'skillModal'))
+                )
+            except:
+                # La modal a été supprimée, donc elle n'est plus dans le DOM
+                pass
+            
+        except NoSuchElementException:
+            self.fail("La popup n'a pas été trouvée")
+
+    def test_double_click_color(self):
+        """Teste le comportement du double clic sur une ligne du tableau Couleurs"""
+        
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre que les données soient chargées
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@id='profile-data']//h2[text()='Couleurs']"))
+        )
+        
+        # Trouver la ligne du tableau Couleurs
+        color_row = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), 'Couleur 1')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(color_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'colorModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        try:
+            modal = self.browser.find_element(By.ID, 'colorModal')
+            self.assertTrue(modal.is_displayed())
+            
+            # Vérifier que le contenu de la popup est correct
+            modal_content = self.browser.find_element(By.CSS_SELECTOR, '#colorModal .modal-content')
+            red = modal_content.find_element(By.CSS_SELECTOR, '[data-field="red"]').text
+            green = modal_content.find_element(By.CSS_SELECTOR, '[data-field="green"]').text
+            blue = modal_content.find_element(By.CSS_SELECTOR, '[data-field="blue"]').text
+            transparency = modal_content.find_element(By.CSS_SELECTOR, '[data-field="transparency"]').text
+            self.assertEqual(red, '255')
+            self.assertEqual(green, '0')
+            self.assertEqual(blue, '0')
+            self.assertEqual(transparency, '100')
+            
+            # Fermer la popup
+            close_button = self.browser.find_element(By.CSS_SELECTOR, '#colorModal .modal-header button.close')
+            self.browser.execute_script("arguments[0].click();", close_button)
+            
+            # Attendre que la popup soit masquée
+            try:
+                WebDriverWait(self.browser, 10).until(
+                    EC.invisibility_of_element_located((By.ID, 'colorModal'))
+                )
+            except:
+                # La modal a été supprimée, donc elle n'est plus dans le DOM
+                pass
+            
+            # Vérifier que la modal n'est plus présente dans le DOM
+            with self.assertRaises(NoSuchElementException):
+                self.browser.find_element(By.ID, 'colorModal')
+            
+            # Trouver la ligne du tableau Couleurs pour la deuxième section
+            color_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), 'Couleur 2')]/..")
+
+            # Effectuer un double clic
+            action = ActionChains(self.browser)
+            action.double_click(color_row).perform()
+            
+            # Attendre que la popup soit visible
+            WebDriverWait(self.browser, 10).until(
+                EC.visibility_of_element_located((By.ID, 'colorModal'))
+            )
+            
+            # Vérifier que la popup est visible
+            modal = self.browser.find_element(By.ID, 'colorModal')
+            self.assertTrue(modal.is_displayed())
+
+            # Vérifier le contenu de la popup
+            modal_content = self.browser.find_element(By.CSS_SELECTOR, '#colorModal .modal-content')
+            red = modal_content.find_element(By.CSS_SELECTOR, '[data-field="red"]').text
+            green = modal_content.find_element(By.CSS_SELECTOR, '[data-field="green"]').text
+            blue = modal_content.find_element(By.CSS_SELECTOR, '[data-field="blue"]').text
+            transparency = modal_content.find_element(By.CSS_SELECTOR, '[data-field="transparency"]').text
+            self.assertEqual(red, '0')
+            self.assertEqual(green, '255')
+            self.assertEqual(blue, '0')
+            self.assertEqual(transparency, '100')
+            
+            # Fermer la popup
+            close_button = self.browser.find_element(By.CSS_SELECTOR, '#colorModal .modal-header button.close')
+            self.browser.execute_script("arguments[0].click();", close_button)
+            
+            # Attendre que la popup soit masquée
+            try:
+                WebDriverWait(self.browser, 10).until(
+                    EC.invisibility_of_element_located((By.ID, 'colorModal'))
                 )
             except:
                 # La modal a été supprimée, donc elle n'est plus dans le DOM
@@ -941,6 +1060,91 @@ class ModifyAndSaveTest(BaseTest):
         updated_row = WebDriverWait(self.browser, 10).until(
             EC.presence_of_element_located((By.XPATH, 
                 f"//div[@id='profile-data']//table[@id='skill-table']//td[contains(., '{new_content.category}')]/.."))
+        )
+        self.assertTrue(updated_row.is_displayed())
+
+    def test_modify_and_save_color(self):
+        """Teste la modification et la sauvegarde d'un élément Couleur"""
+
+        # Créer un nouveau contenu pour l'expérience
+        new_content = Color(
+            profile=self.profile,
+            red=147,
+            green=203,
+            blue=67,
+            transparency=42,
+        )
+
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.ID, "color-table"))
+        )
+        
+        # Trouver la ligne du tableau Couleurs
+        color_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), 'Couleur 1')]/..")
+        
+        # Effectuer un double clic
+        action = ActionChains(self.browser)
+        action.double_click(color_row).perform()
+        
+        # Attendre que la popup soit visible
+        WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'colorModal'))
+        )
+        
+        # Vérifier que la popup est visible
+        modal = self.browser.find_element(By.ID, 'colorModal')
+        self.assertTrue(modal.is_displayed())
+        
+        # Modifier les infos
+        red_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="red"]')
+        red_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content.red).perform()
+        
+        green_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="green"]')
+        green_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content.green).perform()
+        
+        blue_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="blue"]')
+        blue_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content.blue).perform()
+        
+        transparency_field = modal.find_element(By.CSS_SELECTOR, 'span.editable-content[data-field="transparency"]')
+        transparency_field.click()
+        action = ActionChains(self.browser)
+        action.key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
+        action.send_keys(new_content.transparency).perform()
+        
+        # Enregistrer et vérifier
+        save_button = modal.find_element(By.CSS_SELECTOR, '.btn-primary')
+        self.browser.execute_script("arguments[0].click();", save_button)
+        
+        # Vérifier que la modal commence à se fermer
+        WebDriverWait(self.browser, 10).until(
+            EC.invisibility_of_element_located((By.ID, 'colorModal'))
+        )
+        
+        # Vérifier côté serveur que la modification est enregistrée
+        color_obj = Color.objects.get(id=self.colors[0].id)
+        self.assertEqual(color_obj.red, new_content.red)
+        self.assertEqual(color_obj.green, new_content.green)
+        self.assertEqual(color_obj.blue, new_content.blue)
+        self.assertEqual(color_obj.transparency, new_content.transparency)
+        
+        # Vérifier que le tableau est mis à jour
+        updated_row = WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, 
+                f"//div[@id='profile-data']//table[@id='color-table']//td[contains(., '{new_content.red}')]"))
         )
         self.assertTrue(updated_row.is_displayed())
 
@@ -2118,6 +2322,97 @@ class AddElementTest(BaseTest):
         self.assertTrue(any("Nouveau_nom" in row.text for row in rows))
         self.assertTrue(any("Nouveau_titre" in row.text for row in rows))
 
+    def test_add_new_color(self):
+        """
+        Teste l'ajout d'une nouvelle couleur via l'interface
+        1. Ouvre la page data_display
+        2. Clique sur 'Ajouter une couleur'
+        3. Remplit les champs 'Profil', 'R', 'V', 'B' et 'Transparence'
+        4. Valide et vérifie l'affichage
+        """
+
+        # Créer un nouveau contenu pour l'expérience
+        new_color = Color(
+            profile=self.profile,
+            red=147,
+            green=203,
+            blue=67,
+            transparency=42,
+        )
+        
+        # Sélectionner le profil
+        profile_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/..")
+        self.browser.execute_script("arguments[0].click();", profile_row)
+        
+        # Attendre le chargement des données
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.ID, "color-table"))
+        )
+        
+        # Scroll vers l'élément
+        add_button = self.browser.find_element(By.ID, "addColorSectionButton")
+        self.browser.execute_script("arguments[0].scrollIntoView(true);", add_button)
+        
+        # Attendre que l'élément soit cliquable
+        WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.ID, "addColorSectionButton"))
+        )
+        
+        # Cliquer via JavaScript pour éviter les problèmes d'interception
+        self.browser.execute_script("arguments[0].click();", add_button)
+        
+        # Attendre que la modal soit visible
+        modal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "colorModal"))
+        )
+
+        # Remplir le champ R
+        red_field = modal.find_element(By.CSS_SELECTOR, "[data-field='red']")
+        red_field.send_keys(new_color.red)
+
+        # Remplir le champ V
+        green_field = modal.find_element(By.CSS_SELECTOR, "[data-field='green']")
+        green_field.send_keys(new_color.green)
+
+        # Remplir le champ B
+        blue_field = modal.find_element(By.CSS_SELECTOR, "[data-field='blue']")
+        blue_field.send_keys(new_color.blue)
+
+        # Remplir le champ transparence
+        transparency_field = modal.find_element(By.CSS_SELECTOR, "[data-field='transparency']")
+        transparency_field.send_keys(new_color.transparency)
+        
+        # Cliquer sur valider
+        validate_button = modal.find_element(By.ID, "colorModalValidateButton")
+        self.browser.execute_script("arguments[0].click();", validate_button)
+        
+        # Vérifier l'affichage dans le tableau
+        WebDriverWait(self.browser, 20).until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "#color-table tbody")
+            )
+        )
+        
+        time.sleep(0.5)
+        
+        # Vérification finale
+        rows = self.browser.find_elements(By.CSS_SELECTOR, "#color-table tbody tr")
+        new_row = None
+        for row in rows:
+            if row.find_elements(By.CSS_SELECTOR, "td")[1].text == str(new_color.red) and \
+               row.find_elements(By.CSS_SELECTOR, "td")[2].text == str(new_color.green) and \
+               row.find_elements(By.CSS_SELECTOR, "td")[3].text == str(new_color.blue) and \
+               row.find_elements(By.CSS_SELECTOR, "td")[4].text == str(new_color.transparency)+"%":
+                new_row = row
+                break
+        if new_row:
+            self.assertEqual(str(new_color.red), new_row.find_elements(By.CSS_SELECTOR, "td")[1].text)
+            self.assertEqual(str(new_color.green), new_row.find_elements(By.CSS_SELECTOR, "td")[2].text)
+            self.assertEqual(str(new_color.blue), new_row.find_elements(By.CSS_SELECTOR, "td")[3].text)
+            self.assertEqual(str(new_color.transparency)+"%", new_row.find_elements(By.CSS_SELECTOR, "td")[4].text)
+        else:
+            self.fail("New row not found")
+
     def test_add_new_skill(self):
         """
         Teste l'ajout d'une nouvelle compétence via l'interface
@@ -3055,6 +3350,44 @@ class DeleteElementTest(BaseTest):
         skill_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'skill-table')]//td[contains(text(), '{self.skills[0].name}')]/..")
         self.assertTrue(skill_row.is_displayed(), "La ligne de la compétence est visible")
 
+    def test_delete_color_and_cancel(self):
+        """Vérifie que le clic sur supprimer affiche la modal de confirmation et le bouton d'annulation fonctionne"""
+
+        # Sélectionner le profil
+        profile_row = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/.."))
+        )
+        self.browser.execute_script("arguments[0].click();", profile_row)
+
+        # Attendre et cliquer sur le bouton de suppression
+        delete_button = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'color-table')]//td[contains(text(), 'Couleur 1')]/..//button[contains(@class, 'delete-color')]"))
+        )
+        self.browser.execute_script("arguments[0].click();", delete_button)
+
+        # Vérifier l'affichage de la modal
+        WebDriverWait(self.browser, 5).until(
+            EC.visibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas apparue après le clic"
+        )
+        
+        # Vérifier que le bouton d'annulation est présent
+        cancel_button = self.browser.find_element(By.ID, "cancelDeleteButton")
+        self.assertTrue(cancel_button.is_displayed(), "Le bouton d'annulation n'est pas visible")
+
+        # Cliquer sur le bouton d'annulation
+        self.browser.execute_script("arguments[0].click();", cancel_button)
+
+        # Vérifier que la modal est fermée
+        WebDriverWait(self.browser, 5).until(
+            EC.invisibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas fermée après le clic"
+        )
+
+        #Vérifier que la ligne n'est pas supprimée
+        color_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'color-table')]//td[contains(text(), 'Couleur 1')]/..")
+        self.assertTrue(color_row.is_displayed(), "La ligne de la couleur est visible")
+
     def test_delete_about_and_cancel(self):
         """Vérifie que le clic sur supprimer affiche la modal de confirmation et le bouton d'annulation fonctionne"""
 
@@ -3399,6 +3732,49 @@ class DeleteElementTest(BaseTest):
         # Vérifier que la compétence n'est plus liée au projet en base de données
         project = Project.objects.get(id=self.projects[0].id)
         self.assertFalse(skill_id in project.skills.values_list('id', flat=True), "La compétence est toujours liée à un projet")
+
+    def test_delete_color_and_confirm(self):
+        """Vérifie que le clic sur supprimer affiche la modal de confirmation et le bouton de confirmation fonctionne"""
+        
+        # Sélectionner le profil
+        profile_row = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'profile-table')]//td[contains(text(), '{self.profile.identifiant}')]/.."))
+        )
+        self.browser.execute_script("arguments[0].click();", profile_row)
+
+        # Cliquer sur le bouton de suppression de la section color de test
+        delete_button = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'color-table')]//td[contains(text(), 'Couleur 1')]/..//button[contains(@class, 'delete-color')]"))
+        )
+        self.browser.execute_script("arguments[0].click();", delete_button)
+
+        # Vérifier que la popup est apparue
+        WebDriverWait(self.browser, 5).until(
+            EC.visibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas apparue après le clic"
+        )
+
+        color_id = self.colors[0].id
+
+        # Cliquer sur le bouton de confirmation
+        confirm_button = self.browser.find_element(By.ID, "confirmDeleteButton")
+        self.browser.execute_script("arguments[0].click();", confirm_button)
+
+        # Vérifier que la modal est fermée
+        WebDriverWait(self.browser, 5).until(
+            EC.invisibility_of_element_located((By.ID, "confirmDeleteModal")),
+            message="La modal de confirmation n'est pas fermée après le clic"
+        )
+        
+        # Vérifier que la couleur est supprimée
+        self.assertFalse(Color.objects.filter(id=color_id).exists(), "La couleur n'a pas été supprimée")
+        
+        # Vérifier que la ligne est supprimée
+        try:
+            color_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'color-table')]//td[contains(text(), 'Couleur 1')]/..")
+            self.assertFalse(color_row.is_displayed(), "La ligne de la couleur est visible")
+        except NoSuchElementException:
+            pass  # La ligne a bien été supprimée
 
     def test_delete_about_and_confirm(self):
         """Vérifie que le clic sur supprimer affiche la modal de confirmation et le bouton de confirmation fonctionne"""

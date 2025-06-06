@@ -39,6 +39,26 @@ function addProfileSection() {
     });
 }
 
+// Fonction pour ajouter une nouvelle section Couleur
+function addColorSection() {
+    // Créer un élément row factice avec des attributs vides
+    const dummyRow = document.createElement('div');
+    dummyRow.setAttribute('data-red', '');
+    dummyRow.setAttribute('data-green', '');
+    dummyRow.setAttribute('data-blue', '');
+    dummyRow.setAttribute('data-transparency', '');
+    
+    // Ouvrir la popup avec le contenu vide
+    showPopup(dummyRow, 'colorModal', 'colorModalContent');
+    
+    // Rendre tous les champs éditables
+    const modal = document.getElementById('colorModal');
+    modal.querySelectorAll('.editable-content').forEach(el => {
+        el.contentEditable = true;
+        el.focus();
+    });
+}
+
 // Fonction pour ajouter une nouvelle section À propos
 function addSkillSection() {
     // Créer un élément row factice avec des attributs vides
@@ -75,7 +95,7 @@ function addAboutSection() {
     });
 }
 
-// Fonction pour ajouter une nouvelle section À propos
+// Fonction pour ajouter une nouvelle section Experience
 function addExperienceSection() {
     // Créer un élément row factice avec des attributs vides
     const dummyRow = document.createElement('div');
@@ -99,7 +119,7 @@ function addExperienceSection() {
     });
 }
 
-// Fonction pour ajouter une nouvelle section À propos
+// Fonction pour ajouter une nouvelle section Education
 function addEducationSection() {
     // Créer un élément row factice avec des attributs vides
     const dummyRow = document.createElement('div');
@@ -124,7 +144,7 @@ function addEducationSection() {
     });
 }
 
-// Fonction pour ajouter une nouvelle section À propos
+// Fonction pour ajouter une nouvelle section Project
 function addProjectSection() {
     // Créer un élément row factice avec des attributs vides
     const dummyRow = document.createElement('div');
@@ -337,6 +357,10 @@ function showPopup(row, modalId, contentId) {
     let profileIdentifiant = '';
     let profileName = '';
     let profileTitle = '';
+    let colorRed = '';
+    let colorGreen = '';
+    let colorBlue = '';
+    let colorTransparency = '';
     let skillCategory = '';
     let skillName = '';
     let skillLevel = 0;
@@ -369,6 +393,11 @@ function showPopup(row, modalId, contentId) {
         profileIdentifiant = row.getAttribute('data-identifiant');
         profileName = row.getAttribute('data-name');
         profileTitle = row.getAttribute('data-title');
+    } else if (modalId === 'colorModal') {
+        colorRed = row.getAttribute('data-red');
+        colorGreen = row.getAttribute('data-green');
+        colorBlue = row.getAttribute('data-blue');
+        colorTransparency = row.getAttribute('data-transparency');
     } else if (modalId === 'skillModal') {
         skillCategory = row.getAttribute('data-category');
         skillName = row.getAttribute('data-name');
@@ -408,7 +437,8 @@ function showPopup(row, modalId, contentId) {
                     modalId === 'experienceModal' ? 'Expérience' : 
                     modalId === 'educationModal' ? 'Éducation' : 
                     modalId === 'projectModal' ? 'Projet' : 
-                    modalId === 'skillModal' ? 'Compétence' : '';
+                    modalId === 'skillModal' ? 'Compétence' : 
+                    modalId === 'colorModal' ? 'Couleur' : '';
     
     // Créer la popup si elle n'existe pas déjà
     let modal = document.getElementById(modalId);
@@ -448,6 +478,21 @@ function showPopup(row, modalId, contentId) {
                             <span class="modal-content-info-title">Niveau : </span> 
                             <input type="range" class="form-range" data-field="level" min="0" max="10" step="1" value="${skillLevel}" oninput="this.nextElementSibling.value = this.value" style="width: 100%; height: 10px; background: #000; -webkit-appearance: none; border-radius: 5px;">
                             <output style="display: inline-block; margin-left: 10px; font-weight: bold;">${skillLevel}</output>
+                        </div>
+                    </div>
+                ` : modalId === 'colorModal' ? `
+                    <div class="modal-content-info">
+                        <div class="editable-field">
+                            <span class="modal-content-info-title">Rouge : </span> <span contenteditable="true" class="editable-content" data-field="red">${colorRed}</span>
+                        </div>
+                        <div class="editable-field">
+                            <span class="modal-content-info-title">Vert : </span> <span contenteditable="true" class="editable-content" data-field="green">${colorGreen}</span>
+                        </div>
+                        <div class="editable-field">
+                            <span class="modal-content-info-title">Bleu : </span> <span contenteditable="true" class="editable-content" data-field="blue">${colorBlue}</span>
+                        </div>
+                        <div class="editable-field">
+                            <span class="modal-content-info-title">Transparence : </span> <span contenteditable="true" class="editable-content" data-field="transparency">${colorTransparency}</span>
                         </div>
                     </div>
                 ` : modalId === 'experienceModal' ? `
@@ -816,6 +861,59 @@ function updateProfileData(data) {
         }
     }
 
+    // Mise à jour de la section Couleur
+    if (data.colors && data.colors.length > 0) {
+        let colorTable = document.querySelector('#color-table tbody');
+
+        if (!colorTable) {
+            colorTable = document.querySelector('#color-table-container');
+
+            colorTable.innerHTML = `
+                <table id="color-table" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Rouge</th>
+                            <th>Vert</th>
+                            <th>Bleu</th>
+                            <th>Transparence</th>
+                            <th class="text-end"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            `;
+        }
+
+        colorTable = document.querySelector('#color-table tbody');
+
+        if (colorTable) {
+            colorTable.innerHTML = data.colors.map(color => `
+                <tr class="color-row" data-id="${color.id}" data-red="${color.red}" data-green="${color.green}" data-blue="${color.blue}" data-transparency="${color.transparency}">
+                    <td>Couleur ${color.order + 1}</td>
+                    <td>${color.red}</td>
+                    <td>${color.green}</td>
+                    <td>${color.blue}</td>
+                    <td>${color.transparency}%</td>
+                    <td class="text-end">
+                        <button class="btn btn-danger btn-sm delete-color" data-id="${color.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                    <input type="hidden" class="color-id" value="${color.id}">
+                </tr>
+            `).join('');
+
+            // Réattacher les événements
+            document.querySelectorAll('.color-row').forEach(row => {
+                row.addEventListener('dblclick', function() {
+                    showPopup(row, 'colorModal', 'colorModalContent');
+                });
+            });
+        }
+    }
+
     // Mise à jour de la section Compétences
     if (data.skills && data.skills.length > 0) {
         let skillTable = document.querySelector('#skill-table tbody');
@@ -1085,6 +1183,50 @@ function loadProfileData(profileIdentifiant) {
             const html = `
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">Couleurs</h2>
+                        <button id="addColorSectionButton" class="btn btn-primary btn-sm" onclick="addColorSection()">
+                            <i class="fas fa-plus"></i> Ajouter une couleur
+                        </button>
+                    </div>
+                    <div id="color-table-container" class="card-body">
+                        ${data.colors.length > 0 ? `
+                            <table id="color-table" class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Rouge</th>
+                                        <th>Vert</th>
+                                        <th>Bleu</th>
+                                        <th>Transparence</th>
+                                        <th class="text-end"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.colors.map(color => `
+                                        <tr class="color-row" data-id="${color.id}" data-red="${color.red}" data-green="${color.green}" data-blue="${color.blue}" data-transparency="${color.transparency}">
+                                            <td>Couleur ${color.order + 1}</td>
+                                            <td>${color.red}</td>
+                                            <td>${color.green}</td>
+                                            <td>${color.blue}</td>
+                                            <td>${color.transparency}%</td>
+                                            <td class="text-end">
+                                                <button class="btn btn-danger btn-sm delete-color" data-id="${color.id}">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                            <input type="hidden" class="color-id" value="${color.id}">
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        ` : `
+                            <p>Aucune couleur trouvée</p>
+                        `}
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
                         <h2 class="mb-0">Compétences</h2>
                         <button id="addSkillSectionButton" class="btn btn-primary btn-sm" onclick="addSkillSection()">
                             <i class="fas fa-plus"></i> Ajouter une compétence
@@ -1293,6 +1435,13 @@ function loadProfileData(profileIdentifiant) {
             // Mettre à jour le DOM
             document.querySelector('#profile-data').innerHTML = html;
 
+            // Ajouter les gestionnaires d'événements pour les lignes Couleurs
+            document.querySelectorAll('.color-row').forEach(row => {
+                row.addEventListener('dblclick', function() {
+                    showPopup(row, 'colorModal', 'colorModalContent');
+                });
+            });
+            
             // Ajouter les gestionnaires d'événements pour les lignes Compétences
             document.querySelectorAll('.skill-row').forEach(row => {
                 row.addEventListener('dblclick', function() {
@@ -1378,7 +1527,7 @@ $(function() {
         // Simple clic pour sélectionner le profil
         row.addEventListener('click', function(e) {
             // Ne pas traiter si le clic provient d'un bouton de suppression
-            if (e.target.closest('.btn-danger, .delete-profile, .delete-about, .delete-experience, .delete-education, .delete-project, .delete-skill')) {
+            if (e.target.closest('.btn-danger, .delete-profile, .delete-color, .delete-about, .delete-experience, .delete-education, .delete-project, .delete-skill')) {
                 return;
             }
 
@@ -1467,12 +1616,14 @@ $(function() {
     });
 
     // Clic sur le bouton de suppression
-    $(document).on('click', '.delete-profile, .delete-about, .delete-experience, .delete-education, .delete-project, .delete-skill', function() {
+    $(document).on('click', '.delete-profile, .delete-color, .delete-about, .delete-experience, .delete-education, .delete-project, .delete-skill', function() {
         const btn = $(this);
         currentDeleteId = btn.data('id');
         
         if (btn.hasClass('delete-profile')) {
             currentDeleteType = 'profile';
+        } else if (btn.hasClass('delete-color')) {
+            currentDeleteType = 'color';
         } else if (btn.hasClass('delete-about')) {
             currentDeleteType = 'about';
         } else if (btn.hasClass('delete-experience')) {

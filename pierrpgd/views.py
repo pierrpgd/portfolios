@@ -136,6 +136,7 @@ def load_data(request):
                     'colors': [
                         {
                             'id': color.id,
+                            'order': color.order,
                             'red': color.red,
                             'green': color.green,
                             'blue': color.blue,
@@ -304,7 +305,7 @@ def save_data(request):
                 ProfileSkill.objects.update_or_create(profile=profile, skill=obj, defaults={'level': content.get('level', 5)})
             elif modalId == 'colorModal':
                 type = 'color'
-                if isNew and not Color.objects.filter(profile=profile, red=content.get('red'), green=content.get('green'), blue=content.get('blue')).exists():
+                if isNew:
                     obj = Color.objects.create(
                         red=content.get('red', 0),
                         green=content.get('green', 0),
