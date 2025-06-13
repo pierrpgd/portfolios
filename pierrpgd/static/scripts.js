@@ -891,7 +891,15 @@ function updateProfileData(data) {
         if (colorTable) {
             colorTable.innerHTML = data.colors.map(color => `
                 <tr class="color-row" data-id="${color.id}" data-red="${color.red}" data-green="${color.green}" data-blue="${color.blue}" data-transparency="${color.transparency}">
-                    <td>Couleur ${color.order + 1}</td>
+                    <td>
+                        ${color.order === 0
+                            ? `Texte en gras` 
+                            : color.order === 1
+                            ? `Texte normal` 
+                            : color.order === 2
+                            ? `Couleur de fond` 
+                            : `Compétences cat. ` + (color.order - 2)}
+                    </td>
                     <td>${color.red}</td>
                     <td>${color.green}</td>
                     <td>${color.blue}</td>
@@ -1204,7 +1212,15 @@ function loadProfileData(profileIdentifiant) {
                                 <tbody>
                                     ${data.colors.map(color => `
                                         <tr class="color-row" data-id="${color.id}" data-red="${color.red}" data-green="${color.green}" data-blue="${color.blue}" data-transparency="${color.transparency}">
-                                            <td>Couleur ${color.order + 1}</td>
+                                            <td>
+                                                ${color.order === 0
+                                                    ? `Texte en gras` 
+                                                    : color.order === 1
+                                                    ? `Texte normal` 
+                                                    : color.order === 2
+                                                    ? `Couleur de fond` 
+                                                    : `Compétences cat. ` + (color.order - 2)}
+                                            </td>
                                             <td>${color.red}</td>
                                             <td>${color.green}</td>
                                             <td>${color.blue}</td>
