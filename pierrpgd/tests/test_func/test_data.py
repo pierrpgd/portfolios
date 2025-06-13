@@ -67,7 +67,7 @@ class BaseTest(LiveServerTestCase):
         self.educations = Education.objects.filter(profile=self.profile).order_by('order')
         self.projects = Project.objects.filter(profile=self.profile).order_by('order')
         self.skills = Skill.objects.filter(profile=self.profile).order_by('id')
-        self.colors = Color.objects.filter(profile=self.profile).order_by('id')
+        self.colors = Color.objects.filter(profile=self.profile).order_by('order')
 
 class ProfileTest(BaseTest):
 
@@ -112,10 +112,10 @@ class ProfileTest(BaseTest):
         )
 
         # Vérifier l'affichage des données Couleurs
-        color_number = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), 'Couleur 1')]")
+        color_number = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), 'Texte en gras')]")
         color_red = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), '255')]")
-        color_green = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), '0')]")
-        color_blue = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), '0')]")
+        color_green = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), '255')]")
+        color_blue = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), '255')]")
         color_transparency = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), '100%')]")
         self.assertTrue(color_number.is_displayed())
         self.assertTrue(color_red.is_displayed())
@@ -168,7 +168,7 @@ class ProfileTest(BaseTest):
         )
         
         # Vérifier que les données sont masquées
-        color_content = self.browser.find_elements(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), 'Couleur 1')]")
+        color_content = self.browser.find_elements(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), 'Texte en gras')]")
         self.assertEqual(len(color_content), 0)
         
         skill_content = self.browser.find_elements(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'skill-table')]//td[contains(text(), 'Test Skill')]")
@@ -341,7 +341,7 @@ class PopupTest(BaseTest):
         )
         
         # Trouver la ligne du tableau Couleurs
-        color_row = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), 'Couleur 1')]/..")
+        color_row = self.browser.find_element(By.XPATH, "//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), 'Texte en gras')]/..")
         
         # Effectuer un double clic
         action = ActionChains(self.browser)
@@ -364,8 +364,8 @@ class PopupTest(BaseTest):
             blue = modal_content.find_element(By.CSS_SELECTOR, '[data-field="blue"]').text
             transparency = modal_content.find_element(By.CSS_SELECTOR, '[data-field="transparency"]').text
             self.assertEqual(red, '255')
-            self.assertEqual(green, '0')
-            self.assertEqual(blue, '0')
+            self.assertEqual(green, '255')
+            self.assertEqual(blue, '255')
             self.assertEqual(transparency, '100')
             
             # Fermer la popup
@@ -386,7 +386,7 @@ class PopupTest(BaseTest):
                 self.browser.find_element(By.ID, 'colorModal')
             
             # Trouver la ligne du tableau Couleurs pour la deuxième section
-            color_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), 'Couleur 2')]/..")
+            color_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), 'Texte normal')]/..")
 
             # Effectuer un double clic
             action = ActionChains(self.browser)
@@ -407,9 +407,9 @@ class PopupTest(BaseTest):
             green = modal_content.find_element(By.CSS_SELECTOR, '[data-field="green"]').text
             blue = modal_content.find_element(By.CSS_SELECTOR, '[data-field="blue"]').text
             transparency = modal_content.find_element(By.CSS_SELECTOR, '[data-field="transparency"]').text
-            self.assertEqual(red, '0')
-            self.assertEqual(green, '255')
-            self.assertEqual(blue, '0')
+            self.assertEqual(red, '145')
+            self.assertEqual(green, '157')
+            self.assertEqual(blue, '197')
             self.assertEqual(transparency, '100')
             
             # Fermer la popup
@@ -1085,7 +1085,7 @@ class ModifyAndSaveTest(BaseTest):
         )
         
         # Trouver la ligne du tableau Couleurs
-        color_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), 'Couleur 1')]/..")
+        color_row = self.browser.find_element(By.XPATH, f"//div[@id='profile-data']//table[contains(@id, 'color-table')]//td[contains(text(), 'Texte en gras')]/..")
         
         # Effectuer un double clic
         action = ActionChains(self.browser)
@@ -1133,7 +1133,7 @@ class ModifyAndSaveTest(BaseTest):
         WebDriverWait(self.browser, 10).until(
             EC.invisibility_of_element_located((By.ID, 'colorModal'))
         )
-        
+                
         # Vérifier côté serveur que la modification est enregistrée
         color_obj = Color.objects.get(id=self.colors[0].id)
         self.assertEqual(color_obj.red, new_content.red)
@@ -3361,7 +3361,7 @@ class DeleteElementTest(BaseTest):
 
         # Attendre et cliquer sur le bouton de suppression
         delete_button = WebDriverWait(self.browser, 10).until(
-            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'color-table')]//td[contains(text(), 'Couleur 1')]/..//button[contains(@class, 'delete-color')]"))
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'color-table')]//td[contains(text(), 'Texte en gras')]/..//button[contains(@class, 'delete-color')]"))
         )
         self.browser.execute_script("arguments[0].click();", delete_button)
 
@@ -3385,7 +3385,7 @@ class DeleteElementTest(BaseTest):
         )
 
         #Vérifier que la ligne n'est pas supprimée
-        color_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'color-table')]//td[contains(text(), 'Couleur 1')]/..")
+        color_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'color-table')]//td[contains(text(), 'Texte en gras')]/..")
         self.assertTrue(color_row.is_displayed(), "La ligne de la couleur est visible")
 
     def test_delete_about_and_cancel(self):
@@ -3744,7 +3744,7 @@ class DeleteElementTest(BaseTest):
 
         # Cliquer sur le bouton de suppression de la section color de test
         delete_button = WebDriverWait(self.browser, 10).until(
-            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'color-table')]//td[contains(text(), 'Couleur 1')]/..//button[contains(@class, 'delete-color')]"))
+            EC.element_to_be_clickable((By.XPATH, f"//table[contains(@id, 'color-table')]//td[contains(text(), 'Texte en gras')]/..//button[contains(@class, 'delete-color')]"))
         )
         self.browser.execute_script("arguments[0].click();", delete_button)
 
@@ -3771,7 +3771,7 @@ class DeleteElementTest(BaseTest):
         
         # Vérifier que la ligne est supprimée
         try:
-            color_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'color-table')]//td[contains(text(), 'Couleur 1')]/..")
+            color_row = self.browser.find_element(By.XPATH, f"//table[contains(@id, 'color-table')]//td[contains(text(), 'Texte en gras')]/..")
             self.assertFalse(color_row.is_displayed(), "La ligne de la couleur est visible")
         except NoSuchElementException:
             pass  # La ligne a bien été supprimée

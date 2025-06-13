@@ -71,13 +71,12 @@ class PortfolioPageTest(BaseTest):
         navbar = self.browser.find_element(By.TAG_NAME, "nav")
 
         links = navbar.find_elements(By.TAG_NAME, "a")
-        self.assertEqual(len(links), 5, "Navigation bar doesn't have 4 links.")
+        self.assertEqual(len(links), 4, "Navigation bar doesn't have 4 links.")
 
-        self.assertEqual(links[0].get_attribute('href'), f'{self.url}/', "Navigation bar doesn't have my name.")
-        self.assertEqual(links[1].get_attribute('href'), f'{self.url}/#about', "Navigation bar doesn't have an 'About' item.")
-        self.assertEqual(links[2].get_attribute('href'), f'{self.url}/#experience', "Navigation bar doesn't have an 'Experience' item.")
-        self.assertEqual(links[3].get_attribute('href'), f'{self.url}/#education', "Navigation bar doesn't have an 'Education' item.")
-        self.assertEqual(links[4].get_attribute('href'), f'{self.url}/#projects', "Navigation bar doesn't have an 'Projects' item.")
+        self.assertEqual(links[0].get_attribute('href'), f'{self.url}/#about', "Navigation bar doesn't have an 'About' item.")
+        self.assertEqual(links[1].get_attribute('href'), f'{self.url}/#experience', "Navigation bar doesn't have an 'Experience' item.")
+        self.assertEqual(links[2].get_attribute('href'), f'{self.url}/#education', "Navigation bar doesn't have an 'Education' item.")
+        self.assertEqual(links[3].get_attribute('href'), f'{self.url}/#projects', "Navigation bar doesn't have an 'Projects' item.")
 
     def test_profile_title_is_visible(self):
         title = self.browser.find_element(By.ID, "title")

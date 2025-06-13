@@ -246,46 +246,26 @@
     },
     {
         "model": "pierrpgd.color",
-        "pk": 1,
-        "fields": {
-            "profile": 1,
-            "red": 255,
-            "green": 0,
-            "blue": 0,
-            "transparency": 100
-        }
-    },
-    {
-        "model": "pierrpgd.color",
-        "pk": 2,
-        "fields": {
-            "profile": 1,
-            "red": 255,
-            "green": 0,
-            "blue": 0,
-            "transparency": 100
-        }
-    },
-    {
-        "model": "pierrpgd.color",
-        "pk": 3,
-        "fields": {
-            "profile": 1,
-            "red": 255,
-            "green": 0,
-            "blue": 0,
-            "transparency": 100
-        }
-    },
-    {
-        "model": "pierrpgd.color",
         "pk": 4,
+        "fields": {
+            "profile": 1,
+            "red": 255,
+            "green": 0,
+            "blue": 0,
+            "transparency": 100,
+            "order": 3
+        }
+    },
+    {
+        "model": "pierrpgd.color",
+        "pk": 5,
         "fields": {
             "profile": 1,
             "red": 0,
             "green": 255,
             "blue": 0,
-            "transparency": 100
+            "transparency": 100,
+            "order": 4
         }
     }
 ]

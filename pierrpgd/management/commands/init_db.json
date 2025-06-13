@@ -24,24 +24,6 @@
     },
     "colors": [
       {
-        "red": 255,
-        "green": 255,
-        "blue": 255,
-        "transparency": 100
-      },
-      {
-        "red": 145,
-        "green": 157,
-        "blue": 197,
-        "transparency": 100
-      },
-      {
-        "red": 15,
-        "green": 23,
-        "blue": 42,
-        "transparency": 100
-      },
-      {
         "red": 94,
         "green": 231,
         "blue": 212,
@@ -149,24 +131,6 @@
       "title": "Fille au pair"
     },
     "colors": [
-      {
-        "red": 255,
-        "green": 255,
-        "blue": 255,
-        "transparency": 100
-      },
-      {
-        "red": 145,
-        "green": 157,
-        "blue": 197,
-        "transparency": 100
-      },
-      {
-        "red": 15,
-        "green": 23,
-        "blue": 42,
-        "transparency": 100
-      },
       {
         "red": 94,
         "green": 231,

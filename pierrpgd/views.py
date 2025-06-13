@@ -65,7 +65,7 @@ def load_data(request):
                 educations = profile.education.all()
                 projects = profile.projects.all()
                 profile_skills = ProfileSkill.objects.filter(profile=profile)
-                colors = Color.objects.filter(profile=profile)
+                colors = Color.objects.filter(profile=profile).order_by('order')
                 
                 # Récupération de toutes les compétences liées au profil
                 skills_data = []

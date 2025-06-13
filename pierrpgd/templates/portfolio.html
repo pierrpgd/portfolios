@@ -264,7 +264,10 @@
         }
 
         .tile-container a:hover .tile-title {
-            color: #5ee7d4;
+            color: #5ee7d4 !important;
+        }
+        .tile-container a:hover .tile-description {
+            color: var(--c-white) !important;
         }
         .tile-container:hover a:not(:hover) {
             opacity: 0.6;
@@ -606,6 +609,7 @@
                     for (let i = 0; i < text.length; i++) {
                         text[i].style.color = `rgba({{ color.red }}, {{ color.green }}, {{ color.blue }}, ${transparency})`;
                     }
+                    main.style.setProperty('--c-white', `rgba({{ color.red }}, {{ color.green }}, {{ color.blue }}, ${transparency})`);
                 {% elif forloop.counter == 2 %}
                     text = document.querySelectorAll(`body, a`);
                     for (let i = 0; i < text.length; i++) {
@@ -730,8 +734,8 @@
                                             <div class="skill-badge" data-category="{{ skill.category }}" data-name="{{ skill.name }}">{{ skill.name }}</div>
                                         </div>
                                         <div class="right-col-item">
-                                            <div class="skill-level-gauge" data-category="{{ skill.category }}" style="width: {{ skill.level|mul:10 }}%"></div>
-                                            <span class="skill-level c-white" data-category="{{ skill.category }}" style="left: {{ skill.level|mul:5 }}%;">{{ skill.level }}</span>
+                                            <div class="skill-level-gauge" data-category="{{ skill.category }}" style="width: {{ skill.level|mul:9 }}%"></div>
+                                            <span class="skill-level c-white" data-category="{{ skill.category }}">{{ skill.level }}</span>
                                         </div>
                                     </div>
                                 {% endfor %}

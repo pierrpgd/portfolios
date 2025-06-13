@@ -18,7 +18,7 @@ class BaseTest(TestCase):
         cls.educations = Education.objects.filter(profile=cls.profile)
         cls.projects = Project.objects.filter(profile=cls.profile)
         cls.skills = Skill.objects.all()
-        cls.colors = Color.objects.all()
+        cls.colors = Color.objects.filter(profile=cls.profile)
         cls.profile_skills = ProfileSkill.objects.filter(profile=cls.profile)
 
     @classmethod
@@ -330,10 +330,12 @@ class LoadDataViewTest(BaseTest):
         # Vérifier que la compétence a été créée
         data = self.response.json()
         self.assertIn('colors', data)
-        self.assertEqual(data['colors'][0]['red'], 255)
-        self.assertEqual(data['colors'][0]['green'], 0)
-        self.assertEqual(data['colors'][0]['blue'], 0)
-        self.assertEqual(data['colors'][0]['transparency'], 100)
+        bTrouve = False
+        for color in data['colors']:
+            if color['red'] == 255 and color['green'] == 0 and color['blue'] == 0 and color['transparency'] == 100:
+                bTrouve = True
+                break
+        self.assertTrue(bTrouve)
 
     def test_update_color(self):
         """Teste la mise à jour d'une couleur"""
@@ -370,7 +372,7 @@ class LoadDataViewTest(BaseTest):
 
     def test_delete_color(self):
         """Teste la suppression d'une couleur"""
-
+        nb_colors = len(self.colors)
         id_color = self.colors[0].id
         
         # Supprimer la compétence
@@ -386,7 +388,7 @@ class LoadDataViewTest(BaseTest):
         # Vérifier que la compétence a été supprimée
         data = self.response.json()
         self.assertIn('colors', data)
-        self.assertEqual(len(data['colors']), 1)
+        self.assertEqual(len(data['colors']), nb_colors-1)
 
     def test_create_about(self):
         """Teste la création d'une section About"""

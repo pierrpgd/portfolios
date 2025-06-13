@@ -15,7 +15,7 @@ class BaseTest(TestCase):
         cls.educations = Education.objects.filter(profile=cls.profile)
         cls.projects = Project.objects.filter(profile=cls.profile)
         cls.skills = Skill.objects.all()
-        cls.colors = Color.objects.all()
+        cls.colors = Color.objects.filter(profile=cls.profile)
 
 class ProfileModelTest(BaseTest):
     def test_profile_creation(self):
@@ -29,6 +29,12 @@ class ProfileModelTest(BaseTest):
         self.assertIn(self.skills[0], skills)
         self.assertIn(self.skills[1], skills)
         self.assertIn(self.skills[2], skills)
+
+    def test_profile_creation_colors(self):
+        """Test la creation de couleurs a la creation d'un profil"""
+        profile = Profile.objects.create(name='Test Profile New', identifiant='test-profile-new', title='Test Title New')
+        colors = Color.objects.filter(profile=profile)
+        self.assertEqual(len(colors), 3)
 
     def test_profile_creation_with_same_identifiant(self):
         """Test que la création d'un profil avec un identifiant déjà existant échoue"""
@@ -62,18 +68,36 @@ class ProfileModelTest(BaseTest):
 
 class ColorModelTest(BaseTest):
     def test_color_creation(self):
-        """Test la création d'une section About"""
+        """Test la création de couleurs"""
         self.assertEqual(self.colors[0].red, 255)
-        self.assertEqual(self.colors[0].green, 0)
-        self.assertEqual(self.colors[0].blue, 0)
-        self.assertEqual(self.colors[0].order, 0)
+        self.assertEqual(self.colors[0].green, 255)
+        self.assertEqual(self.colors[0].blue, 255)
         self.assertEqual(self.colors[0].transparency, 100)
+        self.assertEqual(self.colors[0].order, 0)
 
-        self.assertEqual(self.colors[1].red, 0)
-        self.assertEqual(self.colors[1].green, 255)
-        self.assertEqual(self.colors[1].blue, 0)
-        self.assertEqual(self.colors[1].order, 1)
+        self.assertEqual(self.colors[1].red, 145)
+        self.assertEqual(self.colors[1].green, 157)
+        self.assertEqual(self.colors[1].blue, 197)
         self.assertEqual(self.colors[1].transparency, 100)
+        self.assertEqual(self.colors[1].order, 1)
+
+        self.assertEqual(self.colors[2].red, 15)
+        self.assertEqual(self.colors[2].green, 23)
+        self.assertEqual(self.colors[2].blue, 42)
+        self.assertEqual(self.colors[2].transparency, 100)
+        self.assertEqual(self.colors[2].order, 2)
+
+        self.assertEqual(self.colors[3].red, 255)
+        self.assertEqual(self.colors[3].green, 0)
+        self.assertEqual(self.colors[3].blue, 0)
+        self.assertEqual(self.colors[3].transparency, 100)
+        self.assertEqual(self.colors[3].order, 3)
+
+        self.assertEqual(self.colors[4].red, 0)
+        self.assertEqual(self.colors[4].green, 255)
+        self.assertEqual(self.colors[4].blue, 0)
+        self.assertEqual(self.colors[4].transparency, 100)
+        self.assertEqual(self.colors[4].order, 4)
 
     def test_color_string_representation(self):
         """Test la représentation en chaîne de caractères"""
